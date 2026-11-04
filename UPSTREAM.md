@@ -16,6 +16,39 @@ Molly and Signal-JW are feature reference repositories.
 | Molly Android | https://github.com/mollyim/mollyim-android | Feature reference |
 | Signal-JW | https://github.com/johanw666/Signal-Android | Feature reference |
 
+### 2.1 Verified Reference Snapshot
+
+Recorded during the first-phase source audit.
+
+| Item | Value |
+|---|---|
+| Project base | Signal Android `515db93fb4` (`v8.34.2`) |
+| Project HEAD at audit | `d83917f7eafc20721ffb87c3dbb2669acc88fd81` (`dev`) |
+| Molly `main` | `892d6264ba007b5458a8b74cf9183c665f1f17a1`, version `8.19.2-4`, tag `v8.19.2-4` |
+| Molly upstream base | Signal `8.19.2` (`c47a74ba0961903eeaeda6d22347a990056c3e83`) |
+| Signal-JW `main` | `515db93fb48206d63406cbfb48c5816f6af1d9e2` (upstream mirror) |
+| Latest Signal-JW release | `v8.33.2.0-JW` = `da443926af72a1132f44e620182a0d7f0f397677`, based on Signal `6e9dddc01f` (`v8.33.2`) |
+
+Reference clones used for the audit (outside this repository, read-only):
+
+- `~/Projects/molly-reference`
+- `~/Projects/signal-jw-reference`
+
+### 2.2 Reference Repository Characteristics
+
+**Molly**
+
+- Molly `main` is based on Signal **8.19.2**, while this project is based on Signal **8.34.2**.
+- This version gap means Molly cannot be merged or used as an intermediate base. Port features commit-by-commit, adapted to current Signal architecture.
+- Molly also maintains `origin/upstream-main` and `origin/upstream-stable` tracking branches; use them only to understand which Signal version a Molly feature was written against.
+- Molly's build has `store` and `website` distribution flavors plus `prod`/`staging` environments. The former separate FOSS variant was consolidated in commit `45947267f1`; `README.md` still advertises "Molly-FOSS", so treat that as a documentation/build discrepancy.
+
+**Signal-JW**
+
+- Signal-JW `main` mirrors upstream Signal.
+- Custom work is published as one squashed "Added extra options" commit per release (e.g. `da443926af` on `v8.33.2.0-JW`) plus older named feature branches (e.g. `Control_who_can_add_you_to_groups`, `Delete_media_only`, `Set_Google_map_type`).
+- Port from the squashed diff and the named branches, never by merging or cherry-picking the release branch wholesale.
+
 ## 3. Update Principles
 
 1. Follow Signal Android releases directly.
@@ -164,3 +197,18 @@ If integration fails:
 4. Identify affected changes.
 5. Propose a recovery plan.
 6. Obtain approval before destructive recovery operations.
+
+## 9. Reference Refresh Checklist
+
+At the start of each upstream cycle:
+
+1. Fetch the current Signal release and record its tag and commit.
+2. Fetch Molly `origin/main` and record its commit, version name and the Signal version it is based on.
+3. Fetch Signal-JW and identify the latest `vX.Y.Z.0-JW` tag and its base Signal commit.
+4. Update the snapshot table in section 2.1.
+5. Diff each reference against its own base, not against this project.
+6. Map affected custom features to `FEATURE_MATRIX.md`.
+7. Review security-relevant upstream changes before porting anything.
+8. Do not modify the reference repositories.
+
+A large reference-to-project version gap is expected and normal; it is handled by commit-level porting, not by merging reference branches.

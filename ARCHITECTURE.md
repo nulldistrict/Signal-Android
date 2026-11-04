@@ -189,3 +189,29 @@ Document significant decisions with:
 - Migration implications
 
 Avoid unnecessary architectural complexity.
+
+## 10. Reference Version Gap
+
+The first-phase audit established that:
+
+- This project is based on Signal **8.34.2**.
+- Molly `main` (`892d6264ba`) is based on Signal **8.19.2**.
+- Signal-JW's latest release (`v8.33.2.0-JW`) is based on Signal **8.33.2**.
+
+Implications:
+
+- Molly is a **feature reference only**. Its branches must not be merged into this project.
+- Molly features must be ported commit-by-commit and adapted to current Signal architecture.
+- Signal-JW custom work is squashed per release and must be ported from diffs and named feature branches, never merged.
+- Every port must record the reference commit it was derived from.
+- Upstream Signal remains the only merge source.
+
+This gap is expected to widen as upstream advances; the porting model must tolerate it.
+
+## 11. Audit Findings Affecting Architecture
+
+- Several features previously attributed to Molly/JW already exist in current Signal and must not be re-implemented: linked devices/tablet linking, alternative app icons, disappearing call history (scheduled call-event expiration), and the FCM/WebSocket preference.
+- Signal already has a built-in Signal proxy. General SOCKS5/Tor support must extend that network layer rather than replace it.
+- The passphrase-derived database secret and the application lock are separate concerns with separate security models and separate review paths.
+- Molly's former FOSS build variant was consolidated into `store`/`website` distribution flavors. FOSS packaging is a distribution decision, not a runtime feature.
+- See `FEATURE_MATRIX.md` sections 0, 2 and 3 for the verified inventory.
