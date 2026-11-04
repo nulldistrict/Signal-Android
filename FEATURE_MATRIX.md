@@ -75,7 +75,7 @@ Verified against Molly `892d6264ba` and compared with Signal `515db93fb4`.
 | Unknown-contact blocking | NEEDS_PORT | Low | Medium |
 | Custom backup scheduling and retention | NEEDS_PORT | Low–Medium | Medium |
 | SOCKS5 / Tor / Orbot proxy | NEEDS_PORT | High | High |
-| Optional debug logging | NEEDS_PORT | Low | Low |
+| Optional debug logging | TESTED | Low | Low |
 | Manual device linking without QR scan | NEEDS_PORT | Low | Medium |
 | Minor WebView / share / logging hardening | NEEDS_PORT | Low | Low–Medium |
 | Disappearing call history | EXISTS_SIGNAL | — | — |
@@ -157,10 +157,17 @@ Verified against Molly `892d6264ba` and compared with Signal `515db93fb4`.
 
 #### Optional debug logging
 
-- Status: `NEEDS_PORT`
+- Status: `TESTED` (unit tests and app compilation pass; on-device verification pending)
 - Molly sources: `util/TextSecurePreferences.java` (`preferences__enable_debug_log`, `LOG_ENABLED`), early redaction paths, Tracer removal
-- Current Signal: has internal debug logging but no user-facing toggle found.
-- Security implications: Low. Defaults must keep sensitive logging off; never log message contents, keys or tokens.
+- Current Signal: has internal debug logging but no user-facing toggle.
+- Implementation:
+  - `core/util-jvm/.../Log.kt`: split configured vs. active logger; `configure(internalCheck, enableLogging, ...)`, `setLogging(enabled)`, `wipeLogs()`.
+  - `CompoundLogger`/`PersistentLogger`: clear persisted logs.
+  - `SettingsValues.isLoggingEnabled` (`settings.logging.enabled`, default `true`).
+  - `ApplicationContext` and `AvatarProvider` initialize logging from the preference.
+  - Help settings: enable toggle plus a confirmation dialog; disabling drops further log output and deletes existing logs off the main thread.
+- Security implications: Low. Defaults remain enabled to preserve upstream diagnostics; disabling suppresses all `Log` output and clears the persistent log database. Message contents, keys and tokens remain redacted by existing `Scrubber` behavior.
+- Tests: `LogTest` (`setLogging` suppression/resume, `wipeLogs` flush+clear), `HelpSettingsViewModelTest` (toggle/confirm/dismiss), `HelpSettingsScreenTest` (toggle event and dialog).
 - Complexity: Low.
 
 #### Manual device linking without QR scan

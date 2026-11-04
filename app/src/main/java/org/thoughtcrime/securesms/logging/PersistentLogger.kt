@@ -85,6 +85,10 @@ class PersistentLogger private constructor(application: Application) : Log.Logge
     logEntries.blockForFlushed()
   }
 
+  override fun clear() {
+    logDatabase.logs.clearAll()
+  }
+
   private fun write(level: String, tag: String?, message: String?, t: Throwable?, keepLonger: Boolean) {
     logEntries.add(LogRequest(level, tag ?: "null", message, System.currentTimeMillis(), getThreadString(), t, keepLonger))
   }

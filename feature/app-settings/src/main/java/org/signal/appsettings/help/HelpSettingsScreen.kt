@@ -21,7 +21,9 @@ import androidx.compose.ui.text.style.Hyphens
 import androidx.compose.ui.tooling.preview.PreviewWrapper
 import org.signal.appsettings.AppSettingsLazyColumn
 import org.signal.appsettings.R
+import org.signal.appsettings.help.HelpSettingsState.Dialog
 import org.signal.core.ui.compose.DayNightPreviews
+import org.signal.core.ui.compose.Dialogs
 import org.signal.core.ui.compose.Dividers
 import org.signal.core.ui.compose.Rows
 import org.signal.core.ui.compose.Rows.TextAndLabel
@@ -36,7 +38,9 @@ object HelpSettingsTestTags {
   const val ROW_SUPPORT_CENTER = "row-support-center"
   const val ROW_CONTACT_US = "row-contact-us"
   const val ROW_VERSION = "row-version"
+  const val ROW_ENABLE_DEBUG_LOG = "row-enable-debug-log"
   const val ROW_DEBUG_LOG = "row-debug-log"
+  const val DIALOG_CONFIRM_DISABLE_LOGGING = "dialog-confirm-disable-logging"
   const val ROW_LICENSES = "row-licenses"
   const val ROW_TERMS_AND_PRIVACY_POLICY = "row-terms-and-privacy-policy"
 }
@@ -92,9 +96,19 @@ fun HelpSettingsScreen(
       }
 
       item {
+        Rows.ToggleRow(
+          checked = state.logEnabled,
+          text = stringResource(R.string.HelpSettingsFragment__enable_debug_log),
+          onCheckChanged = { onEvent(HelpSettingsEvent.LoggingToggled(it)) },
+          modifier = Modifier.testTag(HelpSettingsTestTags.ROW_ENABLE_DEBUG_LOG)
+        )
+      }
+
+      item {
         Rows.TextRow(
           text = stringResource(R.string.HelpSettingsFragment__debug_log),
           onClick = { onEvent(HelpSettingsEvent.DebugLogClicked) },
+          enabled = state.logEnabled,
           modifier = Modifier.testTag(HelpSettingsTestTags.ROW_DEBUG_LOG)
         )
       }
@@ -121,6 +135,19 @@ fun HelpSettingsScreen(
         LegalNotice()
       }
     }
+  }
+
+  if (state.dialog == Dialog.ConfirmDisableLogging) {
+    Dialogs.SimpleAlertDialog(
+      title = stringResource(R.string.HelpSettingsFragment__disable_debug_log),
+      body = stringResource(R.string.HelpSettingsFragment__disabling_debug_log_will_delete_existing_logs),
+      confirm = stringResource(android.R.string.ok),
+      onConfirm = { onEvent(HelpSettingsEvent.DisableLoggingConfirmed) },
+      onDismiss = { onEvent(HelpSettingsEvent.DialogDismissed) },
+      onDismissRequest = { onEvent(HelpSettingsEvent.DialogDismissed) },
+      dismiss = stringResource(android.R.string.cancel),
+      modifier = Modifier.testTag(HelpSettingsTestTags.DIALOG_CONFIRM_DISABLE_LOGGING)
+    )
   }
 }
 

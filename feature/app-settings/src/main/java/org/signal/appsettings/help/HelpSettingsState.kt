@@ -12,5 +12,17 @@ package org.signal.appsettings.help
  */
 data class HelpSettingsState(
   /** The installed app version, shown on the version row and copied when it is long-pressed. */
-  val versionName: String = ""
-)
+  val versionName: String = "",
+  /** Whether debug logging is currently enabled. */
+  val logEnabled: Boolean = true,
+  /** The currently shown dialog, if any. */
+  val dialog: Dialog = Dialog.None
+) {
+
+  sealed interface Dialog {
+    data object None : Dialog
+
+    /** Shown when the user turns logging off, because doing so also deletes existing logs. */
+    data object ConfirmDisableLogging : Dialog
+  }
+}

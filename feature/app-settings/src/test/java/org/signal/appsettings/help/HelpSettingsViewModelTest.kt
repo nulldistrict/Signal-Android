@@ -7,6 +7,7 @@ package org.signal.appsettings.help
 
 import assertk.assertThat
 import assertk.assertions.containsExactly
+import assertk.assertions.isEmpty
 import assertk.assertions.isEqualTo
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -69,6 +70,55 @@ class HelpSettingsViewModelTest {
   @Test
   fun `TermsAndPrivacyPolicyClicked opens the terms and privacy policy`() = assertEventEmits(HelpSettingsEvent.TermsAndPrivacyPolicyClicked, HelpSettingsAction.OpenTermsAndPrivacyPolicy)
 
+  @Test
+  fun `toggling logging on applies immediately`() = runTest(testDispatcher) {
+    val changes = mutableListOf<Boolean>()
+    val viewModel = createViewModel(initialLogEnabled = false, onLogEnabledChanged = { changes += it })
+
+    viewModel.onEvent(HelpSettingsEvent.LoggingToggled(true))
+
+    assertThat(changes).containsExactly(true)
+    assertThat(viewModel.state.value.logEnabled).isEqualTo(true)
+  }
+
+  @Test
+  fun `toggling logging off asks for confirmation first`() = runTest(testDispatcher) {
+    val changes = mutableListOf<Boolean>()
+    val viewModel = createViewModel(initialLogEnabled = true, onLogEnabledChanged = { changes += it })
+
+    viewModel.onEvent(HelpSettingsEvent.LoggingToggled(false))
+
+    assertThat(changes).isEmpty()
+    assertThat(viewModel.state.value.logEnabled).isEqualTo(true)
+    assertThat(viewModel.state.value.dialog).isEqualTo(HelpSettingsState.Dialog.ConfirmDisableLogging)
+  }
+
+  @Test
+  fun `confirming disable logging applies the change and closes the dialog`() = runTest(testDispatcher) {
+    val changes = mutableListOf<Boolean>()
+    val viewModel = createViewModel(initialLogEnabled = true, onLogEnabledChanged = { changes += it })
+
+    viewModel.onEvent(HelpSettingsEvent.LoggingToggled(false))
+    viewModel.onEvent(HelpSettingsEvent.DisableLoggingConfirmed)
+
+    assertThat(changes).containsExactly(false)
+    assertThat(viewModel.state.value.logEnabled).isEqualTo(false)
+    assertThat(viewModel.state.value.dialog).isEqualTo(HelpSettingsState.Dialog.None)
+  }
+
+  @Test
+  fun `dismissing the dialog leaves logging enabled`() = runTest(testDispatcher) {
+    val changes = mutableListOf<Boolean>()
+    val viewModel = createViewModel(initialLogEnabled = true, onLogEnabledChanged = { changes += it })
+
+    viewModel.onEvent(HelpSettingsEvent.LoggingToggled(false))
+    viewModel.onEvent(HelpSettingsEvent.DialogDismissed)
+
+    assertThat(changes).isEmpty()
+    assertThat(viewModel.state.value.logEnabled).isEqualTo(true)
+    assertThat(viewModel.state.value.dialog).isEqualTo(HelpSettingsState.Dialog.None)
+  }
+
   private fun assertEventEmits(event: HelpSettingsEvent, expected: HelpSettingsAction) = runTest(testDispatcher) {
     val viewModel = createViewModel()
     val actions = collectActions(viewModel.actions)
@@ -78,7 +128,14 @@ class HelpSettingsViewModelTest {
     assertThat(actions).containsExactly(expected)
   }
 
-  private fun createViewModel(): HelpSettingsViewModel = HelpSettingsViewModel(versionName = VERSION_NAME)
+  private fun createViewModel(
+    initialLogEnabled: Boolean = true,
+    onLogEnabledChanged: (Boolean) -> Unit = {}
+  ): HelpSettingsViewModel = HelpSettingsViewModel(
+    versionName = VERSION_NAME,
+    initialLogEnabled = initialLogEnabled,
+    onLogEnabledChanged = onLogEnabledChanged
+  )
 
   private fun TestScope.collectActions(actions: Flow<HelpSettingsAction>): List<HelpSettingsAction> {
     val collected = mutableListOf<HelpSettingsAction>()

@@ -51,6 +51,23 @@ class HelpSettingsScreenTest {
   fun `clicking debug log emits DebugLogClicked`() = assertClickEmits(HelpSettingsTestTags.ROW_DEBUG_LOG, HelpSettingsEvent.DebugLogClicked)
 
   @Test
+  fun `clicking the logging toggle emits LoggingToggled`() {
+    setContent(HelpSettingsState(versionName = "8.33.0", logEnabled = true))
+
+    scrollTo(HelpSettingsTestTags.ROW_ENABLE_DEBUG_LOG)
+    composeTestRule.onNodeWithTag(HelpSettingsTestTags.ROW_ENABLE_DEBUG_LOG).performClick()
+
+    assertThat(events).containsExactly(HelpSettingsEvent.LoggingToggled(false))
+  }
+
+  @Test
+  fun `the disable-logging confirmation dialog is shown when requested`() {
+    setContent(HelpSettingsState(versionName = "8.33.0", dialog = HelpSettingsState.Dialog.ConfirmDisableLogging))
+
+    composeTestRule.onNodeWithTag(HelpSettingsTestTags.DIALOG_CONFIRM_DISABLE_LOGGING).assertIsDisplayed()
+  }
+
+  @Test
   fun `clicking licenses emits LicensesClicked`() = assertClickEmits(HelpSettingsTestTags.ROW_LICENSES, HelpSettingsEvent.LicensesClicked)
 
   @Test

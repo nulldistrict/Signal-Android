@@ -30,6 +30,8 @@ class SettingsValues internal constructor(store: KeyValueStore, private val cont
     const val LINK_PREVIEWS = "settings.link_previews"
     const val KEEP_MESSAGES_DURATION = "settings.keep_messages_duration"
 
+    const val LOGGING_ENABLED = "settings.logging.enabled"
+
     const val PREFER_SYSTEM_CONTACT_PHOTOS = "settings.prefer.system.contact.photos"
 
     private const val SIGNAL_BACKUP_DIRECTORY = "settings.signal.backup.directory"
@@ -181,6 +183,12 @@ class SettingsValues internal constructor(store: KeyValueStore, private val cont
     get() = configurationSettingChanged
 
   var isLinkPreviewsEnabled: Boolean by booleanValue(LINK_PREVIEWS, false)
+
+  /**
+   * Whether debug logging is written to logcat and the persistent log database. Disabling this drops every log
+   * statement at the [Log] layer and is intended to be paired with [Log.wipeLogs].
+   */
+  var isLoggingEnabled: Boolean by booleanValue(LOGGING_ENABLED, true)
 
   var isAutoplayStickersAndGifsEnabled: Boolean by booleanValue(AUTOPLAY_STICKERS_AND_GIFS, true)
 

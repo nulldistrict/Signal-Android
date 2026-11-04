@@ -22,6 +22,15 @@ sealed interface HelpSettingsEvent {
   /** The user long-pressed the version row. */
   data object VersionLongClicked : HelpSettingsEvent
 
+  /** The user toggled debug logging. Disabling requires confirmation, since it deletes prior logs. */
+  data class LoggingToggled(val enabled: Boolean) : HelpSettingsEvent
+
+  /** The user confirmed disabling debug logging. */
+  data object DisableLoggingConfirmed : HelpSettingsEvent
+
+  /** The user dismissed the disable-logging confirmation. */
+  data object DialogDismissed : HelpSettingsEvent
+
   /** The user tapped the debug log row. */
   data object DebugLogClicked : HelpSettingsEvent
 
