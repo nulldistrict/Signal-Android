@@ -64,6 +64,7 @@ object PrivacySettingsTestTags {
   const val ROW_BLOCKED = "row-blocked"
   const val ROW_READ_RECEIPTS = "row-read-receipts"
   const val ROW_TYPING_INDICATORS = "row-typing-indicators"
+  const val ROW_BLOCK_UNKNOWN = "row-block-unknown"
   const val ROW_DEFAULT_TIMER = "row-default-timer"
   const val ROW_ENABLE_PASSPHRASE = "row-enable-passphrase"
   const val ROW_CHANGE_PASSPHRASE = "row-change-passphrase"
@@ -171,6 +172,16 @@ fun PrivacySettingsScreen(
           label = stringResource(R.string.preferences__if_typing_indicators_are_disabled_you_wont_be_able_to_see_typing_indicators),
           onCheckChanged = { onEvent(PrivacySettingsEvent.TypingIndicatorsToggled(it)) },
           modifier = Modifier.testTag(PrivacySettingsTestTags.ROW_TYPING_INDICATORS)
+        )
+      }
+
+      item {
+        Rows.ToggleRow(
+          checked = state.blockUnknown,
+          text = stringResource(R.string.preferences__block_unknown),
+          label = stringResource(R.string.preferences__block_users_youve_never_been_in_contact_with_and_who_are_not_saved_in_your_contacts),
+          onCheckChanged = { onEvent(PrivacySettingsEvent.BlockUnknownToggled(it)) },
+          modifier = Modifier.testTag(PrivacySettingsTestTags.ROW_BLOCK_UNKNOWN)
         )
       }
 

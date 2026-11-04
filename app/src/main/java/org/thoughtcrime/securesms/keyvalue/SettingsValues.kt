@@ -32,6 +32,8 @@ class SettingsValues internal constructor(store: KeyValueStore, private val cont
 
     const val LOGGING_ENABLED = "settings.logging.enabled"
 
+    const val BLOCK_UNKNOWN = "settings.block_unknown"
+
     const val PREFER_SYSTEM_CONTACT_PHOTOS = "settings.prefer.system.contact.photos"
 
     private const val SIGNAL_BACKUP_DIRECTORY = "settings.signal.backup.directory"
@@ -189,6 +191,12 @@ class SettingsValues internal constructor(store: KeyValueStore, private val cont
    * statement at the [Log] layer and is intended to be paired with [Log.wipeLogs].
    */
   var isLoggingEnabled: Boolean by booleanValue(LOGGING_ENABLED, true)
+
+  /**
+   * Whether messages and calls from senders who are neither saved contacts nor already sharing their profile
+   * should be blocked. Group members who share a group profile with the user remain allowed.
+   */
+  var isBlockUnknownEnabled: Boolean by booleanValue(BLOCK_UNKNOWN, false)
 
   var isAutoplayStickersAndGifsEnabled: Boolean by booleanValue(AUTOPLAY_STICKERS_AND_GIFS, true)
 

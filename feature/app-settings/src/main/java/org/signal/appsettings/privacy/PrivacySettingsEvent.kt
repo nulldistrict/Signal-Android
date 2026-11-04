@@ -33,6 +33,9 @@ sealed interface PrivacySettingsEvent {
   /** The user flipped the typing indicators switch. */
   data class TypingIndicatorsToggled(val enabled: Boolean) : PrivacySettingsEvent
 
+  /** The user flipped the block unknown senders switch. */
+  data class BlockUnknownToggled(val enabled: Boolean) : PrivacySettingsEvent
+
   /** The user tapped the default disappearing messages timer row. */
   data object DefaultTimerClicked : PrivacySettingsEvent
 

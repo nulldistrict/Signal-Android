@@ -49,6 +49,12 @@ object PrivacySettingsRepository {
     }
   }
 
+  fun isBlockUnknownEnabled(): Boolean = SignalStore.settings.isBlockUnknownEnabled
+
+  fun setBlockUnknownEnabled(enabled: Boolean) {
+    SignalStore.settings.isBlockUnknownEnabled = enabled
+  }
+
   fun getUniversalExpireTimer(): Duration = SignalStore.settings.universalExpireTimer.seconds
 
   fun isScreenLockEnabled(): Boolean = SignalStore.settings.screenLockEnabled

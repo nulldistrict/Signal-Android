@@ -66,6 +66,11 @@ class PrivacySettingsViewModel(
         refresh()
       }
 
+      is PrivacySettingsEvent.BlockUnknownToggled -> {
+        PrivacySettingsRepository.setBlockUnknownEnabled(event.enabled)
+        refresh()
+      }
+
       PrivacySettingsEvent.DefaultTimerClicked -> parentEventEmitter.navigateTo(AppSettingsRoute.PrivacyRoute.ExpiringMessages)
 
       PrivacySettingsEvent.DisablePassphraseClicked -> _state.update { it.copy(dialog = Dialog.ConfirmDisablePassphrase) }
@@ -151,6 +156,7 @@ class PrivacySettingsViewModel(
         hasPhoneNumber = PrivacySettingsRepository.hasPhoneNumber(),
         readReceipts = PrivacySettingsRepository.isReadReceiptsEnabled(),
         typingIndicators = PrivacySettingsRepository.isTypingIndicatorsEnabled(),
+        blockUnknown = PrivacySettingsRepository.isBlockUnknownEnabled(),
         universalExpireTimer = PrivacySettingsRepository.getUniversalExpireTimer(),
         isObsoletePassphraseEnabled = PrivacySettingsRepository.isObsoletePassphraseEnabled(),
         isObsoletePassphraseTimeoutEnabled = PrivacySettingsRepository.isObsoletePassphraseTimeoutEnabled(),

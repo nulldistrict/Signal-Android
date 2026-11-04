@@ -72,7 +72,7 @@ Verified against Molly `892d6264ba` and compared with Signal `515db93fb4`.
 | Secure RAM wiper | NEEDS_PORT | Medium | High |
 | Automatic application lock (passphrase/biometric extensions) | NEEDS_PORT | Medium | High |
 | UnifiedPush notifications | NEEDS_PORT | High | Medium |
-| Unknown-contact blocking | NEEDS_PORT | Low | Medium |
+| Unknown-contact blocking | TESTED | Low | Medium |
 | Custom backup scheduling and retention | NEEDS_PORT | Low–Medium | Medium |
 | SOCKS5 / Tor / Orbot proxy | NEEDS_PORT | High | High |
 | Optional debug logging | TESTED | Low | Low |
@@ -130,10 +130,16 @@ Verified against Molly `892d6264ba` and compared with Signal `515db93fb4`.
 
 #### Unknown-contact blocking
 
-- Status: `NEEDS_PORT`
+- Status: `TESTED` (unit tests and app compilation pass; on-device verification pending)
 - Molly sources: `util/TextSecurePreferences.java` (`BLOCK_UNKNOWN` / `pref_block_unknown`, default `false`), `messages/MessageContentProcessor.kt`, `components/settings/app/privacy/PrivacySettingsFragment.kt` / `PrivacySettingsViewModel.kt`
 - Current Signal: no equivalent setting found; Signal has message requests but no automatic unknown-sender blocking toggle.
-- Security/privacy: Medium. Affects message acceptance only; must not affect existing trusted conversations or group membership.
+- Implementation:
+  - `SettingsValues.isBlockUnknownEnabled` (`settings.block_unknown`, default `false`).
+  - `MessageContentProcessor.shouldBlockSender` centralizes the policy: explicit blocks always win; saved contacts and profile-sharing senders are allowed; when the setting is off everything else is allowed; when on, senders whose profile is shared through a group are still allowed. Applied to data, edit, decryption-error, call, typing, story and unknown-group paths.
+  - `RecipientUtil.isProfileSharedViaGroup` made public for reuse.
+  - Privacy settings toggle plus `Row` test tag; privacy repository getter/setter and view-model state/event.
+- Security/privacy: Medium. Affects message acceptance only; existing trusted conversations, saved contacts, profile-sharing senders and shared-group members are unaffected. The check runs on the message-processing worker thread because the group lookup reads the database.
+- Tests: `PrivacySettingsViewModelTest` (toggle persists through the repository), `PrivacySettingsScreenTest` (toggle emits `BlockUnknownToggled`). The new row shifted the lazy list, so an existing screen-lock assertion was made row-specific instead of matching any "Off" text.
 - Complexity: Low.
 
 #### Custom backup scheduling and retention

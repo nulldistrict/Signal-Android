@@ -55,6 +55,7 @@ class PrivacySettingsViewModelTest {
 
   private var readReceipts = false
   private var typingIndicators = false
+  private var blockUnknown = false
   private var screenSecurity = false
   private var incognitoKeyboard = false
   private var paymentLock = false
@@ -77,6 +78,8 @@ class PrivacySettingsViewModelTest {
     coEvery { PrivacySettingsRepository.setReadReceiptsEnabled(any()) } answers { readReceipts = firstArg() }
     every { PrivacySettingsRepository.isTypingIndicatorsEnabled() } answers { typingIndicators }
     coEvery { PrivacySettingsRepository.setTypingIndicatorsEnabled(any()) } answers { typingIndicators = firstArg() }
+    every { PrivacySettingsRepository.isBlockUnknownEnabled() } answers { blockUnknown }
+    every { PrivacySettingsRepository.setBlockUnknownEnabled(any()) } answers { blockUnknown = firstArg() }
     every { PrivacySettingsRepository.getUniversalExpireTimer() } returns 1.days
     every { PrivacySettingsRepository.isScreenLockEnabled() } returns false
     every { PrivacySettingsRepository.getScreenLockTimeout() } returns Duration.ZERO
@@ -176,6 +179,16 @@ class PrivacySettingsViewModelTest {
 
     coVerify { PrivacySettingsRepository.setTypingIndicatorsEnabled(true) }
     assertThat(viewModel.state.value.typingIndicators).isTrue()
+  }
+
+  @Test
+  fun `BlockUnknownToggled stores the setting`() = runTest(testDispatcher) {
+    val viewModel = createViewModel()
+
+    viewModel.onEvent(PrivacySettingsEvent.BlockUnknownToggled(true))
+
+    verify { PrivacySettingsRepository.setBlockUnknownEnabled(true) }
+    assertThat(viewModel.state.value.blockUnknown).isTrue()
   }
 
   @Test

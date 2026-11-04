@@ -16,6 +16,7 @@ data class PrivacySettingsState(
   val blockedCount: Int = 0,
   val readReceipts: Boolean = false,
   val typingIndicators: Boolean = false,
+  val blockUnknown: Boolean = false,
   val universalExpireTimer: Duration = Duration.ZERO,
   val isObsoletePassphraseEnabled: Boolean = false,
   val isObsoletePassphraseTimeoutEnabled: Boolean = false,

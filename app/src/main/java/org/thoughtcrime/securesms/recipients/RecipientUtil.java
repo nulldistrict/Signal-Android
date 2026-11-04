@@ -417,7 +417,7 @@ public class RecipientUtil {
   }
 
   @WorkerThread
-  private static boolean isProfileSharedViaGroup(@NonNull Recipient recipient) {
+  public static boolean isProfileSharedViaGroup(@NonNull Recipient recipient) {
     return SignalDatabase.groups().getPushGroupsContainingMember(recipient.getId()).stream()
                          .anyMatch(group -> Recipient.resolved(group.getRecipientId()).isProfileSharing());
   }

@@ -9,6 +9,7 @@ import android.app.Application
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.platform.LocalInspectionMode
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.assertTextContains
 import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
@@ -102,6 +103,16 @@ class PrivacySettingsScreenTest {
   }
 
   @Test
+  fun `toggling block unknown emits BlockUnknownToggled`() {
+    setContent(PrivacySettingsState(blockUnknown = false))
+
+    scrollTo(PrivacySettingsTestTags.ROW_BLOCK_UNKNOWN)
+    composeTestRule.onNodeWithTag(PrivacySettingsTestTags.ROW_BLOCK_UNKNOWN).performClick()
+
+    assertThat(interactionEvents).containsExactly(PrivacySettingsEvent.BlockUnknownToggled(true))
+  }
+
+  @Test
   fun `clicking the default timer row emits DefaultTimerClicked`() {
     setContent(PrivacySettingsState())
 
@@ -144,7 +155,7 @@ class PrivacySettingsScreenTest {
     setContent(PrivacySettingsState(isDeviceSecure = false, screenLock = true))
 
     scrollTo(PrivacySettingsTestTags.ROW_SCREEN_LOCK)
-    composeTestRule.onNodeWithText("Off").assertIsDisplayed()
+    composeTestRule.onNodeWithTag(PrivacySettingsTestTags.ROW_SCREEN_LOCK).assertTextContains("Off")
   }
 
   @Test

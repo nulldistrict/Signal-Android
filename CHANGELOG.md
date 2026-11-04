@@ -16,6 +16,7 @@ Version numbers and release dates must reflect actual releases.
 - Verified Signal-JW candidate inventory, all marked `AWAITING_APPROVAL`.
 - Established reference snapshot: Molly `892d6264ba` (Signal 8.19.2 base), Signal-JW `v8.33.2.0-JW` (`da443926af`, Signal 8.33.2 base).
 - Molly feature: optional debug logging, toggled from Help settings. Disabling drops new log output and deletes existing logs.
+- Molly feature: unknown-contact blocking, toggled from Privacy settings. Explicitly blocked senders are always blocked; saved contacts, profile-sharing senders and shared-group members remain allowed.
 
 ### Changed
 
@@ -33,6 +34,7 @@ Version numbers and release dates must reflect actual releases.
 - Audit identified the security-sensitive porting areas: passphrase-derived database secret, secure RAM wiping, application lock, proxy/Tor DNS-leak handling, plaintext backup, and deletion/view-once behavior.
 - SMS and WhatsApp database import confirmed permanently excluded.
 - Debug logging can now be fully disabled by the user, and disabling it clears persisted logs.
+- Unknown-contact blocking is local-only (`settings.block_unknown`) and does not alter existing contacts, trusted conversations or group membership. Group-profile sharing remains an allow-list exception.
 
 ## Release History
 

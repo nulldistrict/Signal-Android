@@ -44,6 +44,7 @@ import org.thoughtcrime.securesms.messages.SignalServiceProtoUtil.toDecryptionEr
 import org.thoughtcrime.securesms.mms.IncomingMessage
 import org.thoughtcrime.securesms.notifications.v2.ConversationId
 import org.thoughtcrime.securesms.recipients.Recipient
+import org.thoughtcrime.securesms.recipients.RecipientUtil
 import org.thoughtcrime.securesms.util.EarlyMessageCacheEntry
 import org.thoughtcrime.securesms.util.RemoteConfig
 import org.thoughtcrime.securesms.util.SignalLocalMetrics
@@ -155,14 +156,14 @@ open class MessageContentProcessor(private val context: Context) {
         return if (editDataMessage != null) {
           shouldIgnoreDataMessage(editDataMessage, senderRecipient, threadRecipient)
         } else {
-          senderRecipient.isBlocked
+          shouldBlockSender(senderRecipient)
         }
       } else if (content.decryptionErrorMessage != null) {
-        return senderRecipient.isBlocked
+        return shouldBlockSender(senderRecipient)
       } else if (content.callMessage != null) {
-        return senderRecipient.isBlocked
+        return shouldBlockSender(senderRecipient)
       } else if (content.typingMessage != null) {
-        if (senderRecipient.isBlocked) {
+        if (shouldBlockSender(senderRecipient)) {
           return true
         }
 
@@ -180,7 +181,7 @@ open class MessageContentProcessor(private val context: Context) {
         return if (threadRecipient.isGroup && threadRecipient.isBlocked) {
           true
         } else {
-          senderRecipient.isBlocked
+          shouldBlockSender(senderRecipient)
         }
       }
       return false
@@ -191,7 +192,7 @@ open class MessageContentProcessor(private val context: Context) {
         true
       } else if (threadRecipient.isGroup) {
         if (threadRecipient.isUnknownGroup) {
-          return senderRecipient.isBlocked
+          return shouldBlockSender(senderRecipient)
         }
 
         val isTextMessage = message.body != null
@@ -201,11 +202,24 @@ open class MessageContentProcessor(private val context: Context) {
         val isContentMessage = !isGv2Update && !isExpireMessage && (isTextMessage || isMediaMessage)
         val isGroupActive = threadRecipient.isActiveGroup
 
-        isContentMessage && !isGroupActive || senderRecipient.isBlocked && !isGv2Update
+        isContentMessage && !isGroupActive || shouldBlockSender(senderRecipient) && !isGv2Update
       } else {
-        senderRecipient.isBlocked
+        shouldBlockSender(senderRecipient)
       }
     }
+
+    /**
+     * Honors explicit blocks as well as the optional "block unknown" setting. Saved contacts and senders who are
+     * already sharing their profile are always allowed in, as are senders whose profile is shared through a group.
+     */
+    private fun shouldBlockSender(senderRecipient: Recipient): Boolean =
+      senderRecipient.isBlocked || when {
+        senderRecipient.isSystemContact -> false
+        senderRecipient.isProfileSharing -> false
+        !SignalStore.settings.isBlockUnknownEnabled -> false
+        RecipientUtil.isProfileSharedViaGroup(senderRecipient) -> false
+        else -> true
+      }
 
     @Throws(BadGroupIdException::class)
     private fun handlePendingRetry(pending: PendingRetryReceiptModel?, timestamp: Long, destination: Recipient): Long {
