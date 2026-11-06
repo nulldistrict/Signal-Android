@@ -76,7 +76,7 @@ Verified against Molly `892d6264ba` and compared with Signal `515db93fb4`.
 | Custom backup scheduling and retention | NEEDS_PORT | Low–Medium | Medium |
 | SOCKS5 / Tor / Orbot proxy | NEEDS_PORT | High | High |
 | Optional debug logging | TESTED | Low | Low |
-| Manual device linking without QR scan | NEEDS_PORT | Low | Medium |
+| Manual device linking without QR scan | TESTED | Low | Medium |
 | Minor WebView / share / logging hardening | NEEDS_PORT | Low | Low–Medium |
 | Disappearing call history | EXISTS_SIGNAL | — | — |
 | Multi-device / tablet linking | EXISTS_SIGNAL | — | — |
@@ -178,11 +178,17 @@ Verified against Molly `892d6264ba` and compared with Signal `515db93fb4`.
 
 #### Manual device linking without QR scan
 
-- Status: `NEEDS_PORT`
+- Status: `TESTED` (QR-link validation tests and app compilation pass; on-device linking flow pending)
 - Molly sources: `LinkDeviceManualEntryScreen.kt` (commits `05805ddc7f`, `edaf97811a`)
 - Current Signal: no manual-entry equivalent found.
-- Behavior: lets the user type the linking URI/device identifier instead of scanning a QR code.
-- Security implications: Medium. Input validation and the existing device-link authentication must remain unchanged.
+- Behavior: the link-device intro sheet now offers "Scan QR code" and "Link without scanning". The manual screen parses and validates the pasted `sgnl://linkdevice?uuid=…&pub_key=…` URI, disables submission until valid, and then runs the normal link flow without sync.
+- Implementation:
+  - New `LinkDeviceManualEntryScreen` and a `linkWithoutQrCode` state flag in `LinkDeviceSettingsState` / `LinkDeviceViewModel`.
+  - `LinkDeviceIntroBottomSheet` now navigates into the scanner or the manual screen; the QR screen itself no longer auto-opens the intro sheet.
+  - Navigation updated so the intro sheet is removed from the back stack when continuing to device linking.
+  - Reuses `LinkDeviceRepository.isValidQr` and the existing link/error handling; no new network or key-handling path.
+- Security implications: Medium. Validation is unchanged from the QR path, and the manual entry is only a UI alternative. The pasted link contains the same public linking payload as the QR code; it is not logged.
+- Tests: `LinkDeviceRepositoryTest` covers acceptance of a complete link and rejection of missing fields or a different scheme.
 - Complexity: Low.
 
 #### Minor hardening

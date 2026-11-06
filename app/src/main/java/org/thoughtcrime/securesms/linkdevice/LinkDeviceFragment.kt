@@ -103,7 +103,7 @@ class LinkDeviceFragment : ComposeFragment() {
 
     biometricDeviceLockLauncher = registerForActivityResult(BiometricDeviceLockContract()) { result: Int ->
       if (result == BiometricDeviceAuthentication.AUTHENTICATED) {
-        findNavController().safeNavigate(R.id.action_linkDeviceFragment_to_addLinkDeviceFragment)
+        findNavController().safeNavigate(R.id.action_linkDeviceFragment_to_linkDeviceIntroBottomSheet)
       }
     }
 
@@ -243,11 +243,11 @@ class LinkDeviceFragment : ComposeFragment() {
       DevicePinAuthEducationSheet.show(getString(R.string.LinkDeviceFragment__before_linking), parentFragmentManager)
       parentFragmentManager.setFragmentResultListener(DevicePinAuthEducationSheet.REQUEST_KEY, viewLifecycleOwner) { _, _ ->
         if (!biometricAuth.authenticate(requireContext(), true) { biometricDeviceLockLauncher.launch(getString(R.string.LinkDeviceFragment__unlock_to_link)) }) {
-          this.safeNavigate(R.id.action_linkDeviceFragment_to_addLinkDeviceFragment)
+          this.safeNavigate(R.id.action_linkDeviceFragment_to_linkDeviceIntroBottomSheet)
         }
       }
     } else if (!biometricAuth.authenticate(requireContext(), true) { biometricDeviceLockLauncher.launch(getString(R.string.LinkDeviceFragment__unlock_to_link)) }) {
-      this.safeNavigate(R.id.action_linkDeviceFragment_to_addLinkDeviceFragment)
+      this.safeNavigate(R.id.action_linkDeviceFragment_to_linkDeviceIntroBottomSheet)
     }
   }
 
@@ -269,7 +269,7 @@ class LinkDeviceFragment : ComposeFragment() {
 
     override fun onAuthenticationSucceeded(result: BiometricPrompt.AuthenticationResult) {
       Log.i(TAG, "Authentication succeeded")
-      findNavController().safeNavigate(R.id.action_linkDeviceFragment_to_addLinkDeviceFragment)
+      findNavController().safeNavigate(R.id.action_linkDeviceFragment_to_linkDeviceIntroBottomSheet)
     }
 
     override fun onAuthenticationFailed() {

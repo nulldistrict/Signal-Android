@@ -391,12 +391,8 @@
         android:name="org.thoughtcrime.securesms.linkdevice.LinkDeviceFragment"
         android:label="link_device_fragment">
         <action
-            android:id="@+id/action_linkDeviceFragment_to_addLinkDeviceFragment"
-            app:destination="@id/addLinkDeviceFragment"
-            app:enterAnim="@anim/fragment_open_enter"
-            app:exitAnim="@anim/fragment_open_exit"
-            app:popEnterAnim="@anim/fragment_close_enter"
-            app:popExitAnim="@anim/fragment_close_exit" />
+            android:id="@+id/action_linkDeviceFragment_to_linkDeviceIntroBottomSheet"
+            app:destination="@id/linkDeviceIntroBottomSheet" />
         <action
             android:id="@+id/action_linkDeviceFragment_to_editDeviceNameFragment"
             app:destination="@id/editDeviceNameFragment"
@@ -441,7 +437,17 @@
     </fragment>
     <dialog
         android:id="@+id/linkDeviceIntroBottomSheet"
-        android:name="org.thoughtcrime.securesms.linkdevice.LinkDeviceIntroBottomSheet" />
+        android:name="org.thoughtcrime.securesms.linkdevice.LinkDeviceIntroBottomSheet">
+        <action
+            android:id="@+id/action_linkDeviceIntroBottomSheet_to_addLinkDeviceFragment"
+            app:destination="@id/addLinkDeviceFragment"
+            app:popUpTo="@id/linkDeviceIntroBottomSheet"
+            app:popUpToInclusive="true"
+            app:enterAnim="@anim/fragment_open_enter"
+            app:exitAnim="@anim/fragment_open_exit"
+            app:popEnterAnim="@anim/fragment_close_enter"
+            app:popExitAnim="@anim/fragment_close_exit" />
+    </dialog>
     <dialog
         android:id="@+id/linkDeviceSyncBottomSheet"
         android:name="org.thoughtcrime.securesms.linkdevice.LinkDeviceSyncBottomSheet" />

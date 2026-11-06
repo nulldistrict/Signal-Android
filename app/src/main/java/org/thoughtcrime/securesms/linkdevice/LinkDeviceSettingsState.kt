@@ -17,6 +17,7 @@ data class LinkDeviceSettingsState(
   val linkUri: Uri? = null,
   val linkDeviceResult: LinkDeviceResult = LinkDeviceResult.None,
   val seenQrEducationSheet: Boolean = SignalStore.uiHints.hasSeenLinkDeviceQrEducationSheet() || SignalStore.account.isMultiDevice,
+  val linkWithoutQrCode: Boolean = false,
   val bottomSheetVisible: Boolean = false,
   val deviceToEdit: Device? = null,
   val shouldCancelArchiveUpload: Boolean = false,

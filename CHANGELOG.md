@@ -17,6 +17,7 @@ Version numbers and release dates must reflect actual releases.
 - Established reference snapshot: Molly `892d6264ba` (Signal 8.19.2 base), Signal-JW `v8.33.2.0-JW` (`da443926af`, Signal 8.33.2 base).
 - Molly feature: optional debug logging, toggled from Help settings. Disabling drops new log output and deletes existing logs.
 - Molly feature: unknown-contact blocking, toggled from Privacy settings. Explicitly blocked senders are always blocked; saved contacts, profile-sharing senders and shared-group members remain allowed.
+- Molly feature: link a device without scanning a QR code. The intro sheet offers manual entry of the linking URI and keeps the existing validation and link flow.
 
 ### Changed
 

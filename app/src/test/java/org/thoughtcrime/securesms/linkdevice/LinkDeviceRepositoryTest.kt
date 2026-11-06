@@ -6,6 +6,7 @@
 package org.thoughtcrime.securesms.linkdevice
 
 import android.app.Application
+import android.net.Uri
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
@@ -52,6 +53,17 @@ class LinkDeviceRepositoryTest {
   @After
   fun tearDown() {
     SignalNetwork.init(SignalNetwork())
+  }
+
+  @Test
+  fun `isValidQr accepts a complete device link`() {
+    assertTrue(LinkDeviceRepository.isValidQr(Uri.parse("sgnl://linkdevice?uuid=abc&pub_key=def")))
+  }
+
+  @Test
+  fun `isValidQr rejects links that are missing fields or use another scheme`() {
+    assertEquals(false, LinkDeviceRepository.isValidQr(Uri.parse("sgnl://linkdevice?uuid=abc")))
+    assertEquals(false, LinkDeviceRepository.isValidQr(Uri.parse("https://linkdevice?uuid=abc&pub_key=def")))
   }
 
   @Test
