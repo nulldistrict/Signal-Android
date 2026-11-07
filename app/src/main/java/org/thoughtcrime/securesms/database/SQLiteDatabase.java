@@ -16,15 +16,12 @@ import net.zetetic.database.sqlcipher.SQLiteTransactionListener;
 
 import org.signal.core.util.ThreadUtil;
 import org.signal.core.util.logging.Log;
-import org.signal.core.util.tracing.Tracer;
 
 import java.io.IOException;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
-import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 
@@ -44,13 +41,7 @@ public class SQLiteDatabase implements SupportSQLiteDatabase {
   public static final int CONFLICT_REPLACE  = 5;
   public static final int CONFLICT_NONE     = 0;
 
-  private static final String KEY_QUERY  = "query";
-  private static final String KEY_TABLE  = "table";
-  private static final String KEY_THREAD = "thread";
-  private static final String NAME_LOCK  = "LOCK";
-
   private final net.zetetic.database.sqlcipher.SQLiteDatabase wrapped;
-  private final Tracer                                        tracer;
 
   private static final ThreadLocal<Long>          TRANSACTION_HOLD_START_NS = new ThreadLocal<>();
   private static final ThreadLocal<Set<Runnable>> PENDING_POST_SUCCESSFUL_TRANSACTION_TASKS;
@@ -65,21 +56,16 @@ public class SQLiteDatabase implements SupportSQLiteDatabase {
 
   public SQLiteDatabase(net.zetetic.database.sqlcipher.SQLiteDatabase wrapped) {
     this.wrapped = wrapped;
-    this.tracer  = Tracer.getInstance();
   }
 
   private void traceLockStart() {
-    tracer.start(NAME_LOCK, Tracer.TrackId.DB_LOCK, KEY_THREAD, Thread.currentThread().getName());
   }
 
   private void traceLockEnd() {
-    tracer.end(NAME_LOCK, Tracer.TrackId.DB_LOCK);
   }
 
   private void trace(String methodName, Runnable runnable) {
-    tracer.start(methodName);
     runnable.run();
-    tracer.end(methodName);
   }
 
   private void traceSql(String methodName, String query, boolean locked, Runnable returnable) {
@@ -87,13 +73,11 @@ public class SQLiteDatabase implements SupportSQLiteDatabase {
       traceLockStart();
     }
 
-    tracer.start(methodName, KEY_QUERY, query);
     long startNs = locked ? System.nanoTime() : 0L;
     returnable.run();
     if (locked) {
       warnIfSlowDirectWrite(methodName, null, query, startNs);
     }
-    tracer.end(methodName);
 
     if (locked) {
       traceLockEnd();
@@ -109,15 +93,6 @@ public class SQLiteDatabase implements SupportSQLiteDatabase {
       traceLockStart();
     }
 
-    Map<String, String> params = new HashMap<>();
-    if (query != null) {
-      params.put(KEY_QUERY, query);
-    }
-    if (table != null) {
-      params.put(KEY_TABLE, table);
-    }
-
-    tracer.start(methodName, params);
     long startNs = System.nanoTime();
     E result = returnable.run();
     if (result instanceof Cursor) {
@@ -129,7 +104,6 @@ public class SQLiteDatabase implements SupportSQLiteDatabase {
     } else {
       warnIfSlowQuery(methodName, table, query, startNs);
     }
-    tracer.end(methodName);
 
     if (locked) {
       traceLockEnd();

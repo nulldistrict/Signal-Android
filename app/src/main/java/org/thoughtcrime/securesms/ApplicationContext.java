@@ -43,7 +43,6 @@ import org.signal.core.util.crypto.AttachmentSecretProvider;
 import org.signal.core.util.logging.AndroidLogger;
 import org.signal.core.util.logging.Log;
 import org.signal.core.util.logging.Scrubber;
-import org.signal.core.util.tracing.Tracer;
 import org.signal.glide.SignalGlideCodecs;
 import org.signal.libsignal.net.ChatServiceException;
 import org.signal.libsignal.protocol.logging.SignalProtocolLoggerProvider;
@@ -173,7 +172,6 @@ public class ApplicationContext extends Application implements AppForegroundObse
   public void onCreate() {
     PartAuthorityUris.init(BuildConfig.APPLICATION_ID);
 
-    Tracer.getInstance().start("Application#onCreate()");
     AppStartup.getInstance().onApplicationCreate();
     SignalLocalMetrics.ColdStart.start();
 
@@ -215,7 +213,6 @@ public class ApplicationContext extends Application implements AppForegroundObse
               .addBlocking("remote-config", RemoteConfig::init)
               .addBlocking("ring-rtc", this::initializeRingRtc)
               .addBlocking("glide", () -> SignalGlideModule.setRegisterGlideComponents(new SignalGlideComponents()))
-              .addBlocking("tracer", this::initializeTracer)
               .addNonBlocking(() -> RegistrationUtil.maybeMarkRegistrationComplete())
               .addNonBlocking(() -> Glide.get(this))
               .addNonBlocking(this::cleanAvatarStorage)
@@ -269,7 +266,6 @@ public class ApplicationContext extends Application implements AppForegroundObse
 
     Log.d(TAG, "onCreate() took " + (System.currentTimeMillis() - startTime) + " ms");
     SignalLocalMetrics.ColdStart.onApplicationCreateFinished();
-    Tracer.getInstance().end("Application#onCreate()");
   }
 
   @Override
@@ -538,12 +534,6 @@ public class ApplicationContext extends Application implements AppForegroundObse
     KeepMessagesDuration keepMessagesDuration = SignalStore.settings().getKeepMessagesDuration();
     if (keepMessagesDuration != KeepMessagesDuration.FOREVER) {
       AppDependencies.getTrimThreadsByDateManager().scheduleIfNecessary();
-    }
-  }
-
-  private void initializeTracer() {
-    if (RemoteConfig.internalUser()) {
-      Tracer.getInstance().setMaxBufferSize(35_000);
     }
   }
 

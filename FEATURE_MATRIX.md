@@ -77,7 +77,7 @@ Verified against Molly `892d6264ba` and compared with Signal `515db93fb4`.
 | SOCKS5 / Tor / Orbot proxy | NEEDS_PORT | High | High |
 | Optional debug logging | TESTED | Low | Low |
 | Manual device linking without QR scan | TESTED | Low | Medium |
-| Minor WebView / share / logging hardening | NEEDS_PORT | Low | Low–Medium |
+| Minor WebView / share / logging hardening | TESTED | Low | Low–Medium |
 | Disappearing call history | EXISTS_SIGNAL | — | — |
 | Multi-device / tablet linking | EXISTS_SIGNAL | — | — |
 | Alternative application icons | EXISTS_SIGNAL | — | — |
@@ -199,9 +199,13 @@ Verified against Molly `892d6264ba` and compared with Signal `515db93fb4`.
 
 #### Minor hardening
 
-- Status: `NEEDS_PORT` (individually optional)
-- Items: disable Google Safe Browsing in WebViews (Molly `ddc05b14ae`), remove the share-selection recipient limit, remove the debuglog Tracer.
-- Security implications: Low–Medium. Each item needs its own review; some change upstream behavior and should be opt-in.
+- Status: `TESTED` (compilation and relevant unit test pass; on-device behavior verification pending)
+- Items and implementation:
+  - Disable Google Safe Browsing in WebViews (Molly `ddc05b14ae`): added `android.webkit.WebView.EnableSafeBrowsing=false` to the manifest.
+  - Remove the share-selection recipient limit (Molly `3ad11a8fd6`): `RemoteConfig.shareSelectionLimit` now returns `SelectionLimits.NO_LIMITS` instead of the remote-configured five-recipient cap.
+  - Remove the debug log Tracer (Molly `5758f942ca`, adapted): removed app-side Tracer instrumentation from startup, activities, SQLite tracing, jobs, and debug-log serialization. The core `Tracer` class is retained because the internal Spinner debug tool still references it. Debug log zips/uploads now contain no trace payload, and `signal.trace` is empty.
+- Security implications: Medium trade-off. Safe Browsing no longer warns about phishing/malware in the payment, captcha and debug WebViews; this matches Molly's de-Googled behavior but reduces a Google-provided safety layer. Share and logging changes do not affect cryptography, authentication, or message transport. Raw SQL and method-trace data can no longer leave the device through debug logs.
+- Tests: `RemoteConfig_StaticValuesTest` was updated because `shareSelectionLimit` is now intentionally static, and it passes.
 - Complexity: Low.
 
 #### Disappearing call history

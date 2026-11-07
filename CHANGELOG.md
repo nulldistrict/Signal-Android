@@ -19,6 +19,7 @@ Version numbers and release dates must reflect actual releases.
 - Molly feature: unknown-contact blocking, toggled from Privacy settings. Explicitly blocked senders are always blocked; saved contacts, profile-sharing senders and shared-group members remain allowed.
 - Molly feature: link a device without scanning a QR code. The intro sheet offers manual entry of the linking URI and keeps the existing validation and link flow.
 - Molly feature: configurable local backup frequency (daily/weekly) and retention count (1–10), with pruning applied to both folder and legacy backup formats.
+- Molly hardening: Safe Browsing disabled for in-app WebViews, the remote share-recipient limit removed, and app-side debug-log Tracer instrumentation removed so trace data is not included in debug logs.
 
 ### Changed
 
@@ -37,6 +38,7 @@ Version numbers and release dates must reflect actual releases.
 - SMS and WhatsApp database import confirmed permanently excluded.
 - Debug logging can now be fully disabled by the user, and disabling it clears persisted logs.
 - Unknown-contact blocking is local-only (`settings.block_unknown`) and does not alter existing contacts, trusted conversations or group membership. Group-profile sharing remains an allow-list exception.
+- Debug logs no longer include app instrumentation traces; the in-app WebViews no longer use Google Safe Browsing, which is a privacy/security trade-off documented in `FEATURE_MATRIX.md`.
 
 ## Release History
 

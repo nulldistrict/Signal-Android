@@ -15,7 +15,6 @@ import androidx.fragment.app.Fragment;
 import org.signal.core.util.AppForegroundObserver;
 import org.signal.core.util.eventbus.EventBus;
 import org.signal.core.util.logging.Log;
-import org.signal.core.util.tracing.Tracer;
 import org.signal.devicetransfer.TransferStatus;
 import org.signal.registration.RegistrationActivity;
 import org.signal.registration.RegistrationRoute;
@@ -67,7 +66,6 @@ public abstract class PassphraseRequiredActivity extends BaseActivity implements
 
   @Override
   protected final void onCreate(Bundle savedInstanceState) {
-    Tracer.getInstance().start(Log.tag(getClass()) + "#onCreate()");
     AppStartup.getInstance().onCriticalRenderEventStart();
     this.networkAccess = AppDependencies.getSignalServiceNetworkAccess();
     onPreCreate();
@@ -83,7 +81,6 @@ public abstract class PassphraseRequiredActivity extends BaseActivity implements
     }
 
     AppStartup.getInstance().onCriticalRenderEventEnd();
-    Tracer.getInstance().end(Log.tag(getClass()) + "#onCreate()");
   }
 
   protected void onPreCreate() {}

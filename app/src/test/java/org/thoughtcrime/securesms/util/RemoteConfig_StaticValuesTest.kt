@@ -60,6 +60,8 @@ class RemoteConfig_StaticValuesTest {
       "overridableConfigs",
       "overrides",
       "REMOTE_VALUES",
+      // Molly hardening: sharing intentionally ignores the remote recipient limit.
+      "shareSelectionLimit",
       // TODO Remove once the app settings navigation override button is removed.
       "APP_SETTINGS_NAVIGATION_KEY"
     )
