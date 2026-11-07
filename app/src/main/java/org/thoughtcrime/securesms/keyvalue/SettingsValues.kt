@@ -50,6 +50,8 @@ class SettingsValues internal constructor(store: KeyValueStore, private val cont
     const val BACKUPS_ENABLED = "settings.backups.enabled"
     const val BACKUPS_SCHEDULE_HOUR = "settings.backups.schedule.hour"
     const val BACKUPS_SCHEDULE_MINUTE = "settings.backups.schedule.minute"
+    const val BACKUPS_INTERVAL_DAYS = "settings.backups.interval.days"
+    const val BACKUPS_MAX_FILES = "settings.backups.max.files"
     const val SIGNAL_BACKUPS_SCHEDULE_HOUR = "settings.signal.backups.schedule.hour"
     const val SIGNAL_BACKUPS_SCHEDULE_MINUTE = "settings.signal.backups.schedule.minute"
     const val SMS_DELIVERY_REPORTS_ENABLED = "settings.sms.delivery.reports.enabled"
@@ -107,6 +109,10 @@ class SettingsValues internal constructor(store: KeyValueStore, private val cont
 
     const val BACKUP_DEFAULT_HOUR = 2
     const val BACKUP_DEFAULT_MINUTE = 0
+    const val BACKUP_DEFAULT_INTERVAL_DAYS = 1
+    const val BACKUP_DEFAULT_MAX_FILES = 2
+    const val BACKUP_MAX_FILES_MIN = 1
+    const val BACKUP_MAX_FILES_MAX = 10
   }
 
   private val configurationSettingChanged = SingleLiveEvent<String>()
@@ -308,6 +314,24 @@ class SettingsValues internal constructor(store: KeyValueStore, private val cont
     putInteger(BACKUPS_SCHEDULE_HOUR, hour)
     putInteger(BACKUPS_SCHEDULE_MINUTE, minute)
   }
+
+  /**
+   * How often a local backup is created, in days. Only daily (1) and weekly (7) are exposed in the UI.
+   */
+  var backupIntervalDays: Int
+    get() = getInteger(BACKUPS_INTERVAL_DAYS, BACKUP_DEFAULT_INTERVAL_DAYS).coerceIn(1, 7)
+    set(value) {
+      putInteger(BACKUPS_INTERVAL_DAYS, value.coerceIn(1, 7))
+    }
+
+  /**
+   * Number of local backup snapshots to retain after a successful backup.
+   */
+  var backupMaxFiles: Int
+    get() = getInteger(BACKUPS_MAX_FILES, BACKUP_DEFAULT_MAX_FILES).coerceIn(BACKUP_MAX_FILES_MIN, BACKUP_MAX_FILES_MAX)
+    set(value) {
+      putInteger(BACKUPS_MAX_FILES, value.coerceIn(BACKUP_MAX_FILES_MIN, BACKUP_MAX_FILES_MAX))
+    }
 
   private fun initSignalBackupsSchedule() {
     setSignalBackupSchedule(Random().nextInt(5) + 1, Random().nextInt(12) * 5)

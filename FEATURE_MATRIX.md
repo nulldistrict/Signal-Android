@@ -73,7 +73,7 @@ Verified against Molly `892d6264ba` and compared with Signal `515db93fb4`.
 | Automatic application lock (passphrase/biometric extensions) | NEEDS_PORT | Medium | High |
 | UnifiedPush notifications | NEEDS_PORT | High | Medium |
 | Unknown-contact blocking | TESTED | Low | Medium |
-| Custom backup scheduling and retention | NEEDS_PORT | Low–Medium | Medium |
+| Custom backup scheduling and retention | TESTED | Low–Medium | Medium |
 | SOCKS5 / Tor / Orbot proxy | NEEDS_PORT | High | High |
 | Optional debug logging | TESTED | Low | Low |
 | Manual device linking without QR scan | TESTED | Low | Medium |
@@ -144,11 +144,17 @@ Verified against Molly `892d6264ba` and compared with Signal `515db93fb4`.
 
 #### Custom backup scheduling and retention
 
-- Status: `NEEDS_PORT`
+- Status: `TESTED` (unit tests and app compilation pass; on-device scheduling/retention verification pending)
 - Molly sources: `preferences/BackupsPreferenceFragment.java`, `util/BackupUtil.java`, `util/TextSecurePreferences.java` (`BACKUP_INTERVAL` / `pref_backup_interval`, default 1 day; `BACKUP_MAX_FILES` / `pref_backup_max_files`, default 2), `res/values/arrays.xml` (`backup_intervals`)
-- Current Signal: local backups support a daily scheduled time only (`scheduleTimeLabel`, `LocalBackupListener`). No weekly interval and no retention-count setting found.
-- What Molly adds: selectable backup interval and a maximum number of retained backup files.
-- Security implications: Medium. Retention deletion must never delete the only good backup; backup contents are already encrypted by Signal.
+- Current Signal: local backups support a daily scheduled time only (`scheduleTimeLabel`, `LocalBackupListener`). Retention was hardcoded to two snapshots.
+- Implementation:
+  - `SettingsValues` stores `settings.backups.interval.days` (default 1, daily/weekly exposed) and `settings.backups.max.files` (default 2, clamped to 1–10).
+  - `LocalBackupListener` computes the next run from the selected interval and applies the existing jitter window. Changing the time or interval recomputes the next alarm immediately.
+  - `LocalBackupsSettingsScreen` adds "Backup frequency" (Daily/Weekly) and "Backups to keep" rows backed by Compose radio-list dialogs.
+  - Retention is applied to both formats: `LocalArchiveJob` passes the configured count to `ArchiveFileSystem.deleteOldBackups(limit)` for folder backups, and `BackupUtil.deleteOldBackups()` uses it for legacy `.backup` files. At least one backup is always retained.
+- Scope note: the new controls live in the modern on-device backup settings screen. The legacy `BackupsPreferenceFragment` still only shows the time picker, but legacy pruning now honors the configured count when set.
+- Security implications: Medium. Retention deletion must never delete the only good backup; the lower bound is enforced. Backup contents and encryption are unchanged.
+- Tests: `LocalBackupListenerTest` covers daily/weekly scheduling and jitter; `ArchiveFileSystemTest` covers retention-count pruning.
 - Complexity: Low–Medium.
 
 #### SOCKS5 / Tor / Orbot proxy

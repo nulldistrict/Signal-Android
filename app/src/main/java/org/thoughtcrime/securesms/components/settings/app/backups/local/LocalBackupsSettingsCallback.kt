@@ -28,6 +28,8 @@ sealed interface LocalBackupsSettingsCallback {
   fun onTurnOnClick()
   fun onCreateBackupClick()
   fun onPickTimeClick()
+  fun onBackupIntervalSelected(days: Int)
+  fun onMaxBackupsSelected(maxBackups: Int)
   fun onViewBackupKeyClick()
   fun onLearnMoreClick()
   fun onLaunchBackupLocationPickerClick()
@@ -39,6 +41,8 @@ sealed interface LocalBackupsSettingsCallback {
     override fun onTurnOnClick() = Unit
     override fun onCreateBackupClick() = Unit
     override fun onPickTimeClick() = Unit
+    override fun onBackupIntervalSelected(days: Int) = Unit
+    override fun onMaxBackupsSelected(maxBackups: Int) = Unit
     override fun onViewBackupKeyClick() = Unit
     override fun onLearnMoreClick() = Unit
     override fun onLaunchBackupLocationPickerClick() = Unit
@@ -86,12 +90,24 @@ class DefaultLocalBackupsSettingsCallback(
 
     picker.addOnPositiveButtonClickListener {
       SignalStore.settings.setBackupSchedule(picker.hour, picker.minute)
-      SignalStore.settings.localBackupNextTime = 0
+      LocalBackupListener.setNextBackupTimeToIntervalFromNow(fragment.requireContext())
       LocalBackupListener.schedule(fragment.requireContext())
       viewModel.refreshSettingsState()
     }
 
     picker.show(fragment.childFragmentManager, "TIME_PICKER")
+  }
+
+  override fun onBackupIntervalSelected(days: Int) {
+    SignalStore.settings.backupIntervalDays = days
+    LocalBackupListener.setNextBackupTimeToIntervalFromNow(fragment.requireContext())
+    LocalBackupListener.schedule(fragment.requireContext())
+    viewModel.refreshSettingsState()
+  }
+
+  override fun onMaxBackupsSelected(maxBackups: Int) {
+    SignalStore.settings.backupMaxFiles = maxBackups
+    viewModel.refreshSettingsState()
   }
 
   override fun onCreateBackupClick() {

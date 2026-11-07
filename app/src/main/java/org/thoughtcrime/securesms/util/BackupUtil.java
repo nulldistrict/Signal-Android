@@ -138,9 +138,10 @@ public class BackupUtil {
     Log.i(TAG, "Deleting older backups");
 
     try {
-      List<BackupInfo> backups = getAllBackupsNewestFirst();
+      List<BackupInfo> backups  = getAllBackupsNewestFirst();
+      int              maxFiles = SignalStore.settings().getBackupMaxFiles();
 
-      for (int i = 2; i < backups.size(); i++) {
+      for (int i = maxFiles; i < backups.size(); i++) {
         backups.get(i).delete();
       }
     } catch (NoExternalStorageException e) {

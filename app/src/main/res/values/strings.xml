@@ -889,6 +889,14 @@
     <string name="BackupsPreferenceFragment_signal_requires_external_storage_permission_in_order_to_create_backups">Signal requires external storage permission in order to create backups, but it has been permanently denied. Please continue to app settings, select \"Permissions\" and enable \"Storage\".</string>
     <!-- Title of dialog shown when picking the time to perform a chat backup -->
     <string name="BackupsPreferenceFragment__set_backup_time">Set backup time</string>
+    <!-- Label for the setting that controls how often local backups are created -->
+    <string name="BackupsPreferenceFragment__backup_frequency">Backup frequency</string>
+    <!-- Backup frequency option for one backup per day -->
+    <string name="BackupsPreferenceFragment__daily">Daily</string>
+    <!-- Backup frequency option for one backup per week -->
+    <string name="BackupsPreferenceFragment__weekly">Weekly</string>
+    <!-- Label for the setting that controls how many local backup files are kept -->
+    <string name="BackupsPreferenceFragment__backups_to_keep">Backups to keep</string>
 
 
     <!-- CustomDefaultPreference -->

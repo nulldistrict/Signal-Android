@@ -10,6 +10,7 @@ import android.content.Context
 import androidx.documentfile.provider.DocumentFile
 import androidx.test.core.app.ApplicationProvider
 import assertk.assertThat
+import assertk.assertions.isEqualTo
 import assertk.assertions.isFalse
 import assertk.assertions.isNotNull
 import assertk.assertions.isNull
@@ -126,6 +127,28 @@ class ArchiveFileSystemTest {
     val result = ArchiveFileSystem.openForRestore(context, DocumentFile.fromFile(renamed))
 
     assertThat(result).isNull()
+  }
+
+  @Test
+  fun `deleteOldBackups keeps only the configured number of newest snapshots`() {
+    val parent = temporaryFolder.newFolder()
+    val signalBackups = buildSignalBackupsStructure(parent)
+    repeat(5) { index ->
+      signalBackups.resolve("${ArchiveFileSystem.BACKUP_DIRECTORY_PREFIX}-2026-01-0${index + 1}-00-00-00").mkdir()
+    }
+
+    val archiveFileSystem = ArchiveFileSystem.openForRestore(context, DocumentFile.fromFile(parent))!!
+    archiveFileSystem.deleteOldBackups(limit = 3)
+
+    val remaining = archiveFileSystem.listSnapshots().map { it.name }
+    assertThat(remaining.size).isEqualTo(3)
+    assertThat(remaining).isEqualTo(
+      listOf(
+        "${ArchiveFileSystem.BACKUP_DIRECTORY_PREFIX}-2026-01-05-00-00-00",
+        "${ArchiveFileSystem.BACKUP_DIRECTORY_PREFIX}-2026-01-04-00-00-00",
+        "${ArchiveFileSystem.BACKUP_DIRECTORY_PREFIX}-2026-01-03-00-00-00"
+      )
+    )
   }
 
   /**

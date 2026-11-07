@@ -40,6 +40,7 @@ import org.signal.core.ui.compose.Snackbars
 import org.thoughtcrime.securesms.R
 import org.thoughtcrime.securesms.backup.isIdle
 import org.thoughtcrime.securesms.backup.toBackupCreationProgress
+import org.thoughtcrime.securesms.keyvalue.SettingsValues
 import org.thoughtcrime.securesms.keyvalue.protos.LocalBackupCreationProgress
 import org.thoughtcrime.securesms.util.BackupUtil
 import org.signal.core.ui.R as CoreUiR
@@ -55,6 +56,8 @@ internal fun LocalBackupsSettingsScreen(
   var showChooseLocationDialog by rememberSaveable { mutableStateOf(false) }
   var showTurnOffAndDeleteDialog by rememberSaveable { mutableStateOf(false) }
   var showOptimizeStorageWarningDialog by rememberSaveable { mutableStateOf(false) }
+  var showBackupIntervalDialog by rememberSaveable { mutableStateOf(false) }
+  var showMaxBackupsDialog by rememberSaveable { mutableStateOf(false) }
 
   val learnMore = stringResource(id = R.string.BackupsPreferenceFragment__learn_more)
   val restoreText = stringResource(id = R.string.OnDeviceBackupsScreen__to_restore_a_backup, learnMore).trim()
@@ -173,6 +176,28 @@ internal fun LocalBackupsSettingsScreen(
           )
         }
 
+        item {
+          Rows.TextRow(
+            text = stringResource(id = R.string.BackupsPreferenceFragment__backup_frequency),
+            label = stringResource(
+              id = if (state.scheduleIntervalDays >= 7) {
+                R.string.BackupsPreferenceFragment__weekly
+              } else {
+                R.string.BackupsPreferenceFragment__daily
+              }
+            ),
+            onClick = { showBackupIntervalDialog = true }
+          )
+        }
+
+        item {
+          Rows.TextRow(
+            text = stringResource(id = R.string.BackupsPreferenceFragment__backups_to_keep),
+            label = state.maxBackups.toString(),
+            onClick = { showMaxBackupsDialog = true }
+          )
+        }
+
         if (!state.folderDisplayName.isNullOrBlank()) {
           item {
             Rows.TextRow(
@@ -256,6 +281,33 @@ internal fun LocalBackupsSettingsScreen(
       dismiss = stringResource(id = android.R.string.cancel),
       onConfirm = callback::onTurnOffAndDeleteConfirmed,
       onDismiss = { showTurnOffAndDeleteDialog = false }
+    )
+  }
+
+  if (showBackupIntervalDialog) {
+    Dialogs.RadioListDialog(
+      onDismissRequest = { showBackupIntervalDialog = false },
+      title = stringResource(id = R.string.BackupsPreferenceFragment__backup_frequency),
+      labels = arrayOf(
+        stringResource(id = R.string.BackupsPreferenceFragment__daily),
+        stringResource(id = R.string.BackupsPreferenceFragment__weekly)
+      ),
+      values = arrayOf("1", "7"),
+      selectedIndex = if (state.scheduleIntervalDays >= 7) 1 else 0,
+      onSelected = { index -> callback.onBackupIntervalSelected(if (index == 1) 7 else 1) }
+    )
+  }
+
+  if (showMaxBackupsDialog) {
+    val options = (SettingsValues.BACKUP_MAX_FILES_MIN..SettingsValues.BACKUP_MAX_FILES_MAX).toList()
+
+    Dialogs.RadioListDialog(
+      onDismissRequest = { showMaxBackupsDialog = false },
+      title = stringResource(id = R.string.BackupsPreferenceFragment__backups_to_keep),
+      labels = options.map { it.toString() }.toTypedArray(),
+      values = options.map { it.toString() }.toTypedArray(),
+      selectedIndex = options.indexOf(state.maxBackups).coerceAtLeast(0),
+      onSelected = { index -> callback.onMaxBackupsSelected(options[index]) }
     )
   }
 

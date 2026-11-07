@@ -138,7 +138,7 @@ class LocalArchiveJob internal constructor(parameters: Parameters) : Job(paramet
       }
       stopwatch.split("new-archive-done")
 
-      archiveFileSystem.deleteOldBackups()
+      archiveFileSystem.deleteOldBackups(SignalStore.settings.backupMaxFiles)
       stopwatch.split("delete-old")
 
       archiveFileSystem.deleteUnusedFiles(

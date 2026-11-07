@@ -102,6 +102,8 @@ class LocalBackupsViewModel : ViewModel(), BackupKeyCredentialManagerHandler {
       it.copy(
         canTurnOn = canTurnOn,
         scheduleTimeLabel = backupTime,
+        scheduleIntervalDays = SignalStore.settings.backupIntervalDays,
+        maxBackups = SignalStore.settings.backupMaxFiles,
         optimizeStorageEnabled = SignalStore.backup.optimizeStorage
       )
     }
