@@ -220,30 +220,22 @@ public class KeyCachingService extends Service {
     boolean timeoutEnabled   = SignalStore.settings().getPassphraseTimeoutEnabled();
     boolean passLockActive   = timeoutEnabled && !SignalStore.settings().getPassphraseDisabled();
 
-    long    screenTimeout       = SignalStore.settings().getScreenLockTimeout();
-    boolean screenLockActive    = SignalStore.settings().getScreenLockEnabled();
-    boolean immediateScreenLock = screenTimeout == 0 && screenLockActive;
-
-    if (immediateScreenLock) {
-      Log.i(TAG, "Default immediate screen lock to one minute");
-      SignalStore.settings().setScreenLockTimeout(60);
-      immediateScreenLock = false;
-    }
+    boolean screenLockActive = SignalStore.settings().getScreenLockEnabled();
 
     if (!appVisible && secretSet && (passLockActive || screenLockActive)) {
-      if (immediateScreenLock) {
+      long passphraseTimeoutMinutes = SignalStore.settings().getPassphraseTimeout();
+      long screenLockTimeoutSeconds = SignalStore.settings().getScreenLockTimeout();
+
+      long timeoutMillis;
+
+      if (!SignalStore.settings().getPassphraseDisabled()) timeoutMillis = TimeUnit.MINUTES.toMillis(passphraseTimeoutMinutes);
+      else                                                 timeoutMillis = TimeUnit.SECONDS.toMillis(screenLockTimeoutSeconds);
+
+      if (timeoutMillis <= 0) {
         Log.i(TAG, "Starting immediate screen lock");
         Intent intent = new Intent(PASSPHRASE_EXPIRED_EVENT, null, context, KeyCachingService.class);
         context.startService(intent);
       } else {
-        long passphraseTimeoutMinutes = SignalStore.settings().getPassphraseTimeout();
-        long screenLockTimeoutSeconds = SignalStore.settings().getScreenLockTimeout();
-
-        long timeoutMillis;
-
-        if (!SignalStore.settings().getPassphraseDisabled()) timeoutMillis = TimeUnit.MINUTES.toMillis(passphraseTimeoutMinutes);
-        else                                                    timeoutMillis = TimeUnit.SECONDS.toMillis(screenLockTimeoutSeconds);
-
         Log.i(TAG, "Starting timeout: " + timeoutMillis);
 
         AlarmManager  alarmManager     = ServiceUtil.getAlarmManager(context);

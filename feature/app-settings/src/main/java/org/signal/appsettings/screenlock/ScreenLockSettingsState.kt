@@ -20,7 +20,7 @@ data class ScreenLockSettingsState(
 
   companion object {
     /** The timeouts offered as one tap options. Anything else is a custom timeout. */
-    val PRESET_TIMEOUTS: List<Duration> = listOf(1.minutes, 5.minutes, 30.minutes)
+    val PRESET_TIMEOUTS: List<Duration> = listOf(Duration.ZERO, 1.minutes, 5.minutes, 30.minutes)
   }
 
   val isCustomTimeout: Boolean

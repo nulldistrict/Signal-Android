@@ -20,6 +20,7 @@ Version numbers and release dates must reflect actual releases.
 - Molly feature: link a device without scanning a QR code. The intro sheet offers manual entry of the linking URI and keeps the existing validation and link flow.
 - Molly feature: configurable local backup frequency (daily/weekly) and retention count (1–10), with pruning applied to both folder and legacy backup formats.
 - Molly hardening: Safe Browsing disabled for in-app WebViews, the remote share-recipient limit removed, and app-side debug-log Tracer instrumentation removed so trace data is not included in debug logs.
+- Molly application-lock extensions: restored the "Immediately" screen-lock timeout, made a zero timeout actually lock on backgrounding instead of being coerced to 60 seconds, and block screen-lock-protected content from Android 13+ recents screenshots and from FLAG_SECURE windows while locked.
 
 ### Changed
 

@@ -512,6 +512,8 @@
     <string name="ScreenLockSettingsFragment__your_android_device">Your Android device lock settings will be required to unlock Signal when you leave or switch apps. When locked, notification previews will not show message content.</string>
     <!-- Title text explaining when users should start the screen lock -->
     <string name="ScreenLockSettingsFragment__start_screen_lock">Start screen lock</string>
+    <!-- Option text explaining that screen lock should start immediately -->
+    <string name="ScreenLockSettingsFragment__immediately">Immediately</string>
     <!-- Option text explaining that screen lock should start after 1 minute of inactivity -->
     <string name="ScreenLockSettingsFragment__after_1_min">After 1 minute</string>
     <!-- Option text explaining that screen lock should start after 5 minutes of inactivity -->

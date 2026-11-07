@@ -3,6 +3,7 @@ package org.thoughtcrime.securesms;
 import android.content.Context;
 import android.content.Intent;
 import android.content.res.Configuration;
+import android.os.Build;
 import android.os.Bundle;
 import android.view.View;
 
@@ -16,6 +17,7 @@ import androidx.core.app.ActivityOptionsCompat;
 
 import org.signal.core.util.logging.Log;
 import org.thoughtcrime.securesms.dependencies.AppDependencies;
+import org.thoughtcrime.securesms.keyvalue.SignalStore;
 import org.thoughtcrime.securesms.util.AppStartup;
 import org.signal.core.util.ConfigurationUtil;
 import org.thoughtcrime.securesms.util.WindowUtil;
@@ -44,6 +46,12 @@ public abstract class BaseActivity extends AppCompatActivity {
   protected void onResume() {
     super.onResume();
     WindowUtil.initializeScreenshotSecurity(this, getWindow());
+
+    // Molly: don't leave a screenshot of protected content in the recents switcher while screen lock is enabled.
+    // API 33+ can block only the recents capture; older releases rely on FLAG_SECURE from the screenshot-security path.
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+      setRecentsScreenshotEnabled(!SignalStore.settings().getScreenLockEnabled());
+    }
   }
 
   @Override

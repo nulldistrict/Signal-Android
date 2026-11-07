@@ -216,6 +216,7 @@ fun ScreenLockSettingsScreen(
 
 private val Duration.presetLabelRes: Int
   @StringRes get() = when (this) {
+    Duration.ZERO -> R.string.ScreenLockSettingsFragment__immediately
     1.minutes -> R.string.ScreenLockSettingsFragment__after_1_min
     5.minutes -> R.string.ScreenLockSettingsFragment__after_5_min
     30.minutes -> R.string.ScreenLockSettingsFragment__after_30_min

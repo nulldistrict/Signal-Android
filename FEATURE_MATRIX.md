@@ -109,13 +109,18 @@ Verified against Molly `892d6264ba` and compared with Signal `515db93fb4`.
 
 #### Automatic application lock (passphrase / biometric extensions)
 
-- Status: `NEEDS_PORT` (base screen lock is `EXISTS_SIGNAL`)
+- Status: `TESTED` (unit tests and app compilation pass; on-device verification pending)
 - Molly sources: `app/src/main/java/org/thoughtcrime/securesms/ScreenLockController.kt`, `components/settings/app/privacy/PrivacySettingsFragment.kt`, `PrivacySettingsViewModel.kt`, `service/KeyCachingService.java`, `util/TextSecurePreferences.java`
-- Current Signal: base screen lock exists (`ScreenLockSettingsRepository`, `KeyCachingService`, `components/settings/app/privacy/screenlock`).
-- What Molly adds: passphrase lock as an alternative to device screen lock, biometric unlock option, configurable lock triggers (`PASSPHRASE_LOCK_TRIGGER`), timeout (`PASSPHRASE_LOCK_TIMEOUT`), notification behavior (`PASSPHRASE_LOCK_NOTIFICATIONS`), screenshot blocking (including recents on API 33+), and PIP handling.
-- Security implications: High. Lock-state transitions, key caching, and process death must be handled carefully. Must not weaken Signal's key storage or unlock paths.
-- Complexity: Medium. Reuses Signal's existing lock infrastructure.
-- Note: `PASSPHRASE_LOCK` is a soft application lock; it is not the same as passphrase-based database encryption (see above).
+- Current Signal already provides: device-credential/biometric screen lock, inactivity timeout, legacy passphrase lock with its own inactivity timeout, and notification content/action hiding while locked. These are preserved rather than replaced.
+- What was ported:
+  - Restored the "Immediately" screen-lock timeout preset (0 seconds). `KeyCachingService` now honors a zero timeout by locking as soon as the app is backgrounded instead of silently coercing it to 60 seconds. This matches Molly's immediate-lock behavior and the historical Signal behavior that the current Compose screen-lock UI dropped.
+  - While screen lock is enabled, Android 13+ recents screenshots are blocked via `Activity.setRecentsScreenshotEnabled(false)`.
+  - FLAG_SECURE is forced while the app is locked, and on Android 12 and lower while screen lock protects content, so the recents switcher cannot capture protected windows.
+- Deliberately not ported: Molly's separate `BIOMETRIC_SCREEN_LOCK` preference and `ScreenLockController` overlay. That is a parallel lock implementation which replaces Signal's screen lock and relies on private window-inspector APIs; porting it would duplicate and change upstream lock semantics. Molly's PIP overlay logic is tied to that implementation. Signal's own lock flow remains authoritative.
+- Security implications: Medium. Immediate locking is stricter but can be surprising during short app switches; the default screen-lock timeout of 0 now locks immediately after backgrounding. No changes were made to key storage, biometric verification, or the unlock path.
+- Tests: `ScreenLockSettingsScreenTest` (13 tests), `ScreenLockSettingsLayoutTest` (4 tests), and `ScreenLockSettingsViewModelTest` (9 tests) pass.
+- Complexity: Low–Medium.
+- Note: the application lock is not passphrase-based database encryption (see above).
 
 #### UnifiedPush notifications
 

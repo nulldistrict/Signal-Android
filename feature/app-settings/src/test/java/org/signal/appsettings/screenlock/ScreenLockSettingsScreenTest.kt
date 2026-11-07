@@ -30,6 +30,7 @@ import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 import org.signal.core.ui.compose.Dialogs
+import kotlin.time.Duration
 import kotlin.time.Duration.Companion.hours
 import kotlin.time.Duration.Companion.minutes
 
@@ -81,6 +82,17 @@ class ScreenLockSettingsScreenTest {
     setContent(ScreenLockSettingsState(isScreenLockEnabled = false))
 
     composeTestRule.onNodeWithTag(ScreenLockSettingsTestTags.ROW_CUSTOM_TIMEOUT).assertDoesNotExist()
+  }
+
+  @Test
+  fun `picking the immediate timeout emits TimeoutSelected`() {
+    setContent(ScreenLockSettingsState(isScreenLockEnabled = true, timeout = 1.minutes))
+
+    val tag = ScreenLockSettingsTestTags.ROW_TIMEOUT_PREFIX + Duration.ZERO.inWholeSeconds
+    scrollTo(tag)
+    composeTestRule.onNodeWithTag(tag).performClick()
+
+    assertThat(events).containsExactly(ScreenLockSettingsEvent.TimeoutSelected(Duration.ZERO))
   }
 
   @Test
