@@ -35,8 +35,11 @@ import androidx.core.app.NotificationCompat;
 import androidx.core.content.ContextCompat;
 
 import org.signal.core.ui.compose.SignalIcons;
+import org.signal.core.util.ThreadUtil;
 import org.signal.core.util.concurrent.SignalExecutors;
+import org.signal.core.util.eventbus.EventBus;
 import org.signal.core.util.logging.Log;
+import org.signal.devicetransfer.TransferStatus;
 import org.thoughtcrime.securesms.BuildConfig;
 import org.thoughtcrime.securesms.DummyActivity;
 import org.thoughtcrime.securesms.MainActivity;
@@ -135,8 +138,8 @@ public class KeyCachingService extends Service {
 
     if (intent.getAction() != null) {
       switch (intent.getAction()) {
-        case CLEAR_KEY_ACTION:         handleClearKey();        break;
-        case PASSPHRASE_EXPIRED_EVENT: handleClearKey();        break;
+        case CLEAR_KEY_ACTION:         handleClearKey(); scheduleSecureWipe(); break;
+        case PASSPHRASE_EXPIRED_EVENT: handleClearKey(); scheduleSecureWipe(); break;
         case DISABLE_ACTION:           handleDisableService();  break;
         case LOCK_TOGGLED_EVENT:       handleLockToggled();     break;
       }
@@ -192,6 +195,23 @@ public class KeyCachingService extends Service {
     SignalExecutors.BOUNDED.execute(() -> {
       AppDependencies.getMessageNotifier().updateNotification(KeyCachingService.this);
     });
+  }
+
+  /**
+   * Molly: once the key has been cleared, wipe process memory and restart the process after a short grace period.
+   * The delay lets activities receive the clear-key broadcast and route to the unlock screen first.
+   */
+  private void scheduleSecureWipe() {
+    if ((ApplicationMigrations.isUpdate(this) && ApplicationMigrations.isUiBlockingMigrationRunning()) ||
+        EventBus.getDefault().getStickyEvent(TransferStatus.class) != null)
+    {
+      Log.w(TAG, "Skipping secure wipe during app migration or device transfer.");
+      return;
+    }
+
+    Context appContext = getApplicationContext();
+
+    ThreadUtil.runOnMainDelayed(() -> WipeMemoryService.run(appContext, true), TimeUnit.SECONDS.toMillis(1));
   }
 
   private void handleLockToggled() {

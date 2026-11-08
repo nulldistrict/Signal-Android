@@ -100,12 +100,17 @@ Verified against Molly `892d6264ba` and compared with Signal `515db93fb4`.
 
 #### Secure RAM wiper
 
-- Status: `NEEDS_PORT`
+- Status: `TESTED` (unit tests and app compilation pass; on-device verification pending)
 - Molly sources: `app/src/main/java/org/thoughtcrime/securesms/service/WipeMemoryService.java`, native `allocPages` / `wipePage`
 - Current Signal: no equivalent found.
-- Behavior: allocates memory pages and overwrites process memory on lock, then triggers a GC pass, guarded by a low-memory threshold adjustment and a foreground service notification.
-- Security implications: process-memory hygiene. Must not cause ANRs, should be best-effort on modern Android, and must never log sensitive data.
-- Complexity: Medium. Depends on lifecycle hooks from the application lock.
+- Implementation:
+  - Added `WipeMemoryService` ported from Molly, including the native page allocator/wiper and low-memory safeguards.
+  - Vendored the GPLv3 native library from `im.molly:native-utils:1.0.0` (source: `mollyim/ndkutil`) as `libmolly-wipe.so` under `app/src/main/jniLibs` for arm64-v8a, armeabi-v7a and x86_64. Renaming avoids a collision with Signal's existing `core/util` `libnative-utils.so`. No Maven dependency is added and the binary is a no-op wipe on unsupported ABIs.
+  - `KeyCachingService` now schedules the wiper after every explicit lock (`CLEAR_KEY_ACTION` and `PASSPHRASE_EXPIRED_EVENT`) with a one-second grace period. The wiper is skipped during UI-blocking migrations and active device transfers.
+  - As in Molly, the restart path kills the process (`System.exit(0)`) after the wipe is scheduled, so the app returns cold and requires unlocking. If the foreground service cannot start, process death is used as the fallback memory-clearing mechanism.
+- Security implications: process death interrupts background work such as WebSocket delivery and can delay notifications until the next push; this is Molly's existing trade-off. No sensitive data is logged. The native library load is guarded and the wipe becomes a no-op if the ABI is unavailable.
+- Tests: `NotificationIdsTest` (7 tests) passes with the new `MEMORY_WIPE` id; app compilation succeeds.
+- Complexity: Medium.
 
 #### Automatic application lock (passphrase / biometric extensions)
 

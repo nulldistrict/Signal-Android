@@ -1290,6 +1290,12 @@
             android:foregroundServiceType="remoteMessaging" />
 
         <service
+            android:name=".service.WipeMemoryService"
+            android:enabled="true"
+            android:exported="false"
+            android:foregroundServiceType="remoteMessaging" />
+
+        <service
             android:name=".messages.IncomingMessageObserver$ForegroundService"
             android:enabled="true"
             android:exported="false"

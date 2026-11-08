@@ -2953,6 +2953,10 @@
     <string name="KeyCachingService_passphrase_cached">Signal is unlocked</string>
     <string name="KeyCachingService_lock">Lock Signal</string>
 
+    <!-- WipeMemoryService -->
+    <string name="WipeMemoryService_secure_wipe_in_progress">Secure wipe in progress</string>
+    <string name="WipeMemoryService_clearing_unencrypted_data_from_ram">Clearing unencrypted data from RAM</string>
+
     <!-- MediaPreviewActivity -->
     <string name="MediaPreviewActivity_you">You</string>
     <string name="MediaPreviewActivity_unssuported_media_type">Unsupported media type</string>

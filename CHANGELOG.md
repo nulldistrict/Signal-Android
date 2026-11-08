@@ -21,6 +21,7 @@ Version numbers and release dates must reflect actual releases.
 - Molly feature: configurable local backup frequency (daily/weekly) and retention count (1–10), with pruning applied to both folder and legacy backup formats.
 - Molly hardening: Safe Browsing disabled for in-app WebViews, the remote share-recipient limit removed, and app-side debug-log Tracer instrumentation removed so trace data is not included in debug logs.
 - Molly application-lock extensions: restored the "Immediately" screen-lock timeout, made a zero timeout actually lock on backgrounding instead of being coerced to 60 seconds, and block screen-lock-protected content from Android 13+ recents screenshots and from FLAG_SECURE windows while locked.
+- Molly secure RAM wiper: wipe free process memory on lock and restart the process, matching Molly, using the GPLv3 `im.molly:native-utils` native code, vendored as `libmolly-wipe.so`. The wipe is skipped during migrations and device transfers; process death is the fallback when the foreground service cannot start.
 
 ### Changed
 
