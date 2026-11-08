@@ -816,6 +816,7 @@ dependencies {
   implementation(libs.kotlinx.coroutines.play.services)
   implementation(libs.kotlinx.coroutines.rx3)
   implementation(libs.jackson.module.kotlin)
+  implementation(libs.square.okhttp3.dnsoverhttps)
   implementation(libs.rxjava3.rxandroid)
   implementation(libs.rxjava3.rxkotlin)
   implementation(libs.rxdogtag)

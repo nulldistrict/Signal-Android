@@ -60,13 +60,18 @@ public class EditProxyViewModel extends ViewModel {
     }
   }
 
-  public void onSaveClicked(@NonNull String host) {
-    String trueHost = SignalProxyUtil.convertUserEnteredAddressToHost(host);
+  public void onSaveClicked(@NonNull String address) {
+    SignalProxy proxy = SignalProxyUtil.parseProxyAddress(address);
+
+    if (proxy == null) {
+      events.onNext(Event.PROXY_FAILURE);
+      return;
+    }
 
     saveState.onNext(SaveState.IN_PROGRESS);
 
     SignalExecutors.BOUNDED.execute(() -> {
-      SignalProxyUtil.enableProxy(new SignalProxy(trueHost, 443));
+      SignalProxyUtil.enableProxy(proxy);
 
       boolean success = SignalProxyUtil.testWebsocketConnection(TimeUnit.SECONDS.toMillis(10));
 

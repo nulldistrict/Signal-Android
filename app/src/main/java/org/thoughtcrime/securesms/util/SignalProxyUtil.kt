@@ -17,6 +17,7 @@ import org.thoughtcrime.securesms.push.AccountManagerFactory
 import org.whispersystems.signalservice.api.push.SignalServiceAddress
 import org.whispersystems.signalservice.api.websocket.WebSocketConnectionState
 import java.io.IOException
+import java.net.URI
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
@@ -26,6 +27,7 @@ object SignalProxyUtil {
   private val TAG = tag(SignalProxyUtil::class.java)
 
   private const val PROXY_LINK_HOST = "signal.tube"
+  private const val DEFAULT_SOCKS_PORT = 9050
 
   private val PROXY_LINK_PATTERN: Pattern = Pattern.compile("^(https|sgnl)://$PROXY_LINK_HOST/#([^:]+).*$")
   private val HOST_PATTERN: Pattern = Pattern.compile("^([^:]+).*$")
@@ -47,7 +49,7 @@ object SignalProxyUtil {
   @JvmStatic
   fun enableProxy(proxy: SignalProxy) {
     SignalStore.proxy.enableProxy(proxy)
-    ConscryptSignal.setUseEngineSocketByDefault(true)
+    ConscryptSignal.setUseEngineSocketByDefault(proxy.kind == SignalProxy.ProxyKind.SIGNAL)
     AppDependencies.resetNetwork()
     startListeningToWebsocket()
   }
@@ -133,6 +135,65 @@ object SignalProxyUtil {
     return when {
       matcher.matches() -> matcher.group(1) ?: ""
       else -> host
+    }
+  }
+
+  /**
+   * Parses a user-entered proxy address.
+   *
+   * Supported formats:
+   * - Signal proxy link or bare hostname: `https://signal.tube/#proxy.example.org`, `proxy.example.org`
+   * - SOCKS5: `socks5://127.0.0.1:9050` or `socks5h://127.0.0.1:9050` (port defaults to 9050)
+   *
+   * SOCKS5 always uses remote DNS resolution (`socks5h`) so hostnames are never resolved locally.
+   *
+   * @return the parsed proxy, or null when the address is invalid.
+   */
+  @JvmStatic
+  fun parseProxyAddress(input: String): SignalProxy? {
+    val text = input.trim()
+    if (text.isEmpty()) {
+      return null
+    }
+
+    val proxyHost = parseHostFromProxyDeepLink(text)
+    if (proxyHost != null) {
+      return if (proxyHost.isEmpty()) null else SignalProxy(proxyHost, 443, SignalProxy.ProxyKind.SIGNAL)
+    }
+
+    val lower = text.lowercase()
+    if (lower.startsWith("socks5://") || lower.startsWith("socks5h://")) {
+      return try {
+        val uri = URI(text)
+        val host = uri.host
+        val port = if (uri.port == -1) DEFAULT_SOCKS_PORT else uri.port
+
+        if (host.isNullOrEmpty() || port !in 1..65535 || !uri.rawPath.isNullOrEmpty() || uri.rawQuery != null) {
+          null
+        } else {
+          SignalProxy(host, port, SignalProxy.ProxyKind.SOCKS5)
+        }
+      } catch (e: Exception) {
+        Log.w(TAG, "Invalid SOCKS5 proxy address.", e)
+        null
+      }
+    }
+
+    val host = convertUserEnteredAddressToHost(text)
+    if (host.isEmpty() || host.contains(' ') || host.contains('/')) {
+      return null
+    }
+
+    return SignalProxy(host, 443, SignalProxy.ProxyKind.SIGNAL)
+  }
+
+  /** Formats a stored proxy for display in the address field. */
+  @JvmStatic
+  fun formatProxyAddress(proxy: SignalProxy?): String {
+    return when (proxy?.kind) {
+      null -> ""
+      SignalProxy.ProxyKind.SIGNAL -> proxy.host
+      SignalProxy.ProxyKind.SOCKS5 -> "socks5://${proxy.host}:${proxy.port}"
     }
   }
 

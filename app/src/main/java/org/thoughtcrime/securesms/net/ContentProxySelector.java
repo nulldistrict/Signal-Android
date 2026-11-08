@@ -32,6 +32,13 @@ public class ContentProxySelector extends ProxySelector {
 
   @Override
   public List<Proxy> select(URI uri) {
+    // A user-configured SOCKS5 proxy takes precedence over Signal's content proxy so that content
+    // requests cannot bypass it and expose the user's IP address.
+    Proxy socks = UserProxySelector.getUserSocksProxy();
+    if (socks != null) {
+      return java.util.Collections.singletonList(socks);
+    }
+
     String host = uri.getHost();
     if (host != null) {
       for (String domain : WHITELISTED_DOMAINS) {

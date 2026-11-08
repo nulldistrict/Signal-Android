@@ -22,9 +22,10 @@ fun Network.applyConfiguration(config: SignalServiceConfiguration) {
 /**
  * Configures the [Network] instance with the given proxy settings.
  *
- * TLS Proxies: configuration errors mark the proxy as invalid, causing future connections to
- * fail until the proxy setting is changed. These are explicitly configured by the user in the app
- * and must be respected.
+ * User proxies (Signal TLS and SOCKS5 with remote DNS): configuration errors mark the proxy as
+ * invalid, causing future connections to fail until the proxy setting is changed. These are
+ * explicitly configured by the user and must be respected so that traffic never silently leaves
+ * the proxy.
  *
  * System Proxies: the Android system settings screen explicitly calls out that apps are allowed
  * to ignore the proxy setting, so if configuration fails, we fall back to direct connection
@@ -42,13 +43,16 @@ fun Network.configureProxy(config: ProxyConfig) {
         when (config.scheme) {
           ProxyConfig.ProxyScheme.TLS -> setProxy(config.host, config.port)
           ProxyConfig.ProxyScheme.HTTP,
-          ProxyConfig.ProxyScheme.SOCKS -> setProxy(config.scheme.value, config.host, config.port, null, null)
+          ProxyConfig.ProxyScheme.SOCKS,
+          ProxyConfig.ProxyScheme.SOCKS_REMOTE_DNS -> setProxy(config.scheme.value, config.host, config.port, null, null)
         }
         Log.i(TAG, "Proxy configured: ${config.scheme}/${config.port}")
       } catch (e: IOException) {
         when (config.scheme) {
-          ProxyConfig.ProxyScheme.TLS -> {
-            Log.e(TAG, "Invalid Signal TLS proxy config! Failing connections until changed.", e)
+          ProxyConfig.ProxyScheme.TLS,
+          ProxyConfig.ProxyScheme.SOCKS_REMOTE_DNS -> {
+            // Explicitly configured by the user. Do not silently fall back to a direct connection, which would leak traffic.
+            Log.e(TAG, "Invalid ${config.scheme} proxy config! Failing connections until changed.", e)
             setInvalidProxy()
           }
 

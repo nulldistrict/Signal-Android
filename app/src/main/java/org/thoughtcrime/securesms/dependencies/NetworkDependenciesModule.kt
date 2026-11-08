@@ -31,6 +31,7 @@ import org.signal.network.api.RemoteConfigApi
 import org.signal.network.api.SvrBApi
 import org.signal.network.api.UsernameApi
 import org.signal.network.config.NetworkProxyState
+import org.signal.network.config.SignalProxy
 import org.signal.network.config.TrustStore
 import org.signal.network.rest.SignalRestClient
 import org.signal.network.service.ArchiveService
@@ -280,7 +281,7 @@ class NetworkDependenciesModule(
         .connectionSpecs(Util.immutableList(ConnectionSpec.RESTRICTED_TLS))
 
       val proxy = signalServiceNetworkAccess.getConfiguration().signalProxy.orNull()
-      if (proxy != null) {
+      if (proxy != null && proxy.kind == SignalProxy.ProxyKind.SIGNAL) {
         builder.socketFactory(TlsProxySocketFactory(proxy.host, proxy.port, signalServiceNetworkAccess.getConfiguration().dns))
       }
 

@@ -24,7 +24,16 @@ sealed interface ProxyConfig {
   /** Supported proxy schemes by [Network]. */
   enum class ProxyScheme(val value: String) {
     TLS(Network.SIGNAL_TLS_PROXY_SCHEME),
+
+    /** SOCKS5 with local DNS resolution. Used for system-configured proxies, whose hostnames are already resolved by the OS. */
     SOCKS("socks5"),
+
+    /**
+     * SOCKS5 with remote DNS resolution (`socks5h`). Used for user-configured proxies so that hostnames are resolved
+     * by the proxy and never leak to the local network.
+     */
+    SOCKS_REMOTE_DNS("socks5h"),
+
     HTTP("http")
   }
 

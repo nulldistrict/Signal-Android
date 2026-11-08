@@ -98,6 +98,21 @@ class ProxyConfigTest {
     assertThat(config).isEqualTo(ProxyConfig.ProxyAddress(ProxyConfig.ProxyScheme.TLS, "signal.tls.proxy", 443))
   }
 
+  @Test
+  fun `resolve maps a system socks proxy to local dns`() {
+    val system = Proxy(Proxy.Type.SOCKS, InetSocketAddress.createUnresolved("socks.example.com", 9050))
+    val config = ProxyConfig.resolve(configuration(censored = false), TARGET_URL, StubProxySelector(system))
+    assertThat(config).isEqualTo(ProxyConfig.ProxyAddress(ProxyConfig.ProxyScheme.SOCKS, "socks.example.com", 9050))
+  }
+
+  @Test
+  fun `resolve maps a user socks proxy to remote dns`() {
+    val system = Proxy(Proxy.Type.HTTP, InetSocketAddress.createUnresolved("proxy.example.com", 8080))
+    val proxy = SignalProxy("127.0.0.1", 9050, SignalProxy.ProxyKind.SOCKS5)
+    val config = ProxyConfig.resolve(configuration(censored = false, signalProxy = proxy), TARGET_URL, StubProxySelector(system))
+    assertThat(config).isEqualTo(ProxyConfig.ProxyAddress(ProxyConfig.ProxyScheme.SOCKS_REMOTE_DNS, "127.0.0.1", 9050))
+  }
+
   private fun configuration(censored: Boolean, signalProxy: SignalProxy? = null): SignalServiceConfiguration {
     return SignalServiceConfiguration(
       signalServiceUrls = emptyArray(),

@@ -3887,6 +3887,7 @@
     <string name="preferences_success">Success</string>
     <string name="preferences_failed_to_connect">Failed to connect</string>
     <string name="preferences_enter_proxy_address">Enter proxy address</string>
+    <string name="preferences_enter_proxy_address_socks">Enter proxy address or socks5://host:port</string>
     <!-- Preference title for automatic key verification -->
     <string name="preferences_automatic_key_verification">Automatic key verification</string>
     <!-- Preference summary for automatic key verification -->

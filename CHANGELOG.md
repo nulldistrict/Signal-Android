@@ -22,6 +22,7 @@ Version numbers and release dates must reflect actual releases.
 - Molly hardening: Safe Browsing disabled for in-app WebViews, the remote share-recipient limit removed, and app-side debug-log Tracer instrumentation removed so trace data is not included in debug logs.
 - Molly application-lock extensions: restored the "Immediately" screen-lock timeout, made a zero timeout actually lock on backgrounding instead of being coerced to 60 seconds, and block screen-lock-protected content from Android 13+ recents screenshots and from FLAG_SECURE windows while locked.
 - Molly secure RAM wiper: wipe free process memory on lock and restart the process, matching Molly, using the GPLv3 `im.molly:native-utils` native code, vendored as `libmolly-wipe.so`. The wipe is skipped during migrations and device transfers; process death is the fallback when the foreground service cannot start.
+- Molly SOCKS5/Orbot proxy: the proxy address field accepts `socks5://host:port` and `socks5h://host:port` (default port 9050). User SOCKS5 proxies always use remote DNS, and OkHttp traffic (including content and media) is routed through the same proxy with DNS-over-HTTPS resolved through it. WebRTC media is not proxied.
 
 ### Changed
 
@@ -41,6 +42,7 @@ Version numbers and release dates must reflect actual releases.
 - Debug logging can now be fully disabled by the user, and disabling it clears persisted logs.
 - Unknown-contact blocking is local-only (`settings.block_unknown`) and does not alter existing contacts, trusted conversations or group membership. Group-profile sharing remains an allow-list exception.
 - Debug logs no longer include app instrumentation traces; the in-app WebViews no longer use Google Safe Browsing, which is a privacy/security trade-off documented in `FEATURE_MATRIX.md`.
+- User SOCKS5 proxy configuration fails closed: an invalid or unreachable proxy prevents connections instead of falling back to a direct connection. DNS for proxied OkHttp traffic is resolved via DNS-over-HTTPS through the proxy, and the content proxy is bypassed while SOCKS5 is active.
 
 ## Release History
 

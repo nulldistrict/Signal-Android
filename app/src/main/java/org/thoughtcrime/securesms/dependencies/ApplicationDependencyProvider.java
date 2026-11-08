@@ -101,6 +101,8 @@ import org.thoughtcrime.securesms.messages.IncomingMessageObserver;
 import org.thoughtcrime.securesms.net.DeviceTransferBlockingInterceptor;
 import org.thoughtcrime.securesms.net.SignalWebSocketHealthMonitor;
 import org.thoughtcrime.securesms.net.StandardUserAgentInterceptor;
+import org.thoughtcrime.securesms.net.UserProxyDns;
+import org.thoughtcrime.securesms.net.UserProxySelector;
 import org.thoughtcrime.securesms.notifications.MessageNotifier;
 import org.thoughtcrime.securesms.notifications.OptimizedMessageNotifier;
 import org.thoughtcrime.securesms.payments.MobileCoinConfig;
@@ -596,7 +598,8 @@ public class ApplicationDependencyProvider implements AppDependencies.Provider {
       return new OkHttpClient.Builder()
           .sslSocketFactory(new Tls12SocketFactory(sslContext.getSocketFactory()), trustManager)
           .addInterceptor(new StandardUserAgentInterceptor())
-          .dns(SignalServiceNetworkAccess.DNS)
+          .proxySelector(UserProxySelector.INSTANCE)
+          .dns(UserProxyDns.INSTANCE)
           .build();
     } catch (NoSuchAlgorithmException | KeyManagementException e) {
       throw new AssertionError(e);

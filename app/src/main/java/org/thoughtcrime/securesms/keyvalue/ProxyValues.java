@@ -14,6 +14,7 @@ public final class ProxyValues extends SignalStoreValues {
   private static final String  KEY_PROXY_ENABLED = "proxy.enabled";
   private static final String  KEY_HOST          = "proxy.host";
   private static final String  KEY_PORT          = "proxy.port";
+  private static final String  KEY_KIND          = "proxy.kind";
 
   ProxyValues(@NonNull KeyValueStore store) {
     super(store);
@@ -25,7 +26,7 @@ public final class ProxyValues extends SignalStoreValues {
 
   @Override
   @NonNull List<String> getKeysToIncludeInBackup() {
-    return Arrays.asList(KEY_PROXY_ENABLED, KEY_HOST, KEY_PORT);
+    return Arrays.asList(KEY_PROXY_ENABLED, KEY_HOST, KEY_PORT, KEY_KIND);
   }
 
   public void enableProxy(@NonNull SignalProxy proxy) {
@@ -37,6 +38,7 @@ public final class ProxyValues extends SignalStoreValues {
               .putBoolean(KEY_PROXY_ENABLED, true)
               .putString(KEY_HOST, proxy.getHost())
               .putInteger(KEY_PORT, proxy.getPort())
+              .putString(KEY_KIND, proxy.getKind().name())
               .apply();
   }
 
@@ -60,11 +62,13 @@ public final class ProxyValues extends SignalStoreValues {
       getStore().beginWrite()
                 .putString(KEY_HOST, proxy.getHost())
                 .putInteger(KEY_PORT, proxy.getPort())
+                .putString(KEY_KIND, proxy.getKind().name())
                 .apply();
     } else {
       getStore().beginWrite()
                 .remove(KEY_HOST)
                 .remove(KEY_PORT)
+                .remove(KEY_KIND)
                 .apply();
     }
   }
@@ -74,10 +78,23 @@ public final class ProxyValues extends SignalStoreValues {
     int    port = getInteger(KEY_PORT, 0);
 
     if (host != null) {
-      return new SignalProxy(host, port);
+      return new SignalProxy(host, port, parseKind(getString(KEY_KIND, null)));
     } else {
       return null;
     }
+  }
+
+  private static @NonNull SignalProxy.ProxyKind parseKind(@Nullable String value) {
+    if (value != null) {
+      for (SignalProxy.ProxyKind kind : SignalProxy.ProxyKind.values()) {
+        if (kind.name().equals(value)) {
+          return kind;
+        }
+      }
+    }
+
+    // Existing installs only stored Signal TLS proxies, so default to that.
+    return SignalProxy.ProxyKind.SIGNAL;
   }
 
   public @Nullable String getProxyHost() {

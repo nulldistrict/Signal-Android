@@ -69,12 +69,12 @@ Verified against Molly `892d6264ba` and compared with Signal `515db93fb4`.
 | Feature | Status | Complexity | Security impact |
 |---|---|---|---|
 | Data encryption at rest (passphrase-derived DB secret) | NEEDS_PORT | High | High |
-| Secure RAM wiper | NEEDS_PORT | Medium | High |
-| Automatic application lock (passphrase/biometric extensions) | NEEDS_PORT | Medium | High |
+| Secure RAM wiper | TESTED | Medium | High |
+| Automatic application lock (passphrase/biometric extensions) | TESTED | Medium | High |
 | UnifiedPush notifications | NEEDS_PORT | High | Medium |
 | Unknown-contact blocking | TESTED | Low | Medium |
 | Custom backup scheduling and retention | TESTED | Low–Medium | Medium |
-| SOCKS5 / Tor / Orbot proxy | NEEDS_PORT | High | High |
+| SOCKS5 / Tor / Orbot proxy | TESTED | High | High |
 | Optional debug logging | TESTED | Low | Low |
 | Manual device linking without QR scan | TESTED | Low | Medium |
 | Minor WebView / share / logging hardening | TESTED | Low | Low–Medium |
@@ -169,13 +169,21 @@ Verified against Molly `892d6264ba` and compared with Signal `515db93fb4`.
 
 #### SOCKS5 / Tor / Orbot proxy
 
-- Status: `NEEDS_PORT`
+- Status: `TESTED` (unit tests and app compilation pass; on-device verification pending)
 - Molly sources: `app/src/main/java/org/thoughtcrime/securesms/net/NetworkProxy.kt`, `ProxyProvider`, `ProxySocketFactory`, `SocksProxy`, `DohClient`, `res/xml/preferences_network.xml`, related network preferences
 - Molly dependencies: `netcipher` (Tor/Orbot integration), SOCKS support
 - Current Signal: has a built-in **Signal proxy** (host/port via `ProxyValues`, `core/network`, `EditProxyActivity`/`EditProxyFragment`). This is not general SOCKS5, Orbot or system-proxy support.
-- Security implications: High. DNS-leak prevention is critical (Molly has dedicated commits: `Fix SOCKS proxy DNS leak`, `Fix proxy resolution when no valid SOCKS proxy is available`). Must not send traffic outside the proxy. DoH interactions must be reviewed.
+- Implementation:
+  - The existing proxy address field now accepts `socks5://host:port` and `socks5h://host:port` (port defaults to 9050) in addition to Signal proxy links and bare hostnames. This makes Orbot usable by entering `socks5://127.0.0.1:9050` without adding a second settings screen or a proprietary dependency.
+  - User-configured SOCKS5 is always applied as `socks5h` (remote DNS). libsignal's `Network` performs the resolution, so Signal service hostnames never leak to the local resolver.
+  - Configuration failures for user proxies fail closed (`setInvalidProxy`) instead of silently falling back to a direct connection. System-configured SOCKS/HTTP proxies keep Signal's existing fallback behavior.
+  - OkHttp traffic (Giphy, Glide, ExoPlayer) uses the user SOCKS5 proxy through a dynamic `ProxySelector`. When a SOCKS5 proxy is active, DNS is resolved with DNS-over-HTTPS through the same proxy (Cloudflare, then Quad9). If every DoH resolver fails, the lookup fails instead of leaking to the system resolver.
+  - Signal's content proxy is bypassed while a user SOCKS5 proxy is active so that content requests cannot escape the proxy.
+  - The Signal TLS proxy socket factory is only installed for Signal proxies; SOCKS5 uses the regular proxy selector path.
+- Limitations: WebRTC media is not proxied, because the Signal Android ringrtc integration in this version does not expose a SOCKS proxy option. Orbot auto-start and Orbot-installed detection from Molly are not ported; users configure the Orbot SOCKS port manually.
+- Security implications: High. DNS-leak prevention is critical. Remote DNS, fail-closed configuration, and proxied DoH are implemented. Traffic that cannot use the proxy fails rather than leaking the user's IP. On-device verification is still required.
+- Tests: `ProxyConfigTest` (13 tests) and `SignalProxyUtilParseProxyAddressTest` (10 tests) pass.
 - Complexity: High.
-- Prerequisite: build a proxy abstraction over Signal's existing `core/network` configuration rather than replacing it.
 
 #### Optional debug logging
 

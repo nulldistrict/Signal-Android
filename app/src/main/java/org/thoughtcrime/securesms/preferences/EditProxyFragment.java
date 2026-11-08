@@ -34,8 +34,6 @@ import org.thoughtcrime.securesms.util.views.LearnMoreTextView;
 import org.whispersystems.signalservice.api.websocket.WebSocketConnectionState;
 import org.signal.network.config.SignalProxy;
 
-import java.util.Optional;
-
 public class EditProxyFragment extends Fragment {
 
   private SwitchCompat                   proxySwitch;
@@ -87,7 +85,7 @@ public class EditProxyFragment extends Fragment {
       }
     });
 
-    this.proxyText.setText(Optional.ofNullable(SignalStore.proxy().getProxy()).map(SignalProxy::getHost).orElse(""));
+    this.proxyText.setText(SignalProxyUtil.formatProxyAddress(SignalStore.proxy().getProxy()));
     this.proxySwitch.setChecked(SignalStore.proxy().isProxyEnabled());
 
     initViewModel();
@@ -173,7 +171,7 @@ public class EditProxyFragment extends Fragment {
     switch (event) {
       case PROXY_SUCCESS:
         proxyStatus.setVisibility(View.VISIBLE);
-        proxyText.setText(Optional.ofNullable(SignalStore.proxy().getProxy()).map(SignalProxy::getHost).orElse(""));
+        proxyText.setText(SignalProxyUtil.formatProxyAddress(SignalStore.proxy().getProxy()));
         new MaterialAlertDialogBuilder(requireContext())
            .setTitle(R.string.preferences_success)
            .setMessage(R.string.preferences_you_are_connected_to_the_proxy)
@@ -185,7 +183,7 @@ public class EditProxyFragment extends Fragment {
         break;
       case PROXY_FAILURE:
         proxyStatus.setVisibility(View.INVISIBLE);
-        proxyText.setText(Optional.ofNullable(SignalStore.proxy().getProxy()).map(SignalProxy::getHost).orElse(""));
+        proxyText.setText(SignalProxyUtil.formatProxyAddress(SignalStore.proxy().getProxy()));
         ViewUtil.focusAndMoveCursorToEndAndOpenKeyboard(proxyText);
         new MaterialAlertDialogBuilder(requireContext())
            .setTitle(R.string.preferences_failed_to_connect)
@@ -230,11 +228,13 @@ public class EditProxyFragment extends Fragment {
       shareButton.setAlpha(0.5f);
       proxyStatus.setVisibility(View.INVISIBLE);
     } else {
-      shareButton.setEnabled(true);
-      shareButton.setAlpha(1);
+      SignalProxy parsed = SignalProxyUtil.parseProxyAddress(text);
+      boolean isSignalProxy = parsed != null && parsed.getKind() == SignalProxy.ProxyKind.SIGNAL;
 
-      String trueHost = SignalProxyUtil.convertUserEnteredAddressToHost(proxyText.getText().toString());
-      if (SignalStore.proxy().isProxyEnabled() && trueHost.equals(SignalStore.proxy().getProxyHost())) {
+      shareButton.setEnabled(isSignalProxy);
+      shareButton.setAlpha(isSignalProxy ? 1f : 0.5f);
+
+      if (SignalStore.proxy().isProxyEnabled() && parsed != null && parsed.equals(SignalStore.proxy().getProxy())) {
         proxyStatus.setVisibility(View.VISIBLE);
       } else {
         proxyStatus.setVisibility(View.INVISIBLE);
