@@ -42,6 +42,12 @@ object ChatsSettingsRepository {
     SignalStore.misc.sendLinkPreviewImages = enabled
   }
 
+  fun isKeepViewOnceMessages(): Boolean = SignalStore.misc.keepViewOnceMessages
+
+  fun setKeepViewOnceMessages(enabled: Boolean) {
+    SignalStore.misc.keepViewOnceMessages = enabled
+  }
+
   fun isPreferSystemContactPhotos(): Boolean = SignalStore.settings.isPreferSystemContactPhotos
 
   fun setPreferSystemContactPhotos(enabled: Boolean) {

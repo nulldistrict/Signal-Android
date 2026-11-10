@@ -367,6 +367,9 @@
     <string name="ChatsSettingsScreen__send_link_preview_images">Send link preview images</string>
     <!-- Description beneath the send link preview images toggle row in chat settings -->
     <string name="ChatsSettingsScreen__send_link_preview_images_description">Download and include images from links in outgoing messages.</string>
+    <string name="ChatsSettingsScreen__keep_view_once_messages">Keep view-once media</string>
+    <!-- Description beneath the keep view-once media toggle row in chat settings -->
+    <string name="ChatsSettingsScreen__keep_view_once_messages_description">Store incoming view-once messages as normal messages so their media stays available. This breaks the sender\'s view-once expectation.</string>
     <!-- Preference menu item description for a toggle switch for preserving the archived state of muted chats. -->
     <string name="preferences__muted_chats_that_are_archived_will_remain_archived">Muted chats that are archived will remain archived when a new message arrives.</string>
     <!-- Preference menu item title for a toggle switch for preserving the archived state of muted chats. -->

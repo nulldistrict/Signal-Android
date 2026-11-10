@@ -28,6 +28,7 @@ Version numbers and release dates must reflect actual releases.
 - Molly feature: FCM messages arriving while the passphrase-locked database is unavailable no longer crash or attempt to open the database. High-priority pushes post the "you may have messages" notification, other pushes are deferred, FCM job fetching is skipped, and a token rotated while locked is uploaded after the next unlock.
 - Signal-JW feature: a "Send link preview images" toggle in Chat settings, enabled by default and disabled while link previews themselves are off. When off, outgoing link previews keep their title/description but omit the downloaded image.
 - Signal-JW feature: map type selection in the location picker. Normal, Satellite and Terrain buttons change the live map and are remembered for future picks and saved-location snapshots.
+- Signal-JW feature: optional "Keep view-once media" in Chat settings, off by default. When enabled, incoming view-once messages are stored like normal messages so their media remains available; the setting clearly discloses that this breaks the sender's view-once expectation.
 
 ### Approved but not yet implemented
 
@@ -36,7 +37,6 @@ The project owner approved the remaining Signal-JW candidates and the following 
 - Signal-JW: encrypted backup export/restore at any time.
 - Signal-JW: plaintext backup export/import (requires explicit warning flow).
 - Signal-JW: encrypted ZIP backups.
-- Signal-JW: keep view-once media.
 - Signal-JW: ignore remote delete requests.
 - Signal-JW: ignore group-admin delete requests.
 - Signal-JW: delete media only.

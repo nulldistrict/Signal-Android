@@ -48,7 +48,8 @@ class ChatsSettingsViewModel(
       isPlaintextExportEnabled = ChatsSettingsRepository.isPlaintextExportEnabled(),
       plaintextExportProgress = ChatsSettingsRepository.observePlaintextExportProgress().value.toBackupCreationProgress(),
       chatExportState = ChatExportState.None,
-      shouldAutoplayStickersAndGifs = ChatsSettingsRepository.isAutoplayStickersAndGifsEnabled()
+      shouldAutoplayStickersAndGifs = ChatsSettingsRepository.isAutoplayStickersAndGifsEnabled(),
+      keepViewOnceMessages = ChatsSettingsRepository.isKeepViewOnceMessages()
     )
   )
 
@@ -66,6 +67,7 @@ class ChatsSettingsViewModel(
       is ChatsSettingsEvents.PlaintextExportProgressChanged -> applyPlaintextExportProgress(event.progress)
       is ChatsSettingsEvents.GenerateLinkPreviewsChanged -> setGenerateLinkPreviewsEnabled(event.enabled)
       is ChatsSettingsEvents.SendLinkPreviewImagesChanged -> setSendLinkPreviewImagesEnabled(event.enabled)
+      is ChatsSettingsEvents.KeepViewOnceMessagesChanged -> setKeepViewOnceMessages(event.enabled)
       is ChatsSettingsEvents.UseAddressBookChanged -> setUseAddressBook(event.enabled)
       is ChatsSettingsEvents.KeepMutedChatsArchivedChanged -> setKeepMutedChatsArchived(event.enabled)
       is ChatsSettingsEvents.UseSystemEmojiChanged -> setUseSystemEmoji(event.enabled)
@@ -118,6 +120,11 @@ class ChatsSettingsViewModel(
   private fun setSendLinkPreviewImagesEnabled(enabled: Boolean) {
     _state.update { it.copy(sendLinkPreviewImages = enabled) }
     ChatsSettingsRepository.setSendLinkPreviewImagesEnabled(enabled)
+  }
+
+  private fun setKeepViewOnceMessages(enabled: Boolean) {
+    _state.update { it.copy(keepViewOnceMessages = enabled) }
+    ChatsSettingsRepository.setKeepViewOnceMessages(enabled)
   }
 
   private fun setUseAddressBook(enabled: Boolean) {

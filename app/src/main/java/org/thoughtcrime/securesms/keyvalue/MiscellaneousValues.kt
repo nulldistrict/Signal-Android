@@ -64,6 +64,7 @@ class MiscellaneousValues internal constructor(store: KeyValueStore, context: Co
     private const val LAST_PROCESSED_SHARE_DATA_TIMESTAMP = "misc.last_processed_share_data_timestamp"
   private const val SEND_LINK_PREVIEW_IMAGES = "misc.send_link_preview_images"
   private const val GOOGLE_MAP_TYPE = "misc.google_map_type"
+  private const val KEEP_VIEW_ONCE_MESSAGES = "misc.keep_view_once_messages"
     private const val DIRECTORY_REFRESH_TIME = "misc.directory_refresh_time"
     private const val HAS_SUCCESSFULLY_RETRIEVED_DIRECTORY = "misc.has_successfully_retrieved_directory"
     private const val LAST_FULL_CONTACT_SYNC_TIME = "misc.last_full_contact_sync_time"
@@ -471,4 +472,10 @@ class MiscellaneousValues internal constructor(store: KeyValueStore, context: Co
    * Selected Google Maps type for the location picker: normal, hybrid, satellite, terrain or none.
    */
   var googleMapType: String by stringValue(GOOGLE_MAP_TYPE, "normal")
+
+  /**
+   * When set, incoming view-once messages are stored as normal messages so their media remains
+   * available after viewing. Disabled by default to preserve the sender's view-once expectation.
+   */
+  var keepViewOnceMessages: Boolean by booleanValue(KEEP_VIEW_ONCE_MESSAGES, false)
 }

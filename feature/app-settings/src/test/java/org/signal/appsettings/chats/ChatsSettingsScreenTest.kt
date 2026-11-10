@@ -84,6 +84,16 @@ class ChatsSettingsScreenTest {
   }
 
   @Test
+  fun givenKeepViewOnceOff_whenToggleClicked_thenIExpectKeepViewOnceOnEvent() {
+    setContent(createState(keepViewOnceMessages = false))
+
+    scrollTo(ChatsSettingsTestTags.ROW_KEEP_VIEW_ONCE_MESSAGES)
+    composeTestRule.onNodeWithTag(ChatsSettingsTestTags.ROW_KEEP_VIEW_ONCE_MESSAGES).performClick()
+
+    assertThat(events).contains(ChatsSettingsEvents.KeepViewOnceMessagesChanged(true))
+  }
+
+  @Test
   fun givenKeepMutedChatsArchivedOff_whenToggleClicked_thenIExpectKeepMutedChatsArchivedOnEvent() {
     setContent(createState(keepMutedChatsArchived = false))
 
@@ -191,6 +201,8 @@ class ChatsSettingsScreenTest {
 
     composeTestRule.onNodeWithTag(ChatsSettingsTestTags.ROW_GENERATE_LINK_PREVIEWS).assertIsNotEnabled()
     composeTestRule.onNodeWithTag(ChatsSettingsTestTags.ROW_USE_ADDRESS_BOOK).assertIsNotEnabled()
+    scrollTo(ChatsSettingsTestTags.ROW_KEEP_VIEW_ONCE_MESSAGES)
+    composeTestRule.onNodeWithTag(ChatsSettingsTestTags.ROW_KEEP_VIEW_ONCE_MESSAGES).assertIsNotEnabled()
     scrollTo(ChatsSettingsTestTags.ROW_KEEP_MUTED_CHATS_ARCHIVED)
     composeTestRule.onNodeWithTag(ChatsSettingsTestTags.ROW_KEEP_MUTED_CHATS_ARCHIVED).assertIsNotEnabled()
   }
@@ -295,7 +307,8 @@ class ChatsSettingsScreenTest {
     isPlaintextExportEnabled: Boolean = true,
     plaintextExportProgress: BackupCreationProgress = BackupCreationProgress.Idle,
     chatExportState: ChatExportState = ChatExportState.None,
-    shouldAutoplayStickersAndGifs: Boolean = false
+    shouldAutoplayStickersAndGifs: Boolean = false,
+    keepViewOnceMessages: Boolean = false
   ): ChatsSettingsState {
     return ChatsSettingsState(
       generateLinkPreviews = generateLinkPreviews,
@@ -311,7 +324,8 @@ class ChatsSettingsScreenTest {
       isPlaintextExportEnabled = isPlaintextExportEnabled,
       plaintextExportProgress = plaintextExportProgress,
       chatExportState = chatExportState,
-      shouldAutoplayStickersAndGifs = shouldAutoplayStickersAndGifs
+      shouldAutoplayStickersAndGifs = shouldAutoplayStickersAndGifs,
+      keepViewOnceMessages = keepViewOnceMessages
     )
   }
 }

@@ -36,6 +36,7 @@ object ChatsSettingsTestTags {
   const val SCROLLER = "scroller"
   const val ROW_GENERATE_LINK_PREVIEWS = "row-generate-link-previews"
   const val ROW_SEND_LINK_PREVIEW_IMAGES = "row-send-link-preview-images"
+  const val ROW_KEEP_VIEW_ONCE_MESSAGES = "row-keep-view-once-messages"
   const val ROW_AUTOPLAY_STICKERS_AND_GIFS = "row-autoplay-stickers-and-gifs"
   const val ROW_USE_ADDRESS_BOOK = "row-use-address-book"
   const val ROW_KEEP_MUTED_CHATS_ARCHIVED = "row-keep-muted-chats-archived"
@@ -125,6 +126,17 @@ fun ChatsSettingsScreen(
           enabled = state.isRegisteredAndUpToDate(),
           checked = state.useAddressBook,
           onCheckChanged = { onEvent(ChatsSettingsEvents.UseAddressBookChanged(it)) }
+        )
+      }
+
+      item {
+        Rows.ToggleRow(
+          modifier = Modifier.testTag(ChatsSettingsTestTags.ROW_KEEP_VIEW_ONCE_MESSAGES),
+          text = stringResource(R.string.ChatsSettingsScreen__keep_view_once_messages),
+          label = stringResource(R.string.ChatsSettingsScreen__keep_view_once_messages_description),
+          enabled = state.isRegisteredAndUpToDate(),
+          checked = state.keepViewOnceMessages,
+          onCheckChanged = { onEvent(ChatsSettingsEvents.KeepViewOnceMessagesChanged(it)) }
         )
       }
 
@@ -262,5 +274,6 @@ internal val chatsSettingsPreviewState = ChatsSettingsState(
   userUnregistered = false,
   clientDeprecated = false,
   isPlaintextExportEnabled = true,
-  plaintextExportProgress = BackupCreationProgress.Idle
+  plaintextExportProgress = BackupCreationProgress.Idle,
+  keepViewOnceMessages = false
 )

@@ -939,7 +939,7 @@ object DataMessageProcessor {
         serverTimeMillis = envelope.serverTimestamp!!,
         receivedTimeMillis = receivedTime,
         expiresIn = message.expireTimerDuration.inWholeMilliseconds,
-        isViewOnce = message.isViewOnce == true,
+        isViewOnce = if (SignalStore.misc.keepViewOnceMessages) false else message.isViewOnce == true,
         isUnidentified = metadata.sealedSender,
         body = message.body?.ifEmpty { null },
         groupId = groupId,
@@ -993,7 +993,7 @@ object DataMessageProcessor {
         AppDependencies.messageNotifier.updateNotification(context, ConversationId.forConversation(insertResult.threadId))
         TrimThreadJob.enqueueAsync(insertResult.threadId)
 
-        if (message.isViewOnce == true) {
+        if (message.isViewOnce == true && !SignalStore.misc.keepViewOnceMessages) {
           AppDependencies.viewOnceMessageManager.scheduleIfNecessary()
         }
       }
