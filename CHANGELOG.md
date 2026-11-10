@@ -30,6 +30,7 @@ Version numbers and release dates must reflect actual releases.
 - Signal-JW feature: map type selection in the location picker. Normal, Satellite and Terrain buttons change the live map and are remembered for future picks and saved-location snapshots.
 - Signal-JW feature: optional "Keep view-once media" in Chat settings, off by default. When enabled, incoming view-once messages are stored like normal messages so their media remains available; the setting clearly discloses that this breaks the sender's view-once expectation.
 - Signal-JW feature: optional "Ignore delete requests" in Chat settings, off by default. When enabled, "delete for everyone" requests no longer remove the local copy; the attempted delete is marked with a ❗ reaction. The setting discloses that it only affects this device.
+- Signal-JW feature: optional "Ignore group admin deletes" in Chat settings, off by default. When enabled, valid group-admin deletes keep the local copy and mark the attempt with a ‼ reaction; the administrator and target thread are still validated.
 
 ### Approved but not yet implemented
 
@@ -38,7 +39,6 @@ The project owner approved the remaining Signal-JW candidates and the following 
 - Signal-JW: encrypted backup export/restore at any time.
 - Signal-JW: plaintext backup export/import (requires explicit warning flow).
 - Signal-JW: encrypted ZIP backups.
-- Signal-JW: ignore group-admin delete requests.
 - Signal-JW: delete media only.
 - Signal-JW: group invitation controls.
 - Signal-JW: exit-app action.

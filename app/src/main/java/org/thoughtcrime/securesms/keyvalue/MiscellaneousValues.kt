@@ -66,6 +66,7 @@ class MiscellaneousValues internal constructor(store: KeyValueStore, context: Co
   private const val GOOGLE_MAP_TYPE = "misc.google_map_type"
   private const val KEEP_VIEW_ONCE_MESSAGES = "misc.keep_view_once_messages"
   private const val IGNORE_REMOTE_DELETE = "misc.ignore_remote_delete"
+  private const val IGNORE_ADMIN_DELETE = "misc.ignore_admin_delete"
     private const val DIRECTORY_REFRESH_TIME = "misc.directory_refresh_time"
     private const val HAS_SUCCESSFULLY_RETRIEVED_DIRECTORY = "misc.has_successfully_retrieved_directory"
     private const val LAST_FULL_CONTACT_SYNC_TIME = "misc.last_full_contact_sync_time"
@@ -485,4 +486,10 @@ class MiscellaneousValues internal constructor(store: KeyValueStore, context: Co
    * Disabled by default so the sender's deletion is honored.
    */
   var ignoreRemoteDelete: Boolean by booleanValue(IGNORE_REMOTE_DELETE, false)
+
+  /**
+   * When set, group admins' "delete for everyone" requests are ignored and the targeted message is kept.
+   * Disabled by default so admin moderation is honored.
+   */
+  var ignoreAdminDelete: Boolean by booleanValue(IGNORE_ADMIN_DELETE, false)
 }

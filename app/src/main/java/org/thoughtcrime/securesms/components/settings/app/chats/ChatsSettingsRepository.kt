@@ -54,6 +54,12 @@ object ChatsSettingsRepository {
     SignalStore.misc.ignoreRemoteDelete = enabled
   }
 
+  fun isIgnoreAdminDelete(): Boolean = SignalStore.misc.ignoreAdminDelete
+
+  fun setIgnoreAdminDelete(enabled: Boolean) {
+    SignalStore.misc.ignoreAdminDelete = enabled
+  }
+
   fun isPreferSystemContactPhotos(): Boolean = SignalStore.settings.isPreferSystemContactPhotos
 
   fun setPreferSystemContactPhotos(enabled: Boolean) {

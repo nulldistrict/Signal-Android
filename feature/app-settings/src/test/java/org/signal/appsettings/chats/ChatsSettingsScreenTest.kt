@@ -104,6 +104,16 @@ class ChatsSettingsScreenTest {
   }
 
   @Test
+  fun givenIgnoreAdminDeleteOff_whenToggleClicked_thenIExpectIgnoreAdminDeleteOnEvent() {
+    setContent(createState(ignoreAdminDelete = false))
+
+    scrollTo(ChatsSettingsTestTags.ROW_IGNORE_ADMIN_DELETE)
+    composeTestRule.onNodeWithTag(ChatsSettingsTestTags.ROW_IGNORE_ADMIN_DELETE).performClick()
+
+    assertThat(events).contains(ChatsSettingsEvents.IgnoreAdminDeleteChanged(true))
+  }
+
+  @Test
   fun givenKeepMutedChatsArchivedOff_whenToggleClicked_thenIExpectKeepMutedChatsArchivedOnEvent() {
     setContent(createState(keepMutedChatsArchived = false))
 
@@ -215,6 +225,8 @@ class ChatsSettingsScreenTest {
     composeTestRule.onNodeWithTag(ChatsSettingsTestTags.ROW_KEEP_VIEW_ONCE_MESSAGES).assertIsNotEnabled()
     scrollTo(ChatsSettingsTestTags.ROW_IGNORE_REMOTE_DELETE)
     composeTestRule.onNodeWithTag(ChatsSettingsTestTags.ROW_IGNORE_REMOTE_DELETE).assertIsNotEnabled()
+    scrollTo(ChatsSettingsTestTags.ROW_IGNORE_ADMIN_DELETE)
+    composeTestRule.onNodeWithTag(ChatsSettingsTestTags.ROW_IGNORE_ADMIN_DELETE).assertIsNotEnabled()
     scrollTo(ChatsSettingsTestTags.ROW_KEEP_MUTED_CHATS_ARCHIVED)
     composeTestRule.onNodeWithTag(ChatsSettingsTestTags.ROW_KEEP_MUTED_CHATS_ARCHIVED).assertIsNotEnabled()
   }
@@ -321,7 +333,8 @@ class ChatsSettingsScreenTest {
     chatExportState: ChatExportState = ChatExportState.None,
     shouldAutoplayStickersAndGifs: Boolean = false,
     keepViewOnceMessages: Boolean = false,
-    ignoreRemoteDelete: Boolean = false
+    ignoreRemoteDelete: Boolean = false,
+    ignoreAdminDelete: Boolean = false
   ): ChatsSettingsState {
     return ChatsSettingsState(
       generateLinkPreviews = generateLinkPreviews,
@@ -339,7 +352,8 @@ class ChatsSettingsScreenTest {
       chatExportState = chatExportState,
       shouldAutoplayStickersAndGifs = shouldAutoplayStickersAndGifs,
       keepViewOnceMessages = keepViewOnceMessages,
-      ignoreRemoteDelete = ignoreRemoteDelete
+      ignoreRemoteDelete = ignoreRemoteDelete,
+      ignoreAdminDelete = ignoreAdminDelete
     )
   }
 }

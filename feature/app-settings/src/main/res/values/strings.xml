@@ -373,6 +373,9 @@
     <string name="ChatsSettingsScreen__ignore_remote_delete">Ignore delete requests</string>
     <!-- Description beneath the ignore remote delete toggle row in chat settings -->
     <string name="ChatsSettingsScreen__ignore_remote_delete_description">Keep messages that others try to delete for everyone. An attempted delete is marked with a ❗ reaction instead. This only affects this device and does not stop the sender from deleting their copy.</string>
+    <string name="ChatsSettingsScreen__ignore_admin_delete">Ignore group admin deletes</string>
+    <!-- Description beneath the ignore group admin delete toggle row in chat settings -->
+    <string name="ChatsSettingsScreen__ignore_admin_delete_description">Keep group messages that admins delete for everyone. An attempted delete is marked with a ‼ reaction instead. This only affects this device and does not stop the admin from deleting their copy.</string>
     <!-- Preference menu item description for a toggle switch for preserving the archived state of muted chats. -->
     <string name="preferences__muted_chats_that_are_archived_will_remain_archived">Muted chats that are archived will remain archived when a new message arrives.</string>
     <!-- Preference menu item title for a toggle switch for preserving the archived state of muted chats. -->

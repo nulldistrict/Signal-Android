@@ -50,7 +50,8 @@ class ChatsSettingsViewModel(
       chatExportState = ChatExportState.None,
       shouldAutoplayStickersAndGifs = ChatsSettingsRepository.isAutoplayStickersAndGifsEnabled(),
       keepViewOnceMessages = ChatsSettingsRepository.isKeepViewOnceMessages(),
-      ignoreRemoteDelete = ChatsSettingsRepository.isIgnoreRemoteDelete()
+      ignoreRemoteDelete = ChatsSettingsRepository.isIgnoreRemoteDelete(),
+      ignoreAdminDelete = ChatsSettingsRepository.isIgnoreAdminDelete()
     )
   )
 
@@ -70,6 +71,7 @@ class ChatsSettingsViewModel(
       is ChatsSettingsEvents.SendLinkPreviewImagesChanged -> setSendLinkPreviewImagesEnabled(event.enabled)
       is ChatsSettingsEvents.KeepViewOnceMessagesChanged -> setKeepViewOnceMessages(event.enabled)
       is ChatsSettingsEvents.IgnoreRemoteDeleteChanged -> setIgnoreRemoteDelete(event.enabled)
+      is ChatsSettingsEvents.IgnoreAdminDeleteChanged -> setIgnoreAdminDelete(event.enabled)
       is ChatsSettingsEvents.UseAddressBookChanged -> setUseAddressBook(event.enabled)
       is ChatsSettingsEvents.KeepMutedChatsArchivedChanged -> setKeepMutedChatsArchived(event.enabled)
       is ChatsSettingsEvents.UseSystemEmojiChanged -> setUseSystemEmoji(event.enabled)
@@ -132,6 +134,11 @@ class ChatsSettingsViewModel(
   private fun setIgnoreRemoteDelete(enabled: Boolean) {
     _state.update { it.copy(ignoreRemoteDelete = enabled) }
     ChatsSettingsRepository.setIgnoreRemoteDelete(enabled)
+  }
+
+  private fun setIgnoreAdminDelete(enabled: Boolean) {
+    _state.update { it.copy(ignoreAdminDelete = enabled) }
+    ChatsSettingsRepository.setIgnoreAdminDelete(enabled)
   }
 
   private fun setUseAddressBook(enabled: Boolean) {

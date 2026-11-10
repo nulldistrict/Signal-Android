@@ -38,6 +38,7 @@ object ChatsSettingsTestTags {
   const val ROW_SEND_LINK_PREVIEW_IMAGES = "row-send-link-preview-images"
   const val ROW_KEEP_VIEW_ONCE_MESSAGES = "row-keep-view-once-messages"
   const val ROW_IGNORE_REMOTE_DELETE = "row-ignore-remote-delete"
+  const val ROW_IGNORE_ADMIN_DELETE = "row-ignore-admin-delete"
   const val ROW_AUTOPLAY_STICKERS_AND_GIFS = "row-autoplay-stickers-and-gifs"
   const val ROW_USE_ADDRESS_BOOK = "row-use-address-book"
   const val ROW_KEEP_MUTED_CHATS_ARCHIVED = "row-keep-muted-chats-archived"
@@ -149,6 +150,17 @@ fun ChatsSettingsScreen(
           enabled = state.isRegisteredAndUpToDate(),
           checked = state.ignoreRemoteDelete,
           onCheckChanged = { onEvent(ChatsSettingsEvents.IgnoreRemoteDeleteChanged(it)) }
+        )
+      }
+
+      item {
+        Rows.ToggleRow(
+          modifier = Modifier.testTag(ChatsSettingsTestTags.ROW_IGNORE_ADMIN_DELETE),
+          text = stringResource(R.string.ChatsSettingsScreen__ignore_admin_delete),
+          label = stringResource(R.string.ChatsSettingsScreen__ignore_admin_delete_description),
+          enabled = state.isRegisteredAndUpToDate(),
+          checked = state.ignoreAdminDelete,
+          onCheckChanged = { onEvent(ChatsSettingsEvents.IgnoreAdminDeleteChanged(it)) }
         )
       }
 
@@ -288,5 +300,6 @@ internal val chatsSettingsPreviewState = ChatsSettingsState(
   isPlaintextExportEnabled = true,
   plaintextExportProgress = BackupCreationProgress.Idle,
   keepViewOnceMessages = false,
-  ignoreRemoteDelete = false
+  ignoreRemoteDelete = false,
+  ignoreAdminDelete = false
 )

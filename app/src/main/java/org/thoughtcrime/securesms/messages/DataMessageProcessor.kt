@@ -1481,7 +1481,7 @@ object DataMessageProcessor {
     val targetMessage: MessageRecord? = SignalDatabase.messages.getMessageFor(targetSentTimestamp, targetAuthor.id)
     if (targetMessage == null) {
       warn(envelope.clientTimestamp!!, "[handleAdminRemoteDelete] Could not find matching message! timestamp: $targetSentTimestamp")
-      if (earlyMessageCacheEntry != null) {
+      if (!SignalStore.misc.ignoreAdminDelete && earlyMessageCacheEntry != null) {
         AppDependencies.earlyMessageCache.store(targetAuthor.id, targetSentTimestamp, earlyMessageCacheEntry)
         batchCache.requiresEarlyMessageProcessing()
       }
@@ -1506,9 +1506,14 @@ object DataMessageProcessor {
     }
 
     return if (MessageConstraintsUtil.isValidAdminDeleteReceive(targetMessage, senderRecipient, envelope.serverTimestamp!!, groupRecord)) {
-      SignalDatabase.messages.markAsRemoteDelete(targetMessage, senderRecipient.id)
-      AppDependencies.messageNotifier.updateNotification(context, ConversationId.fromMessageRecord(targetMessage))
-      MessageId(targetMessage.id)
+      if (SignalStore.misc.ignoreAdminDelete) {
+        setLocalReaction(context, message, targetMessage, "\u203C")
+        null
+      } else {
+        SignalDatabase.messages.markAsRemoteDelete(targetMessage, senderRecipient.id)
+        AppDependencies.messageNotifier.updateNotification(context, ConversationId.fromMessageRecord(targetMessage))
+        MessageId(targetMessage.id)
+      }
     } else {
       warn(
         envelope.clientTimestamp!!,
