@@ -127,6 +127,28 @@ Release
 
 Do not use Molly as an intermediate upstream base.
 
+### 5.1 Reproducible release pipeline
+
+Release builds use Signal's `reproducible-builds/` Docker image, not the development machine toolchain, so the build environment is pinned and auditable.
+
+Pipeline:
+
+Signal release
+    ↓
+Feature commits rebased one at a time
+    ↓
+Targeted tests and compilation
+    ↓
+Three independent unsigned builds in the Docker image
+    ↓
+Identical SHA-256 hashes required
+    ↓
+Sign verified APK with release key
+    ↓
+GitHub release with APK, checksum and build provenance
+
+Feature isolation is part of the reproducibility strategy: small commits rebase cleanly, and a conflict is limited to the feature that owns the affected upstream code. See `UPSTREAM.md` section 5.1.
+
 ## 6. Git Organization
 
 Recommended remotes:

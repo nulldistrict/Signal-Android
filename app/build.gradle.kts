@@ -46,6 +46,10 @@ val debugKeystorePropertiesProvider: Provider<Properties> = providers.of(Propert
   parameters.file.set(rootProject.layout.projectDirectory.file("keystore.debug.properties"))
 }
 
+val releaseKeystorePropertiesProvider: Provider<Properties> = providers.of(PropertiesFileValueSource::class.java) {
+  parameters.file.set(rootProject.layout.projectDirectory.file("keystore.release.properties"))
+}
+
 val languagesProvider: Provider<List<String>> = providers.of(LanguageListValueSource::class.java) {
   parameters.resDir.set(layout.projectDirectory.dir("src/main/res"))
 }
@@ -169,6 +173,15 @@ android {
 
   debugKeystorePropertiesProvider.get().takeIf { it.isNotEmpty() }?.let { properties ->
     signingConfigs.getByName("debug").apply {
+      storeFile = file("${project.rootDir}/${properties.getProperty("storeFile")}")
+      storePassword = properties.getProperty("storePassword")
+      keyAlias = properties.getProperty("keyAlias")
+      keyPassword = properties.getProperty("keyPassword")
+    }
+  }
+
+  releaseKeystorePropertiesProvider.get().takeIf { it.isNotEmpty() }?.let { properties ->
+    signingConfigs.create("release") {
       storeFile = file("${project.rootDir}/${properties.getProperty("storeFile")}")
       storePassword = properties.getProperty("storePassword")
       keyAlias = properties.getProperty("keyAlias")
@@ -373,6 +386,7 @@ android {
     }
 
     getByName("release") {
+      signingConfig = signingConfigs.findByName("release")
       isMinifyEnabled = true
       proguardFiles(*buildTypes["debug"].proguardFiles.toTypedArray())
       buildConfigField("String", "BUILD_VARIANT_TYPE", "\"Release\"")

@@ -82,8 +82,9 @@ Verified against Molly `892d6264ba` and compared with Signal `515db93fb4`.
 | Multi-device / tablet linking | EXISTS_SIGNAL | — | — |
 | Alternative application icons | EXISTS_SIGNAL | — | — |
 | FOSS / degoogled build variant | OWNER_DECISION | — | Medium |
-| APK self-updater and reproducible builds | OWNER_DECISION | — | Medium |
-| MobileCoin removal | OWNER_DECISION | — | Low |
+| GitHub reproducible builds | IMPLEMENTED (CI verification pending) | Medium–High | Medium |
+| APK self-updater | APPROVED | Medium | Medium |
+| MobileCoin removal | APPROVED | Medium | Low |
 
 ### 2.2 Feature Detail
 
@@ -251,17 +252,25 @@ Verified against Molly `892d6264ba` and compared with Signal `515db93fb4`.
 - Evidence: Molly commit `45947267f1 Remove proprietary dependencies and consolidate FOSS variant (#652)` removed the separate FOSS source set and consolidated to `store` / `website` distribution flavors. Molly's `README.md` still advertises "Molly-FOSS", so the documentation and the build disagree.
 - This is a distribution decision (which proprietary/GMS dependencies to exclude), not a runtime feature. It affects application identity and build outputs, so it requires explicit owner approval.
 
-#### APK self-updater and reproducible builds
+#### GitHub reproducible builds
 
-- Status: `OWNER_DECISION`
-- Evidence: Molly `apkupdate/*` (`MANAGE_MOLLY_UPDATES`, F-Droid update URL, `ApkUpdateJob`, installer/notifications) and reproducible-build infrastructure (`reprocheck.yml`, pinned build config).
-- This is distribution/build infrastructure, not core runtime functionality. It depends on a release channel and signing strategy. Deferred until release strategy is decided.
+- Status: `IMPLEMENTED` (workflow and signing config added; first CI run still pending)
+- Evidence: Signal ships `reproducible-builds/` (Docker image), `.github/workflows/build-artifacts.yml` and `.github/scripts/build.sh`; Molly ships `.github/workflows/reprocheck.yml`.
+- Implemented: `.github/workflows/reproducible-release.yml` builds `githubProdRelease` three times inside Signal's reproducible Docker image, compares unsigned SHA-256 hashes, signs the verified APK and publishes it. `scripts/ci/build-fork.sh` and `scripts/ci/sign-fork.sh` are the container entrypoints.
+- Signing: optional `keystore.release.properties` (git-ignored) for local builds; GitHub Actions secrets for CI. The signing identity must never change without a migration plan.
+- Limitation: signed APKs are not byte-identical to unsigned builds, so verification uses `reproducible-builds/apkdiff/apkdiff.py`, which ignores signing metadata. Reproducibility is asserted for the unsigned artifact only.
+
+#### APK self-updater
+
+- Status: `APPROVED`
+- Evidence: Molly `apkupdate/*` (`MANAGE_MOLLY_UPDATES`, update URL, `ApkUpdateJob`, installer/notifications).
+- Implementation depends on the release channel produced by the reproducible-build workflow. Updates must verify the signing certificate matches the installed app before installing.
 
 #### MobileCoin removal
 
-- Status: `OWNER_DECISION`
+- Status: `APPROVED`
 - Evidence: Molly commit `5a8a33070d Remove MobileCoin payments`.
-- This is a divergence (removal of a Signal feature), not a port. It conflicts with the requirement to preserve applicable Signal functionality, so it requires explicit owner approval.
+- This is a deliberate divergence from Signal. Remove MobileCoin payment UI, jobs and dependencies without changing the application identity; keep all non-payment functionality intact.
 
 ## 3. Signal-JW Feature Candidates
 
@@ -273,21 +282,21 @@ Verified against Signal-JW `v8.33.2.0-JW` (`da443926af`) and compared with Signa
 
 | Feature | Status | Complexity | Security impact |
 |---|---|---|---|
-| Encrypted backup export/restore at any time | AWAITING_APPROVAL | High | High |
-| Plaintext backup export/import | AWAITING_APPROVAL | Medium–High | High |
+| Encrypted backup export/restore at any time | APPROVED | High | High |
+| Plaintext backup export/import | APPROVED | Medium–High | High |
 | Backup location / removable storage selection | EXISTS_SIGNAL (largely) | Low | Medium |
-| Encrypted ZIP backups (`zip4j`) | AWAITING_APPROVAL | Low–Medium | Medium |
-| Application passphrase (soft) lock | AWAITING_APPROVAL (duplicates Molly) | Medium | High |
-| Link preview image toggle | AWAITING_APPROVAL | Low | Low–Medium |
-| Keep view-once media | AWAITING_APPROVAL | Low | High |
-| Ignore remote delete requests | AWAITING_APPROVAL | Low–Medium | High |
-| Ignore group-admin delete requests | AWAITING_APPROVAL | Low–Medium | High |
-| Delete media only (keep message) | AWAITING_APPROVAL | Low | Medium |
-| Map type selection | AWAITING_APPROVAL | Low | Low |
-| Group invitation controls | AWAITING_APPROVAL | Medium–High | Medium |
+| Encrypted ZIP backups (`zip4j`) | APPROVED | Low–Medium | Medium |
+| Application passphrase (soft) lock | EXCLUDED (duplicates Molly) | Medium | High |
+| Link preview image toggle | APPROVED | Low | Low–Medium |
+| Keep view-once media | APPROVED | Low | High |
+| Ignore remote delete requests | APPROVED | Low–Medium | High |
+| Ignore group-admin delete requests | APPROVED | Low–Medium | High |
+| Delete media only (keep message) | APPROVED | Low | Medium |
+| Map type selection | APPROVED | Low | Low |
+| Group invitation controls | APPROVED | Medium–High | Medium |
 | FCM / WebSocket notification preference | EXISTS_SIGNAL | — | — |
-| Exit-app action | AWAITING_APPROVAL | Low | Low |
-| APK expiry removal | NOT_RECOMMENDED | Low | High |
+| Exit-app action | APPROVED | Low | Low |
+| APK expiry removal | EXCLUDED (NOT_RECOMMENDED) | Low | High |
 
 ### 3.2 Candidate Detail
 
@@ -295,7 +304,7 @@ Verified against Signal-JW `v8.33.2.0-JW` (`da443926af`) and compared with Signa
 - **Plaintext backup export/import** — `PlaintextBackupExporter.java`, `PlaintextBackupImporter.java`. Adds XML plaintext export and additive import. High security risk (plaintext of messages). Would require a dedicated warning flow and explicit confirmation. Not recommended without a security review.
 - **Backup location / removable storage selection** — `BACKUP_LOCATION_REMOVABLE_PREF`, `BACKUP_LOCATION_CHANGED`, `MANAGE_EXTERNAL_STORAGE`. Current Signal already has a backup folder picker (SAF). Likely `EXISTS_SIGNAL` or a legacy duplicate; the broad `MANAGE_EXTERNAL_STORAGE` permission is undesirable.
 - **Encrypted ZIP backups** — uses `net.lingala.zip4j:zip4j:2.11.6`. Low priority; evaluate only if backup work is approved.
-- **Application passphrase (soft) lock** — `PassphrasePromptActivity`, `Passphrase`/`softlock` branches. Duplicates Molly's passphrase lock; do not implement twice. If approved, implement once via the Molly-aligned design.
+- **Application passphrase (soft) lock** — `PassphrasePromptActivity`, `Passphrase`/`softlock` branches. Duplicates Molly's passphrase lock; do not implement twice. **Excluded by the project owner**; the Molly-aligned passphrase and database protection remains the single implementation.
 - **Link preview image toggle** — `preferences_chats__send_link_preview_images`. Current Signal only has a single link-preview on/off setting, no image-specific toggle. Low complexity.
 - **Keep view-once media** — `preferences_chats__chat_keep_view_once_messages`. Privacy-sensitive; breaks the view-once expectation. Requires explicit owner approval and clear UI disclosure.
 - **Ignore remote delete requests** — `preferences_chats__chat_ignore_remote_delete`. Privacy-sensitive; affects synchronization expectations. Approve only with explicit disclosure.
@@ -305,13 +314,18 @@ Verified against Signal-JW `v8.33.2.0-JW` (`da443926af`) and compared with Signa
 - **Group invitation controls** — `whoCanAddYouToGroups` (anyone / nonblocked / onlycontacts / onlysystemcontacts / nobody), `GroupsV2StateProcessor`. Current Signal has group-level "who can add members" permissions, not a per-user policy for who can add you. Medium–high complexity (group state + sync semantics).
 - **FCM / WebSocket notification preference** — Current Signal already exposes `forceWebsocketMode` in Data & Storage. `EXISTS_SIGNAL`; do not duplicate.
 - **Exit-app action** — `ExitActivity.java`, `MainToolbar`. Minor convenience; low risk.
-- **APK expiry removal** — `BuildConfig` expiry behavior. Not recommended: removing update enforcement weakens a security control.
+- **APK expiry removal** — `BuildConfig` expiry behavior. **Excluded by the project owner** (marked `NOT_RECOMMENDED`): removing update enforcement weakens a security control.
 
 ### 3.3 Approval Rule
 
 A candidate may already exist in Signal or Molly. Verify before porting.
 
-No Signal-JW feature may be implemented without explicit project owner approval of that specific feature.
+The project owner has approved every Signal-JW candidate above except:
+
+- Application passphrase (soft) lock
+- APK expiry removal
+
+These two must not be implemented. Approved features must still be ported as isolated, individually reviewable commits.
 
 ## 4. Explicitly Excluded Features
 
@@ -321,6 +335,8 @@ No Signal-JW feature may be implemented without explicit project owner approval 
 | WhatsApp database import | EXCLUDED |
 | SMS export/reset (JW, tied to removed SMS) | EXCLUDED |
 | WhatsApp database handling (`WhatsappBackup*`, `WaDb*`) | EXCLUDED |
+| Application passphrase (JW soft lock, duplicates Molly) | EXCLUDED |
+| APK expiry removal (JW) | EXCLUDED |
 
 Do not implement these features or their supporting dependencies. Do not add workarounds.
 

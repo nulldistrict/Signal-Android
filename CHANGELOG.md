@@ -24,6 +24,27 @@ Version numbers and release dates must reflect actual releases.
 - Molly secure RAM wiper: wipe free process memory on lock and restart the process, matching Molly, using the GPLv3 `im.molly:native-utils` native code, vendored as `libmolly-wipe.so`. The wipe is skipped during migrations and device transfers; process death is the fallback when the foreground service cannot start.
 - Molly SOCKS5/Orbot proxy: the proxy address field accepts `socks5://host:port` and `socks5h://host:port` (default port 9050). User SOCKS5 proxies always use remote DNS, and OkHttp traffic (including content and media) is routed through the same proxy with DNS-over-HTTPS resolved through it. WebRTC media is not proxied.
 - Molly data encryption at rest: the local master secret is now protected by an Argon2id-derived key bound to a non-exportable keystore HMAC key, and the SQLCipher database secret is wrapped under the passphrase-derived master secret instead of remaining keystore-sealed. App startup waits for the passphrase to unlock the database. Existing legacy passphrase formats are migrated on first successful unlock.
+- GitHub reproducible release infrastructure: a workflow builds the `githubProdRelease` APK three times inside Signal's `reproducible-builds/` Docker image, fails if the unsigned hashes differ, then signs the verified APK with the release key and publishes it. Release signing is configured through git-ignored `keystore.release.properties` or Actions secrets.
+
+### Approved but not yet implemented
+
+The project owner approved the remaining Signal-JW candidates and the following project changes. They are not released functionality until each is implemented and tested.
+
+- Signal-JW: encrypted backup export/restore at any time.
+- Signal-JW: plaintext backup export/import (requires explicit warning flow).
+- Signal-JW: encrypted ZIP backups.
+- Signal-JW: link preview image toggle.
+- Signal-JW: keep view-once media.
+- Signal-JW: ignore remote delete requests.
+- Signal-JW: ignore group-admin delete requests.
+- Signal-JW: delete media only.
+- Signal-JW: map type selection.
+- Signal-JW: group invitation controls.
+- Signal-JW: exit-app action.
+- APK self-updater.
+- MobileCoin payment removal.
+
+Explicitly not approved: the Signal-JW application passphrase (soft) lock and APK expiry removal.
 
 ### Changed
 
@@ -45,6 +66,7 @@ Version numbers and release dates must reflect actual releases.
 - Debug logs no longer include app instrumentation traces; the in-app WebViews no longer use Google Safe Browsing, which is a privacy/security trade-off documented in `FEATURE_MATRIX.md`.
 - User SOCKS5 proxy configuration fails closed: an invalid or unreachable proxy prevents connections instead of falling back to a direct connection. DNS for proxied OkHttp traffic is resolved via DNS-over-HTTPS through the proxy, and the content proxy is bypassed while SOCKS5 is active.
 - A passphrase-protected database now requires the passphrase to unwrap the SQLCipher database secret; the keystore-sealed copy is removed while the passphrase is active. The derived key is bound to the device keystore, and there is no passphrase-recovery path. While locked, background process starts cannot open the database until the user unlocks.
+- Release signing material is never committed. GitHub Actions stages the keystore only in `$RUNNER_TEMP` and mounts it read-only; the workflow signs only an unsigned APK whose three independent builds produced identical SHA-256 hashes.
 
 ## Release History
 

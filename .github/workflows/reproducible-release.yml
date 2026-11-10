@@ -1,0 +1,260 @@
+name: Reproducible release
+
+# Builds the fork three times in Signal's reproducible-builds Docker image,
+# verifies that the unsigned APKs are byte-for-byte identical, then signs the
+# verified APK with the fork's release key and optionally publishes it.
+#
+# Never runs on pull requests. Release builds require the following repository
+# secrets:
+#   ANDROID_KEYSTORE_BASE64   base64-encoded PKCS#12/JKS release keystore
+#   ANDROID_KEYSTORE_PASSWORD keystore password
+#   ANDROID_KEY_ALIAS         signing key alias
+#   ANDROID_KEY_PASSWORD      signing key password
+#
+# The signing identity must never change without an explicit migration plan:
+# Android refuses to install an update signed by a different key.
+
+on:
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: "Commit, branch or tag to build"
+        type: string
+        required: true
+        default: dev
+      tag:
+        description: "Release tag to create/publish (leave empty to only build)"
+        type: string
+        default: ""
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: reproducible-release-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  BUILD_VARIANT: githubProdRelease
+
+jobs:
+  build:
+    name: "Unsigned build #${{ matrix.index }}"
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    permissions:
+      contents: read
+    strategy:
+      fail-fast: false
+      matrix:
+        index: [0, 1, 2]
+
+    steps:
+      - name: Check out workflow
+        uses: actions/checkout@v7
+
+      - name: Check out source
+        uses: actions/checkout@v7
+        with:
+          ref: ${{ github.event.inputs.ref || github.ref }}
+          path: src
+          submodules: true
+          lfs: true
+
+      - name: Free disk space
+        run: |
+          sudo rm -rf /usr/lib/jvm /usr/share/dotnet /usr/share/swift
+          sudo rm -rf /usr/local/.ghcup /usr/local/julia* /usr/local/lib/android
+          sudo rm -rf /usr/local/share/chromium /opt/microsoft /opt/google /opt/az
+          sudo rm -rf /usr/local/share/powershell /opt/hostedtoolcache
+          docker system prune -af || true
+          docker builder prune -af || true
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v4
+
+      - name: Build reproducible-builds image
+        uses: docker/build-push-action@v7
+        with:
+          context: src/reproducible-builds
+          tags: signal-android
+          load: true
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Build unsigned APK
+        env:
+          BUILD_VARIANT: ${{ env.BUILD_VARIANT }}
+        run: |
+          mkdir -p out
+          docker run --rm \
+            --user "$(id -u):$(id -g)" \
+            -v "$PWD/src:/project" -w /project \
+            -v "$PWD/out:/out" \
+            -v "$PWD/scripts/ci:/scripts:ro" \
+            -e OUT=/out -e BUILD_VARIANT \
+            signal-android /scripts/build-fork.sh
+
+      - name: Upload unsigned APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: fork-unsigned-${{ matrix.index }}
+          path: out/
+          if-no-files-found: error
+          retention-days: 7
+
+  verify:
+    name: Verify reproducibility
+    runs-on: ubuntu-latest
+    needs: build
+    permissions:
+      contents: read
+
+    steps:
+      - name: Download unsigned APKs
+        uses: actions/download-artifact@v4
+        with:
+          pattern: fork-unsigned-*
+          path: artifacts
+
+      - name: Compare builds
+        run: |
+          set -euo pipefail
+          mapfile -d '' apks < <(find artifacts -name '*.apk' -print0 | sort -z)
+          if [ "${#apks[@]}" -ne 3 ]; then
+            echo "Expected 3 unsigned APKs, found ${#apks[@]}." >&2
+            exit 1
+          fi
+          hashes="$(printf '%s\0' "${apks[@]}" | xargs -0 sha256sum | awk '{print $1}' | sort -u)"
+          count="$(printf '%s\n' "$hashes" | wc -l)"
+          echo "Distinct APK hashes: $count"
+          printf '%s\n' "$hashes"
+          if [ "$count" -ne 1 ]; then
+            echo "Builds are not reproducible: unsigned APK hashes differ." >&2
+            exit 1
+          fi
+
+      - name: Record verified hash
+        run: |
+          find artifacts -name '*.apk' -print0 | sort -z | xargs -0 sha256sum | head -1 > artifacts/verified-unsigned.sha256
+          cat artifacts/verified-unsigned.sha256
+
+      - name: Upload verified unsigned APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: fork-verified-unsigned
+          path: artifacts/
+          if-no-files-found: error
+
+  sign:
+    name: Sign and publish
+    runs-on: ubuntu-latest
+    needs: verify
+    permissions:
+      contents: write
+
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v7
+        with:
+          ref: ${{ github.event.inputs.ref || github.ref }}
+          path: src
+
+      - name: Download verified unsigned APK
+        uses: actions/download-artifact@v4
+        with:
+          name: fork-verified-unsigned
+          path: unsigned
+
+      - name: Stage release keystore
+        env:
+          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+        run: |
+          set -euo pipefail
+          if [ -z "$ANDROID_KEYSTORE_BASE64" ]; then
+            echo "ANDROID_KEYSTORE_BASE64 is not configured." >&2
+            exit 1
+          fi
+          mkdir -p "$RUNNER_TEMP/secrets"
+          printf '%s' "$ANDROID_KEYSTORE_BASE64" | base64 -d > "$RUNNER_TEMP/secrets/release.jks"
+          chmod 600 "$RUNNER_TEMP/secrets/release.jks"
+
+      - name: Free disk space
+        run: |
+          sudo rm -rf /usr/lib/jvm /usr/share/dotnet /usr/share/swift
+          sudo rm -rf /usr/local/.ghcup /usr/local/julia* /usr/local/lib/android
+          sudo rm -rf /usr/local/share/chromium /opt/microsoft /opt/google /opt/az
+          sudo rm -rf /usr/local/share/powershell /opt/hostedtoolcache
+          docker system prune -af || true
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v4
+
+      - name: Build reproducible-builds image
+        uses: docker/build-push-action@v7
+        with:
+          context: src/reproducible-builds
+          tags: signal-android
+          load: true
+          cache-from: type=gha
+
+      - name: Sign verified APK
+        env:
+          KS_PASS: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          KEY_PASS: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: |
+          set -euo pipefail
+          mkdir -p signed
+          docker run --rm \
+            --user "$(id -u):$(id -g)" \
+            -v "$PWD/unsigned:/unsigned:ro" \
+            -v "$PWD/signed:/out" \
+            -v "$RUNNER_TEMP/secrets:/secrets:ro" \
+            -v "$PWD/scripts/ci:/scripts:ro" \
+            -e APK_IN="/unsigned/fork-unsigned.apk" \
+            -e OUT=/out \
+            -e KEYSTORE=/secrets/release.jks \
+            -e KS_PASS -e KEY_ALIAS -e KEY_PASS \
+            signal-android /scripts/sign-fork.sh
+
+      - name: Write build provenance
+        run: |
+          set -euo pipefail
+          {
+            echo "source commit: $(git -C src rev-parse HEAD)"
+            echo "source ref:    ${{ github.event.inputs.ref || github.ref }}"
+            echo "build variant: ${{ env.BUILD_VARIANT }}"
+            echo "unsigned sha256: $(awk '{print $1}' unsigned/verified-unsigned.sha256 2>/dev/null || awk '{print $1}' unsigned/*.sha256 | head -1)"
+            echo "signed sha256:   $(awk '{print $1}' signed/fork-release.apk.sha256)"
+          } > signed/BUILD_INFO.txt
+          cat signed/BUILD_INFO.txt
+
+      - name: Upload signed APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: fork-signed
+          path: signed/
+          if-no-files-found: error
+
+      - name: Publish release
+        if: ${{ startsWith(github.ref, 'refs/tags/v') || github.event.inputs.tag != '' }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          TAG="${{ github.event.inputs.tag || github.ref_name }}"
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            gh release upload "$TAG" signed/fork-release.apk signed/fork-release.apk.sha256 signed/BUILD_INFO.txt --clobber
+          else
+            gh release create "$TAG" \
+              signed/fork-release.apk \
+              signed/fork-release.apk.sha256 \
+              signed/BUILD_INFO.txt \
+              --target "${{ github.sha }}" \
+              --title "$TAG" \
+              --generate-notes
+          fi

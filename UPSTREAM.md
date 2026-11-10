@@ -145,6 +145,21 @@ Where practical:
 
 Do not force artificial modularization.
 
+### 5.1 Low-conflict update rule
+
+Every custom feature must remain a self-contained commit on top of the upstream base. Do not squash features together, and do not rewrite unrelated upstream code in the same commit.
+
+After each Signal update:
+
+1. Rebase the feature commits onto the new upstream tag one at a time, in the order recorded in `FEATURE_MATRIX.md`.
+2. Resolve conflicts inside the feature that owns the changed upstream code.
+3. Keep the feature's tests and documentation changes in the same commit as the feature.
+4. Run the reproducible release workflow on the rebased branch.
+
+A feature that cannot be rebased cleanly is stopped and reviewed instead of being dropped or auto-resolved. This keeps conflicts local to one feature and makes the next update cheaper.
+
+Prefer extending existing Signal extension points (repositories, settings stores, build config fields) over editing large upstream files. When an upstream file must change, keep the change as small as possible and document it in the feature's `FEATURE_MATRIX.md` entry.
+
 ## 6. Update Report Template
 
 ```text
@@ -182,6 +197,17 @@ Potential future scripts:
 Implement automation only after understanding the repository and update workflow.
 
 Automation must never silently discard changes or resolve unknown conflicts.
+
+Current automation:
+
+- `.github/workflows/reproducible-release.yml` builds the unsigned release APK three times, verifies identical hashes, signs the verified APK and publishes GitHub release artifacts.
+- `scripts/ci/build-fork.sh` and `scripts/ci/sign-fork.sh` are the container entrypoints used by that workflow.
+
+Recommended next automation, in order:
+
+1. A non-destructive upstream check that reports the new Signal tag, the current base, and the custom commits that need rebasing.
+2. A CI job that compiles and runs targeted tests on each rebased feature commit.
+3. A release-notes generator that lists the feature commits included in a tag.
 
 ## 8. Recovery
 
