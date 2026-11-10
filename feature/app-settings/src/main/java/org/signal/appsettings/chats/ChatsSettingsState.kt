@@ -9,6 +9,7 @@ import org.signal.appsettings.backups.BackupCreationProgress
 
 data class ChatsSettingsState(
   val generateLinkPreviews: Boolean,
+  val sendLinkPreviewImages: Boolean,
   val useAddressBook: Boolean,
   val keepMutedChatsArchived: Boolean,
   val useSystemEmoji: Boolean,

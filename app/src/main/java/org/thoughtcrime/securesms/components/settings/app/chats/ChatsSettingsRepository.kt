@@ -36,6 +36,12 @@ object ChatsSettingsRepository {
     SignalStore.settings.isAutoplayStickersAndGifsEnabled = enabled
   }
 
+  fun isSendLinkPreviewImagesEnabled(): Boolean = SignalStore.misc.sendLinkPreviewImages
+
+  fun setSendLinkPreviewImagesEnabled(enabled: Boolean) {
+    SignalStore.misc.sendLinkPreviewImages = enabled
+  }
+
   fun isPreferSystemContactPhotos(): Boolean = SignalStore.settings.isPreferSystemContactPhotos
 
   fun setPreferSystemContactPhotos(enabled: Boolean) {

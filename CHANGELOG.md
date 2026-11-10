@@ -26,6 +26,7 @@ Version numbers and release dates must reflect actual releases.
 - Molly data encryption at rest: the local master secret is now protected by an Argon2id-derived key bound to a non-exportable keystore HMAC key, and the SQLCipher database secret is wrapped under the passphrase-derived master secret instead of remaining keystore-sealed. App startup waits for the passphrase to unlock the database. Existing legacy passphrase formats are migrated on first successful unlock.
 - GitHub reproducible release infrastructure: a workflow builds the `githubProdRelease` APK three times inside Signal's `reproducible-builds/` Docker image, fails if the unsigned hashes differ, then signs the verified APK with the release key and publishes it. Release signing is configured through git-ignored `keystore.release.properties` or Actions secrets.
 - Molly feature: FCM messages arriving while the passphrase-locked database is unavailable no longer crash or attempt to open the database. High-priority pushes post the "you may have messages" notification, other pushes are deferred, FCM job fetching is skipped, and a token rotated while locked is uploaded after the next unlock.
+- Signal-JW feature: a "Send link preview images" toggle in Chat settings, enabled by default and disabled while link previews themselves are off. When off, outgoing link previews keep their title/description but omit the downloaded image.
 
 ### Approved but not yet implemented
 
@@ -34,7 +35,6 @@ The project owner approved the remaining Signal-JW candidates and the following 
 - Signal-JW: encrypted backup export/restore at any time.
 - Signal-JW: plaintext backup export/import (requires explicit warning flow).
 - Signal-JW: encrypted ZIP backups.
-- Signal-JW: link preview image toggle.
 - Signal-JW: keep view-once media.
 - Signal-JW: ignore remote delete requests.
 - Signal-JW: ignore group-admin delete requests.

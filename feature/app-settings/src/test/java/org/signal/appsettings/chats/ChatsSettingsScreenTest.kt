@@ -87,6 +87,7 @@ class ChatsSettingsScreenTest {
   fun givenKeepMutedChatsArchivedOff_whenToggleClicked_thenIExpectKeepMutedChatsArchivedOnEvent() {
     setContent(createState(keepMutedChatsArchived = false))
 
+    scrollTo(ChatsSettingsTestTags.ROW_KEEP_MUTED_CHATS_ARCHIVED)
     composeTestRule.onNodeWithTag(ChatsSettingsTestTags.ROW_KEEP_MUTED_CHATS_ARCHIVED).performClick()
 
     assertThat(events).contains(ChatsSettingsEvents.KeepMutedChatsArchivedChanged(true))
@@ -190,6 +191,7 @@ class ChatsSettingsScreenTest {
 
     composeTestRule.onNodeWithTag(ChatsSettingsTestTags.ROW_GENERATE_LINK_PREVIEWS).assertIsNotEnabled()
     composeTestRule.onNodeWithTag(ChatsSettingsTestTags.ROW_USE_ADDRESS_BOOK).assertIsNotEnabled()
+    scrollTo(ChatsSettingsTestTags.ROW_KEEP_MUTED_CHATS_ARCHIVED)
     composeTestRule.onNodeWithTag(ChatsSettingsTestTags.ROW_KEEP_MUTED_CHATS_ARCHIVED).assertIsNotEnabled()
   }
 
@@ -282,6 +284,7 @@ class ChatsSettingsScreenTest {
 
   private fun createState(
     generateLinkPreviews: Boolean = true,
+    sendLinkPreviewImages: Boolean = true,
     useAddressBook: Boolean = true,
     keepMutedChatsArchived: Boolean = true,
     useSystemEmoji: Boolean = false,
@@ -296,6 +299,7 @@ class ChatsSettingsScreenTest {
   ): ChatsSettingsState {
     return ChatsSettingsState(
       generateLinkPreviews = generateLinkPreviews,
+      sendLinkPreviewImages = sendLinkPreviewImages,
       useAddressBook = useAddressBook,
       keepMutedChatsArchived = keepMutedChatsArchived,
       useSystemEmoji = useSystemEmoji,

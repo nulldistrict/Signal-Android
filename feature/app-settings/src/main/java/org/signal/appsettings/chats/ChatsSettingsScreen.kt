@@ -35,6 +35,7 @@ import org.signal.core.ui.compose.Texts
 object ChatsSettingsTestTags {
   const val SCROLLER = "scroller"
   const val ROW_GENERATE_LINK_PREVIEWS = "row-generate-link-previews"
+  const val ROW_SEND_LINK_PREVIEW_IMAGES = "row-send-link-preview-images"
   const val ROW_AUTOPLAY_STICKERS_AND_GIFS = "row-autoplay-stickers-and-gifs"
   const val ROW_USE_ADDRESS_BOOK = "row-use-address-book"
   const val ROW_KEEP_MUTED_CHATS_ARCHIVED = "row-keep-muted-chats-archived"
@@ -91,6 +92,17 @@ fun ChatsSettingsScreen(
           enabled = state.isRegisteredAndUpToDate(),
           checked = state.generateLinkPreviews,
           onCheckChanged = { onEvent(ChatsSettingsEvents.GenerateLinkPreviewsChanged(it)) }
+        )
+      }
+
+      item {
+        Rows.ToggleRow(
+          modifier = Modifier.testTag(ChatsSettingsTestTags.ROW_SEND_LINK_PREVIEW_IMAGES),
+          text = stringResource(R.string.ChatsSettingsScreen__send_link_preview_images),
+          label = stringResource(R.string.ChatsSettingsScreen__send_link_preview_images_description),
+          enabled = state.isRegisteredAndUpToDate() && state.generateLinkPreviews,
+          checked = state.sendLinkPreviewImages,
+          onCheckChanged = { onEvent(ChatsSettingsEvents.SendLinkPreviewImagesChanged(it)) }
         )
       }
 
@@ -240,6 +252,7 @@ private fun ChatsSettingsScreenPreview() {
 
 internal val chatsSettingsPreviewState = ChatsSettingsState(
   generateLinkPreviews = true,
+  sendLinkPreviewImages = true,
   useAddressBook = true,
   keepMutedChatsArchived = true,
   useSystemEmoji = false,

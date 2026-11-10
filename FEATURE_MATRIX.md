@@ -297,7 +297,7 @@ Verified against Signal-JW `v8.33.2.0-JW` (`da443926af`) and compared with Signa
 | Backup location / removable storage selection | EXISTS_SIGNAL (largely) | Low | Medium |
 | Encrypted ZIP backups (`zip4j`) | APPROVED | Low–Medium | Medium |
 | Application passphrase (soft) lock | EXCLUDED (duplicates Molly) | Medium | High |
-| Link preview image toggle | APPROVED | Low | Low–Medium |
+| Link preview image toggle | TESTED | Low | Low–Medium |
 | Keep view-once media | APPROVED | Low | High |
 | Ignore remote delete requests | APPROVED | Low–Medium | High |
 | Ignore group-admin delete requests | APPROVED | Low–Medium | High |
@@ -315,8 +315,7 @@ Verified against Signal-JW `v8.33.2.0-JW` (`da443926af`) and compared with Signa
 - **Backup location / removable storage selection** — `BACKUP_LOCATION_REMOVABLE_PREF`, `BACKUP_LOCATION_CHANGED`, `MANAGE_EXTERNAL_STORAGE`. Current Signal already has a backup folder picker (SAF). Likely `EXISTS_SIGNAL` or a legacy duplicate; the broad `MANAGE_EXTERNAL_STORAGE` permission is undesirable.
 - **Encrypted ZIP backups** — uses `net.lingala.zip4j:zip4j:2.11.6`. Low priority; evaluate only if backup work is approved.
 - **Application passphrase (soft) lock** — `PassphrasePromptActivity`, `Passphrase`/`softlock` branches. Duplicates Molly's passphrase lock; do not implement twice. **Excluded by the project owner**; the Molly-aligned passphrase and database protection remains the single implementation.
-- **Link preview image toggle** — `preferences_chats__send_link_preview_images`. Current Signal only has a single link-preview on/off setting, no image-specific toggle. Low complexity.
-- **Keep view-once media** — `preferences_chats__chat_keep_view_once_messages`. Privacy-sensitive; breaks the view-once expectation. Requires explicit owner approval and clear UI disclosure.
+- **Link preview image toggle** — `preferences_chats__send_link_preview_images`. Current Signal only has a single link-preview on/off setting, no image-specific toggle. Low complexity. Status: `TESTED`; implemented as `SignalStore.misc.sendLinkPreviewImages` (default on) and a Chat settings toggle that is disabled while link previews themselves are off. Image downloading is skipped only for the outgoing preview attachment; link metadata is still fetched when previews are enabled.- **Keep view-once media** — `preferences_chats__chat_keep_view_once_messages`. Privacy-sensitive; breaks the view-once expectation. Requires explicit owner approval and clear UI disclosure.
 - **Ignore remote delete requests** — `preferences_chats__chat_ignore_remote_delete`. Privacy-sensitive; affects synchronization expectations. Approve only with explicit disclosure.
 - **Ignore group-admin delete requests** — `preferences_chats__chat_ignore_admin_delete`. Same concerns as remote delete; group-governance implications.
 - **Delete media only** — `preferences_chats__delete_media_only`. Keeps message text while deleting media. Medium privacy impact.

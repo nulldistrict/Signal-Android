@@ -36,6 +36,7 @@ class ChatsSettingsViewModel(
   private val _state = MutableStateFlow(
     ChatsSettingsState(
       generateLinkPreviews = ChatsSettingsRepository.isLinkPreviewsEnabled(),
+      sendLinkPreviewImages = ChatsSettingsRepository.isSendLinkPreviewImagesEnabled(),
       useAddressBook = ChatsSettingsRepository.isPreferSystemContactPhotos(),
       keepMutedChatsArchived = ChatsSettingsRepository.isKeepMutedChatsArchived(),
       useSystemEmoji = ChatsSettingsRepository.isPreferSystemEmoji(),
@@ -64,6 +65,7 @@ class ChatsSettingsViewModel(
       ChatsSettingsEvents.Refresh -> refresh()
       is ChatsSettingsEvents.PlaintextExportProgressChanged -> applyPlaintextExportProgress(event.progress)
       is ChatsSettingsEvents.GenerateLinkPreviewsChanged -> setGenerateLinkPreviewsEnabled(event.enabled)
+      is ChatsSettingsEvents.SendLinkPreviewImagesChanged -> setSendLinkPreviewImagesEnabled(event.enabled)
       is ChatsSettingsEvents.UseAddressBookChanged -> setUseAddressBook(event.enabled)
       is ChatsSettingsEvents.KeepMutedChatsArchivedChanged -> setKeepMutedChatsArchived(event.enabled)
       is ChatsSettingsEvents.UseSystemEmojiChanged -> setUseSystemEmoji(event.enabled)
@@ -111,6 +113,11 @@ class ChatsSettingsViewModel(
   private fun setAutoplayStickersAndGifsEnabled(enabled: Boolean) {
     _state.update { it.copy(shouldAutoplayStickersAndGifs = enabled) }
     ChatsSettingsRepository.setAutoplayStickersAndGifsEnabled(enabled)
+  }
+
+  private fun setSendLinkPreviewImagesEnabled(enabled: Boolean) {
+    _state.update { it.copy(sendLinkPreviewImages = enabled) }
+    ChatsSettingsRepository.setSendLinkPreviewImagesEnabled(enabled)
   }
 
   private fun setUseAddressBook(enabled: Boolean) {

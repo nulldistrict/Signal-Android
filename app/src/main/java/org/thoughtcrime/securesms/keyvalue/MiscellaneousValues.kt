@@ -62,6 +62,7 @@ class MiscellaneousValues internal constructor(store: KeyValueStore, context: Co
     private const val LAST_APPLIED_PNI_CHANGE_SERVER_TIMESTAMP = "misc.last_applied_pni_change_server_timestamp"
     private const val LAST_MISSING_PLAY_SERVICES_FCM_VERIFICATION_TIME = "misc.last_missing_play_services_fcm_verification_time"
     private const val LAST_PROCESSED_SHARE_DATA_TIMESTAMP = "misc.last_processed_share_data_timestamp"
+  private const val SEND_LINK_PREVIEW_IMAGES = "misc.send_link_preview_images"
     private const val DIRECTORY_REFRESH_TIME = "misc.directory_refresh_time"
     private const val HAS_SUCCESSFULLY_RETRIEVED_DIRECTORY = "misc.has_successfully_retrieved_directory"
     private const val LAST_FULL_CONTACT_SYNC_TIME = "misc.last_full_contact_sync_time"
@@ -458,4 +459,10 @@ class MiscellaneousValues internal constructor(store: KeyValueStore, context: Co
    * the activity that consumed it is gone.
    */
   var lastProcessedShareDataTimestamp: Long by longValue(LAST_PROCESSED_SHARE_DATA_TIMESTAMP, -1)
+
+  /**
+   * Whether outgoing link previews may include a downloaded preview image. Link previews themselves
+   * remain governed by the existing [org.thoughtcrime.securesms.keyvalue.SettingsValues] toggle.
+   */
+  var sendLinkPreviewImages: Boolean by booleanValue(SEND_LINK_PREVIEW_IMAGES, true)
 }
