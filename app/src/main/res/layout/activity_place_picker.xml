@@ -29,6 +29,36 @@
         app:layout_constraintVertical_bias="0.0"
         app:backgroundColor="@color/signal_colorBackground"/>
 
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:padding="8dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <Button
+            android:id="@+id/map_type_normal"
+            style="?android:attr/buttonBarButtonStyle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/preferences__map_normal" />
+
+        <Button
+            android:id="@+id/map_type_satellite"
+            style="?android:attr/buttonBarButtonStyle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/preferences__map_satellite" />
+
+        <Button
+            android:id="@+id/map_type_terrain"
+            style="?android:attr/buttonBarButtonStyle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/preferences__map_terrain" />
+    </LinearLayout>
+
     <ImageView
         android:id="@+id/marker_shadow_image_view"
         android:layout_width="wrap_content"

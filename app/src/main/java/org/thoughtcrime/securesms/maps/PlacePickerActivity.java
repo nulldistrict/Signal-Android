@@ -15,6 +15,7 @@ import android.os.AsyncTask;
 import android.os.Bundle;
 import android.view.View;
 import android.view.animation.OvershootInterpolator;
+import android.widget.Button;
 
 import androidx.activity.EdgeToEdge;
 import androidx.annotation.ColorInt;
@@ -40,6 +41,7 @@ import org.signal.core.util.logging.Log;
 import org.thoughtcrime.securesms.R;
 import org.thoughtcrime.securesms.components.location.SignalMapView;
 import org.thoughtcrime.securesms.dependencies.AppDependencies;
+import org.thoughtcrime.securesms.keyvalue.SignalStore;
 import org.thoughtcrime.securesms.util.DynamicNoActionBarTheme;
 import org.thoughtcrime.securesms.util.DynamicTheme;
 import org.thoughtcrime.securesms.util.MediaUtil;
@@ -77,6 +79,9 @@ public final class PlacePickerActivity extends AppCompatActivity {
   private AddressLookup            addressLookup;
   private GoogleMap                googleMap;
   private Insets                   systemBarInsets;
+  private Button                   mapTypeNormal;
+  private Button                   mapTypeSatellite;
+  private Button                   mapTypeTerrain;
 
   public static void startActivityForResultAtCurrentLocation(@NonNull Fragment fragment, int requestCode, @ColorInt int chatColor) {
     fragment.startActivityForResult(new Intent(fragment.requireActivity(), PlacePickerActivity.class).putExtra(KEY_CHAT_COLOR, chatColor), requestCode);
@@ -98,6 +103,9 @@ public final class PlacePickerActivity extends AppCompatActivity {
     bottomSheet      = findViewById(R.id.bottom_sheet);
     View markerImage = findViewById(R.id.marker_image_view);
     View fab         = findViewById(R.id.place_chosen_button);
+    mapTypeNormal    = findViewById(R.id.map_type_normal);
+    mapTypeSatellite = findViewById(R.id.map_type_satellite);
+    mapTypeTerrain   = findViewById(R.id.map_type_terrain);
 
     ViewCompat.setOnApplyWindowInsetsListener(findViewById(android.R.id.content), (view, insets) -> {
       systemBarInsets = insets.getInsets(WindowInsetsCompat.Type.systemBars());
@@ -108,6 +116,10 @@ public final class PlacePickerActivity extends AppCompatActivity {
 
     ViewCompat.setBackgroundTintList(fab, ColorStateList.valueOf(getIntent().getIntExtra(KEY_CHAT_COLOR, Color.RED)));
     fab.setOnClickListener(v -> finishWithAddress());
+
+    mapTypeNormal.setOnClickListener(v -> setMapType("normal", GoogleMap.MAP_TYPE_NORMAL));
+    mapTypeSatellite.setOnClickListener(v -> setMapType("satellite", GoogleMap.MAP_TYPE_SATELLITE));
+    mapTypeTerrain.setOnClickListener(v -> setMapType("terrain", GoogleMap.MAP_TYPE_TERRAIN));
 
     if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)   == PackageManager.PERMISSION_GRANTED ||
         ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED)
@@ -178,9 +190,18 @@ public final class PlacePickerActivity extends AppCompatActivity {
 
   private void setMap(GoogleMap googleMap) {
     this.googleMap = googleMap;
+    googleMap.setMapType(SignalMapView.getSelectedMapType());
 
     applyMapPadding();
     moveMapToInitialIfPossible();
+  }
+
+  private void setMapType(@NonNull String value, int mapType) {
+    SignalStore.misc().setGoogleMapType(value);
+
+    if (googleMap != null) {
+      googleMap.setMapType(mapType);
+    }
   }
 
   private void applyMapPadding() {

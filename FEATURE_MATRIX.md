@@ -302,7 +302,7 @@ Verified against Signal-JW `v8.33.2.0-JW` (`da443926af`) and compared with Signa
 | Ignore remote delete requests | APPROVED | Low–Medium | High |
 | Ignore group-admin delete requests | APPROVED | Low–Medium | High |
 | Delete media only (keep message) | APPROVED | Low | Medium |
-| Map type selection | APPROVED | Low | Low |
+| Map type selection | TESTED | Low | Low |
 | Group invitation controls | APPROVED | Medium–High | Medium |
 | FCM / WebSocket notification preference | EXISTS_SIGNAL | — | — |
 | Exit-app action | APPROVED | Low | Low |
@@ -319,7 +319,7 @@ Verified against Signal-JW `v8.33.2.0-JW` (`da443926af`) and compared with Signa
 - **Ignore remote delete requests** — `preferences_chats__chat_ignore_remote_delete`. Privacy-sensitive; affects synchronization expectations. Approve only with explicit disclosure.
 - **Ignore group-admin delete requests** — `preferences_chats__chat_ignore_admin_delete`. Same concerns as remote delete; group-governance implications.
 - **Delete media only** — `preferences_chats__delete_media_only`. Keeps message text while deleting media. Medium privacy impact.
-- **Map type selection** — `SignalMapView.getGoogleMapType`, `preferences` map type (normal/hybrid/satellite/terrain/none). Current Signal hardcodes `GoogleMap.MAP_TYPE_NORMAL`. Low complexity; low risk.
+- **Map type selection** — `SignalMapView.getGoogleMapType`, `preferences` map type (normal/hybrid/satellite/terrain/none). Current Signal hardcodes `GoogleMap.MAP_TYPE_NORMAL`. Low complexity; low risk. Status: `TESTED`; the location picker now shows Normal/Satellite/Terrain buttons and stores the choice in `SignalStore.misc.googleMapType`; the saved-location snapshot uses the same choice. Hybrid and none remain supported by the stored value even though they have no picker button, matching JW.
 - **Group invitation controls** — `whoCanAddYouToGroups` (anyone / nonblocked / onlycontacts / onlysystemcontacts / nobody), `GroupsV2StateProcessor`. Current Signal has group-level "who can add members" permissions, not a per-user policy for who can add you. Medium–high complexity (group state + sync semantics).
 - **FCM / WebSocket notification preference** — Current Signal already exposes `forceWebsocketMode` in Data & Storage. `EXISTS_SIGNAL`; do not duplicate.
 - **Exit-app action** — `ExitActivity.java`, `MainToolbar`. Minor convenience; low risk.

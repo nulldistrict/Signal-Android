@@ -2097,6 +2097,9 @@
 
     <!-- Content description of the pin image -->
     <string name="PlacePickerActivity_drop_pin">Drop pin</string>
+    <string name="preferences__map_normal">Normal</string>
+    <string name="preferences__map_satellite">Satellite</string>
+    <string name="preferences__map_terrain">Terrain</string>
     <string name="PlacePickerActivity_accept_address">Accept address</string>
 
     <!-- PlayServicesProblemFragment -->

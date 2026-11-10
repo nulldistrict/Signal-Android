@@ -20,6 +20,7 @@ import com.google.android.gms.maps.model.MarkerOptions;
 import org.signal.core.util.concurrent.ListenableFuture;
 import org.signal.core.util.concurrent.SettableFuture;
 import org.thoughtcrime.securesms.R;
+import org.thoughtcrime.securesms.keyvalue.SignalStore;
 
 import java.util.concurrent.ExecutionException;
 
@@ -86,7 +87,7 @@ public class SignalMapView extends LinearLayout {
       googleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(place, 13));
       googleMap.addMarker(new MarkerOptions().position(place));
       googleMap.setBuildingsEnabled(true);
-      googleMap.setMapType(GoogleMap.MAP_TYPE_NORMAL);
+      googleMap.setMapType(getSelectedMapType());
       googleMap.getUiSettings().setAllGesturesEnabled(false);
       googleMap.setOnMapLoadedCallback(() -> googleMap.snapshot(bitmap -> {
         future.set(bitmap);
@@ -101,6 +102,16 @@ public class SignalMapView extends LinearLayout {
   }
   public static ListenableFuture<Bitmap> snapshot(final SignalPlace place, @NonNull final MapView mapView) {
     return snapshot(place.getLatLong(), mapView);
+  }
+
+  public static int getSelectedMapType() {
+    switch (SignalStore.misc().getGoogleMapType()) {
+      case "hybrid":    return GoogleMap.MAP_TYPE_HYBRID;
+      case "satellite": return GoogleMap.MAP_TYPE_SATELLITE;
+      case "terrain":   return GoogleMap.MAP_TYPE_TERRAIN;
+      case "none":      return GoogleMap.MAP_TYPE_NONE;
+      default:          return GoogleMap.MAP_TYPE_NORMAL;
+    }
   }
 
 }
