@@ -544,6 +544,12 @@ public class ApplicationContext extends Application implements AppForegroundObse
       long nextSetTime = lastSetTime + TimeUnit.HOURS.toMillis(6);
       long now         = System.currentTimeMillis();
 
+      if (PlainTextKeyValueStore.getShouldRefreshFcmToken()) {
+        Log.i(TAG, "FCM token was rotated while the app was locked. Refreshing now.");
+        PlainTextKeyValueStore.setShouldRefreshFcmToken(false);
+        nextSetTime = now;
+      }
+
       if (SignalStore.account().getFcmToken() == null || nextSetTime <= now || lastSetTime > now) {
         Log.i(TAG, "Time for routine FCM token refresh.");
         AppDependencies.getJobManager().add(new FcmRefreshJob());

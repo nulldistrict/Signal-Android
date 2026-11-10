@@ -13,8 +13,10 @@ import org.signal.core.util.logging.Log;
 import org.thoughtcrime.securesms.dependencies.AppDependencies;
 import org.thoughtcrime.securesms.jobs.FcmRefreshJob;
 import org.thoughtcrime.securesms.jobs.SubmitRateLimitPushChallengeJob;
+import org.thoughtcrime.securesms.keyvalue.PlainTextKeyValueStore;
 import org.thoughtcrime.securesms.keyvalue.SignalStore;
 import org.thoughtcrime.securesms.registration.fcm.PushChallengeRequest;
+import org.thoughtcrime.securesms.service.KeyCachingService;
 import org.thoughtcrime.securesms.util.NetworkUtil;
 import org.thoughtcrime.securesms.util.SignalLocalMetrics;
 
@@ -26,6 +28,16 @@ public class FcmReceiveService extends FirebaseMessagingService {
 
   @Override
   public void onMessageReceived(RemoteMessage remoteMessage) {
+    if (KeyCachingService.isLocked(this)) {
+      if (remoteMessage.getPriority() == RemoteMessage.PRIORITY_HIGH) {
+        Log.d(TAG, "New urgent message received while app is locked.");
+        FcmFetchManager.postMayHaveMessagesNotification(this);
+      } else {
+        Log.d(TAG, "Message received while app is locked. Deferring fetch until unlock.");
+      }
+      return;
+    }
+
     Log.i(TAG, String.format(Locale.US,
                              "onMessageReceived() ID: %s, Delay: %d (Server offset: %d), Priority: %d, Original Priority: %d, Network: %s",
                              remoteMessage.getMessageId(),
@@ -52,6 +64,11 @@ public class FcmReceiveService extends FirebaseMessagingService {
 
   @Override
   public void onDeletedMessages() {
+    if (KeyCachingService.isLocked(this)) {
+      Log.d(TAG, "onDeletedMessages() while locked. Deferring fetch until unlock.");
+      return;
+    }
+
     Log.w(TAG, "onDeleteMessages() -- Messages may have been dropped. Doing a normal message fetch.");
     handleReceivedNotification(AppDependencies.getApplication(), null);
   }
@@ -59,6 +76,12 @@ public class FcmReceiveService extends FirebaseMessagingService {
   @Override
   public void onNewToken(String token) {
     Log.i(TAG, "onNewToken()");
+
+    if (KeyCachingService.isLocked(this)) {
+      Log.i(TAG, "Got a new FCM token while locked. Deferring upload until unlock.");
+      PlainTextKeyValueStore.setShouldRefreshFcmToken(true);
+      return;
+    }
 
     if (!SignalStore.account().isRegistered()) {
       Log.i(TAG, "Got a new FCM token, but the user isn't registered.");

@@ -69,6 +69,7 @@ Verified against Molly `892d6264ba` and compared with Signal `515db93fb4`.
 | Feature | Status | Complexity | Security impact |
 |---|---|---|---|
 | Data encryption at rest (passphrase-derived DB secret) | TESTED | High | High |
+| FCM handling while database is locked | TESTED | Low | Medium |
 | Secure RAM wiper | TESTED | Medium | High |
 | Automatic application lock (passphrase/biometric extensions) | TESTED | Medium | High |
 | UnifiedPush notifications | NEEDS_PORT | High | Medium |
@@ -101,6 +102,15 @@ Verified against Molly `892d6264ba` and compared with Signal `515db93fb4`.
 - Limitations: while a passphrase is set, background process starts (for example FCM) cannot open the database until the user unlocks, which can delay background processing. Legacy master-secret cryptography remains AES-128 + HmacSHA1 (Molly's `char[]`/`Destroyable` rewrite is not ported), and `MasterSecretUtil` keeps its `String` passphrase API.
 - Tests: `app/src/test/java/org/thoughtcrime/securesms/crypto/PassphraseCryptoTest.java` covers `SecureSecretKeySpec` behavior, PKCS#12 passphrase encoding and KDF parameter round-tripping. The existing Signal test suite does not cover Android Keystore or the on-device upgrade path.
 - Notes: Do not describe the application lock as database encryption. This feature and the application lock are separate.
+
+#### FCM handling while the database is locked
+
+- Status: `TESTED` (unitless; compilation verified, on-device delivery while locked pending)
+- Molly sources: `app/src/main/java/org/thoughtcrime/securesms/gcm/FcmReceiveService.java`, `FcmJobService.java`, `FcmFetchManager.kt`
+- Current Signal: FCM handling assumes the database is always open. With passphrase protection, the application process can start while the database is still locked, so `SignalStore` is unavailable.
+- What was ported: when `KeyCachingService.isLocked()` reports the locked state, `onMessageReceived` defers non-urgent pushes and posts the "you may have messages" notification for high-priority pushes; `onDeletedMessages` and `FcmJobService` defer fetching; `onNewToken` stores a flag in `PlainTextKeyValueStore` and the post-unlock FCM check uploads the new token. The notification path avoids `SignalStore`-backed `RemoteConfig` and `NotificationChannels` until the app is initialized.
+- Security implications: no message contents are read while locked. The notification only reveals that messages may be waiting.
+- Limitations: message fetching resumes after the user unlocks; a locked app cannot process messages in the background. This matches Molly's deferred-startup model.
 
 #### Secure RAM wiper
 

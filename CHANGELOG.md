@@ -25,6 +25,7 @@ Version numbers and release dates must reflect actual releases.
 - Molly SOCKS5/Orbot proxy: the proxy address field accepts `socks5://host:port` and `socks5h://host:port` (default port 9050). User SOCKS5 proxies always use remote DNS, and OkHttp traffic (including content and media) is routed through the same proxy with DNS-over-HTTPS resolved through it. WebRTC media is not proxied.
 - Molly data encryption at rest: the local master secret is now protected by an Argon2id-derived key bound to a non-exportable keystore HMAC key, and the SQLCipher database secret is wrapped under the passphrase-derived master secret instead of remaining keystore-sealed. App startup waits for the passphrase to unlock the database. Existing legacy passphrase formats are migrated on first successful unlock.
 - GitHub reproducible release infrastructure: a workflow builds the `githubProdRelease` APK three times inside Signal's `reproducible-builds/` Docker image, fails if the unsigned hashes differ, then signs the verified APK with the release key and publishes it. Release signing is configured through git-ignored `keystore.release.properties` or Actions secrets.
+- Molly feature: FCM messages arriving while the passphrase-locked database is unavailable no longer crash or attempt to open the database. High-priority pushes post the "you may have messages" notification, other pushes are deferred, FCM job fetching is skipped, and a token rotated while locked is uploaded after the next unlock.
 
 ### Approved but not yet implemented
 

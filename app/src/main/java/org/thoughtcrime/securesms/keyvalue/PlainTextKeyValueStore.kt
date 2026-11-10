@@ -23,6 +23,7 @@ object PlainTextKeyValueStore {
   private const val APP_MIGRATION_VERSION = "pref_app_migration_version"
   private const val LAST_VERSION_CODE = "last_version_code"
   private const val LANGUAGE = "pref_language"
+  private const val SHOULD_REFRESH_FCM_TOKEN = "pref_should_refresh_fcm_token"
 
   private lateinit var sharedPrefs: SharedPreferences
 
@@ -82,4 +83,13 @@ object PlainTextKeyValueStore {
   var language: String
     get() = sharedPrefs.getString(LANGUAGE, "zz") ?: "zz"
     set(value) = sharedPrefs.edit(commit = true) { putString(LANGUAGE, value) }
+
+  /**
+   * Set when FCM rotates the token while the app is locked and the database cannot be opened.
+   * Read after unlock so the new token can be uploaded to the server.
+   */
+  @JvmStatic
+  var shouldRefreshFcmToken: Boolean
+    get() = sharedPrefs.getBoolean(SHOULD_REFRESH_FCM_TOKEN, false)
+    set(value) = sharedPrefs.edit(commit = true) { putBoolean(SHOULD_REFRESH_FCM_TOKEN, value) }
 }

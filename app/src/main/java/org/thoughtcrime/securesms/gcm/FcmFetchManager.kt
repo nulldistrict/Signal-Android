@@ -15,6 +15,7 @@ import org.signal.core.util.concurrent.SignalExecutors
 import org.signal.core.util.logging.Log
 import org.thoughtcrime.securesms.MainActivity
 import org.thoughtcrime.securesms.R
+import org.thoughtcrime.securesms.ApplicationContext
 import org.thoughtcrime.securesms.dependencies.AppDependencies
 import org.thoughtcrime.securesms.jobs.MessageFetchJob
 import org.thoughtcrime.securesms.messages.WebSocketDrainer
@@ -80,8 +81,14 @@ object FcmFetchManager {
     }
   }
 
-  private fun postMayHaveMessagesNotification(context: Context) {
-    if (RemoteConfig.fcmMayHaveMessagesNotificationKillSwitch) {
+  @JvmStatic
+  fun postMayHaveMessagesNotification(context: Context) {
+    // RemoteConfig and NotificationChannels both read SignalStore. While the database is locked by a
+    // passphrase the store is unavailable, so use the stable channel id and skip the remote kill
+    // switch for the locked-state notification.
+    val appInitialized = ApplicationContext.getInstance(context).isAppInitialized
+
+    if (appInitialized && RemoteConfig.fcmMayHaveMessagesNotificationKillSwitch) {
       Log.w(TAG, "May have messages notification kill switch")
       return
     }
@@ -91,9 +98,17 @@ object FcmFetchManager {
       return
     }
 
+    val notificationManager = NotificationManagerCompat.from(context)
+    val channelId           = if (appInitialized) NotificationChannels.getInstance().ADDITIONAL_MESSAGE_NOTIFICATIONS else "additional_message_notifications"
+
+    if (Build.VERSION.SDK_INT >= 26 && notificationManager.getNotificationChannel(channelId) == null) {
+      Log.w(TAG, "May have messages notification channel is missing.")
+      return
+    }
+
     Log.w(TAG, "Notifying the user that they may have new messages.")
 
-    val mayHaveMessagesNotification: Notification = NotificationCompat.Builder(context, NotificationChannels.getInstance().ADDITIONAL_MESSAGE_NOTIFICATIONS)
+    val mayHaveMessagesNotification: Notification = NotificationCompat.Builder(context, channelId)
       .setSmallIcon(R.drawable.ic_notification)
       .setContentTitle(context.getString(R.string.FcmFetchManager__you_may_have_messages))
       .setCategory(NotificationCompat.CATEGORY_MESSAGE)
@@ -102,7 +117,7 @@ object FcmFetchManager {
       .setOnlyAlertOnce(true)
       .build()
 
-    NotificationManagerCompat.from(context)
+    notificationManager
       .notify(NotificationIds.MAY_HAVE_MESSAGES_NOTIFICATION_ID, mayHaveMessagesNotification)
   }
 
