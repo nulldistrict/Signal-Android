@@ -48,6 +48,12 @@ object ChatsSettingsRepository {
     SignalStore.misc.keepViewOnceMessages = enabled
   }
 
+  fun isIgnoreRemoteDelete(): Boolean = SignalStore.misc.ignoreRemoteDelete
+
+  fun setIgnoreRemoteDelete(enabled: Boolean) {
+    SignalStore.misc.ignoreRemoteDelete = enabled
+  }
+
   fun isPreferSystemContactPhotos(): Boolean = SignalStore.settings.isPreferSystemContactPhotos
 
   fun setPreferSystemContactPhotos(enabled: Boolean) {

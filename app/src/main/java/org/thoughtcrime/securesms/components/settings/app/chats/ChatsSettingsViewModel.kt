@@ -49,7 +49,8 @@ class ChatsSettingsViewModel(
       plaintextExportProgress = ChatsSettingsRepository.observePlaintextExportProgress().value.toBackupCreationProgress(),
       chatExportState = ChatExportState.None,
       shouldAutoplayStickersAndGifs = ChatsSettingsRepository.isAutoplayStickersAndGifsEnabled(),
-      keepViewOnceMessages = ChatsSettingsRepository.isKeepViewOnceMessages()
+      keepViewOnceMessages = ChatsSettingsRepository.isKeepViewOnceMessages(),
+      ignoreRemoteDelete = ChatsSettingsRepository.isIgnoreRemoteDelete()
     )
   )
 
@@ -68,6 +69,7 @@ class ChatsSettingsViewModel(
       is ChatsSettingsEvents.GenerateLinkPreviewsChanged -> setGenerateLinkPreviewsEnabled(event.enabled)
       is ChatsSettingsEvents.SendLinkPreviewImagesChanged -> setSendLinkPreviewImagesEnabled(event.enabled)
       is ChatsSettingsEvents.KeepViewOnceMessagesChanged -> setKeepViewOnceMessages(event.enabled)
+      is ChatsSettingsEvents.IgnoreRemoteDeleteChanged -> setIgnoreRemoteDelete(event.enabled)
       is ChatsSettingsEvents.UseAddressBookChanged -> setUseAddressBook(event.enabled)
       is ChatsSettingsEvents.KeepMutedChatsArchivedChanged -> setKeepMutedChatsArchived(event.enabled)
       is ChatsSettingsEvents.UseSystemEmojiChanged -> setUseSystemEmoji(event.enabled)
@@ -125,6 +127,11 @@ class ChatsSettingsViewModel(
   private fun setKeepViewOnceMessages(enabled: Boolean) {
     _state.update { it.copy(keepViewOnceMessages = enabled) }
     ChatsSettingsRepository.setKeepViewOnceMessages(enabled)
+  }
+
+  private fun setIgnoreRemoteDelete(enabled: Boolean) {
+    _state.update { it.copy(ignoreRemoteDelete = enabled) }
+    ChatsSettingsRepository.setIgnoreRemoteDelete(enabled)
   }
 
   private fun setUseAddressBook(enabled: Boolean) {

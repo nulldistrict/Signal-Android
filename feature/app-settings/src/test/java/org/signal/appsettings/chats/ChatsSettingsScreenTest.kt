@@ -94,6 +94,16 @@ class ChatsSettingsScreenTest {
   }
 
   @Test
+  fun givenIgnoreRemoteDeleteOff_whenToggleClicked_thenIExpectIgnoreRemoteDeleteOnEvent() {
+    setContent(createState(ignoreRemoteDelete = false))
+
+    scrollTo(ChatsSettingsTestTags.ROW_IGNORE_REMOTE_DELETE)
+    composeTestRule.onNodeWithTag(ChatsSettingsTestTags.ROW_IGNORE_REMOTE_DELETE).performClick()
+
+    assertThat(events).contains(ChatsSettingsEvents.IgnoreRemoteDeleteChanged(true))
+  }
+
+  @Test
   fun givenKeepMutedChatsArchivedOff_whenToggleClicked_thenIExpectKeepMutedChatsArchivedOnEvent() {
     setContent(createState(keepMutedChatsArchived = false))
 
@@ -203,6 +213,8 @@ class ChatsSettingsScreenTest {
     composeTestRule.onNodeWithTag(ChatsSettingsTestTags.ROW_USE_ADDRESS_BOOK).assertIsNotEnabled()
     scrollTo(ChatsSettingsTestTags.ROW_KEEP_VIEW_ONCE_MESSAGES)
     composeTestRule.onNodeWithTag(ChatsSettingsTestTags.ROW_KEEP_VIEW_ONCE_MESSAGES).assertIsNotEnabled()
+    scrollTo(ChatsSettingsTestTags.ROW_IGNORE_REMOTE_DELETE)
+    composeTestRule.onNodeWithTag(ChatsSettingsTestTags.ROW_IGNORE_REMOTE_DELETE).assertIsNotEnabled()
     scrollTo(ChatsSettingsTestTags.ROW_KEEP_MUTED_CHATS_ARCHIVED)
     composeTestRule.onNodeWithTag(ChatsSettingsTestTags.ROW_KEEP_MUTED_CHATS_ARCHIVED).assertIsNotEnabled()
   }
@@ -308,7 +320,8 @@ class ChatsSettingsScreenTest {
     plaintextExportProgress: BackupCreationProgress = BackupCreationProgress.Idle,
     chatExportState: ChatExportState = ChatExportState.None,
     shouldAutoplayStickersAndGifs: Boolean = false,
-    keepViewOnceMessages: Boolean = false
+    keepViewOnceMessages: Boolean = false,
+    ignoreRemoteDelete: Boolean = false
   ): ChatsSettingsState {
     return ChatsSettingsState(
       generateLinkPreviews = generateLinkPreviews,
@@ -325,7 +338,8 @@ class ChatsSettingsScreenTest {
       plaintextExportProgress = plaintextExportProgress,
       chatExportState = chatExportState,
       shouldAutoplayStickersAndGifs = shouldAutoplayStickersAndGifs,
-      keepViewOnceMessages = keepViewOnceMessages
+      keepViewOnceMessages = keepViewOnceMessages,
+      ignoreRemoteDelete = ignoreRemoteDelete
     )
   }
 }

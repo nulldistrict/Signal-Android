@@ -299,7 +299,7 @@ Verified against Signal-JW `v8.33.2.0-JW` (`da443926af`) and compared with Signa
 | Application passphrase (soft) lock | EXCLUDED (duplicates Molly) | Medium | High |
 | Link preview image toggle | TESTED | Low | Low–Medium |
 | Keep view-once media | TESTED | Low | High |
-| Ignore remote delete requests | APPROVED | Low–Medium | High |
+| Ignore remote delete requests | TESTED | Low–Medium | High |
 | Ignore group-admin delete requests | APPROVED | Low–Medium | High |
 | Delete media only (keep message) | APPROVED | Low | Medium |
 | Map type selection | TESTED | Low | Low |
@@ -317,7 +317,7 @@ Verified against Signal-JW `v8.33.2.0-JW` (`da443926af`) and compared with Signa
 - **Application passphrase (soft) lock** — `PassphrasePromptActivity`, `Passphrase`/`softlock` branches. Duplicates Molly's passphrase lock; do not implement twice. **Excluded by the project owner**; the Molly-aligned passphrase and database protection remains the single implementation.
 - **Link preview image toggle** — `preferences_chats__send_link_preview_images`. Current Signal only has a single link-preview on/off setting, no image-specific toggle. Low complexity. Status: `TESTED`; implemented as `SignalStore.misc.sendLinkPreviewImages` (default on) and a Chat settings toggle that is disabled while link previews themselves are off. Image downloading is skipped only for the outgoing preview attachment; link metadata is still fetched when previews are enabled.
 - **Keep view-once media** — `preferences_chats__chat_keep_view_once_messages`. Privacy-sensitive; breaks the view-once expectation. Status: `TESTED`; implemented as `SignalStore.misc.keepViewOnceMessages` (default off) with a Chat settings toggle that discloses the broken expectation. When on, incoming view-once messages are stored as normal messages and the view-once expiry manager is not scheduled.
-- **Ignore remote delete requests** — `preferences_chats__chat_ignore_remote_delete`. Privacy-sensitive; affects synchronization expectations. Approve only with explicit disclosure.
+- **Ignore remote delete requests** — `preferences_chats__chat_ignore_remote_delete`. Privacy-sensitive; affects synchronization expectations. Status: `TESTED`; implemented as `SignalStore.misc.ignoreRemoteDelete` (default off) with a Chat settings toggle. When on, `handleRemoteDelete` keeps the target message and adds a local ❗ reaction instead of marking it remotely deleted. The delete request is also not cached for messages that have not arrived yet. This affects only the local copy; the sender's own deletion is unchanged.
 - **Ignore group-admin delete requests** — `preferences_chats__chat_ignore_admin_delete`. Same concerns as remote delete; group-governance implications.
 - **Delete media only** — `preferences_chats__delete_media_only`. Keeps message text while deleting media. Medium privacy impact.
 - **Map type selection** — `SignalMapView.getGoogleMapType`, `preferences` map type (normal/hybrid/satellite/terrain/none). Current Signal hardcodes `GoogleMap.MAP_TYPE_NORMAL`. Low complexity; low risk. Status: `TESTED`; the location picker now shows Normal/Satellite/Terrain buttons and stores the choice in `SignalStore.misc.googleMapType`; the saved-location snapshot uses the same choice. Hybrid and none remain supported by the stored value even though they have no picker button, matching JW.

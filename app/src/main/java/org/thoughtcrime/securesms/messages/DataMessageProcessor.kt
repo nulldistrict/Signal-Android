@@ -581,6 +581,23 @@ object DataMessageProcessor {
     return targetMessageId
   }
 
+  /**
+   * Adds a reaction from the local user to [targetMessage] without removing the message. Used when
+   * the user has opted out of remote deletes, so the attempted delete stays visible instead.
+   */
+  private fun setLocalReaction(context: Context, message: DataMessage, targetMessage: MessageRecord?, reaction: String) {
+    if (targetMessage == null) {
+      return
+    }
+
+    val reactionEmoji = EmojiUtil.getCanonicalRepresentation(reaction)
+    val targetMessageId = MessageId(targetMessage.id)
+    val reactionRecord = ReactionRecord(reactionEmoji, Recipient.self().id, message.timestamp!!, System.currentTimeMillis())
+
+    SignalDatabase.reactions.addReaction(targetMessageId, reactionRecord)
+    AppDependencies.messageNotifier.updateNotification(context, ConversationId.fromMessageRecord(targetMessage))
+  }
+
   fun handleRemoteDelete(context: Context, envelope: Envelope, message: DataMessage, senderRecipientId: RecipientId, earlyMessageCacheEntry: EarlyMessageCacheEntry?, batchCache: BatchCache): MessageId? {
     val delete = message.delete!!
 
@@ -588,6 +605,11 @@ object DataMessageProcessor {
 
     val targetSentTimestamp: Long = delete.targetSentTimestamp!!
     val targetMessage: MessageRecord? = SignalDatabase.messages.getMessageFor(targetSentTimestamp, senderRecipientId)
+
+    if (SignalStore.misc.ignoreRemoteDelete) {
+      setLocalReaction(context, message, targetMessage, "\u2757")
+      return null
+    }
 
     return if (targetMessage != null && MessageConstraintsUtil.isValidRemoteDeleteReceive(targetMessage, senderRecipientId, envelope.serverTimestamp!!)) {
       SignalDatabase.messages.markAsRemoteDelete(targetMessage, senderRecipientId)

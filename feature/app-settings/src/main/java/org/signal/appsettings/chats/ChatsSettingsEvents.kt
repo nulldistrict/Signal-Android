@@ -40,6 +40,8 @@ sealed interface ChatsSettingsEvents {
 
   data class KeepViewOnceMessagesChanged(val enabled: Boolean) : ChatsSettingsEvents
 
+  data class IgnoreRemoteDeleteChanged(val enabled: Boolean) : ChatsSettingsEvents
+
   data class AutoplayStickersAndGifsChanged(val enabled: Boolean) : ChatsSettingsEvents
 
   data class UseAddressBookChanged(val enabled: Boolean) : ChatsSettingsEvents
