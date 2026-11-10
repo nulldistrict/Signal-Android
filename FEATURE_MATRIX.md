@@ -68,7 +68,7 @@ Verified against Molly `892d6264ba` and compared with Signal `515db93fb4`.
 
 | Feature | Status | Complexity | Security impact |
 |---|---|---|---|
-| Data encryption at rest (passphrase-derived DB secret) | NEEDS_PORT | High | High |
+| Data encryption at rest (passphrase-derived DB secret) | TESTED | High | High |
 | Secure RAM wiper | TESTED | Medium | High |
 | Automatic application lock (passphrase/biometric extensions) | TESTED | Medium | High |
 | UnifiedPush notifications | NEEDS_PORT | High | Medium |
@@ -89,13 +89,16 @@ Verified against Molly `892d6264ba` and compared with Signal `515db93fb4`.
 
 #### Data encryption at rest (passphrase-derived database secret)
 
-- Status: `NEEDS_PORT`
-- Molly sources: `app/src/main/java/org/thoughtcrime/securesms/crypto/MasterSecretUtil.java`, `PassphraseBasedKdf.java`, `Argon2Benchmark.java`, `SecureSecretKeySpec.java`, `PassphraseValidator.java`, `EncryptedPreferences.java`
-- Molly dependencies: `im.molly:argon2:13.1-1`, `im.molly:native-utils`
+- Status: `TESTED` (unit tests and app compilation pass; on-device migration verification pending)
+- Molly sources: `app/src/main/java/org/thoughtcrime/securesms/crypto/MasterSecretUtil.java`, `PassphraseBasedKdf.java`, `Argon2Benchmark.java`, `SecureSecretKeySpec.java`, `PassphraseValidator.java`
+- Ported files: `app/src/main/java/org/thoughtcrime/securesms/crypto/{MasterSecretUtil,DatabaseSecretProvider,PassphraseBasedKdf,Argon2Benchmark,SecureSecretKeySpec,PassphraseValidator}.java`
+- Molly dependencies: `im.molly:argon2:13.1-1`; passphrase strength uses `me.gosimple:nbvcxz:1.5.0`. Molly's `native-utils` AAR is not required by this feature.
 - Current Signal: SQLCipher is already used for the primary database. The database secret is generated and sealed with `KeyStoreHelper` through `DatabaseSecretProvider`. Legacy passphrase code remains in `MasterSecretUtil` but is not the active database-key path.
-- What Molly adds: derives the master/database secret from a user passphrase using Argon2id plus a keystore-held HMAC key, and encrypts derived material with AES-GCM. Adds passphrase change/validation, KDF calibration and encrypted preferences.
-- Security implications: central to data-at-rest protection. Requires dedicated crypto review; must not weaken keystore sealing or introduce a KDF downgrade. Migration/rollback behavior (existing installs, forgotten passphrases) must be defined before implementation.
-- Tests: Molly includes `EncryptedPreferencesTest`; no equivalent KDF migration tests observed.
+- What was ported: master-secret encryption now uses an Argon2id-derived key, optionally bound to a non-exportable keystore HMAC key, with AES-GCM. KDF parameters are calibrated per device with `Argon2Benchmark`. The SQLCipher database secret is wrapped with `MasterCipher` under the passphrase-derived master secret, and the keystore-sealed plaintext copy is removed while a passphrase is active. App startup is deferred until the passphrase unlocks the database secret.
+- Migration: pre-Argon2 `MasterSecretUtil` formats (`master_secret`, `mac_salt`, `encryption_salt`, `passphrase_iterations`) are still readable and are re-encrypted into the new format on first successful unlock. Installs that had a legacy passphrase but no wrapped database secret migrate the existing keystore-sealed secret on unlock.
+- Security implications: the passphrase is now required to obtain the database secret after a cold start. The derived key is device-bound through the keystore HMAC when a passphrase is set. There is no passphrase-recovery path: losing the passphrase makes the wrapped database secret unrecoverable.
+- Limitations: while a passphrase is set, background process starts (for example FCM) cannot open the database until the user unlocks, which can delay background processing. Legacy master-secret cryptography remains AES-128 + HmacSHA1 (Molly's `char[]`/`Destroyable` rewrite is not ported), and `MasterSecretUtil` keeps its `String` passphrase API.
+- Tests: `app/src/test/java/org/thoughtcrime/securesms/crypto/PassphraseCryptoTest.java` covers `SecureSecretKeySpec` behavior, PKCS#12 passphrase encoding and KDF parameter round-tripping. The existing Signal test suite does not cover Android Keystore or the on-device upgrade path.
 - Notes: Do not describe the application lock as database encryption. This feature and the application lock are separate.
 
 #### Secure RAM wiper

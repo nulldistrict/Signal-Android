@@ -208,9 +208,9 @@ fun PrivacySettingsScreen(
         Texts.SectionHeader(text = stringResource(R.string.PrivacySettingsFragment__app_security))
       }
 
-      if (state.isObsoletePassphraseEnabled) {
-        obsoletePassphraseRows(state = state, onEvent = onEvent)
-      } else {
+      obsoletePassphraseRows(state = state, onEvent = onEvent)
+
+      if (!state.isObsoletePassphraseEnabled) {
         item {
           Rows.TextRow(
             text = stringResource(R.string.preferences_app_protection__screen_lock),
@@ -322,12 +322,22 @@ private fun LazyListScope.obsoletePassphraseRows(
 ) {
   item {
     Rows.ToggleRow(
-      checked = true,
+      checked = state.isObsoletePassphraseEnabled,
       text = stringResource(R.string.preferences__enable_passphrase),
       label = stringResource(R.string.preferences__lock_signal_and_message_notifications_with_a_passphrase),
-      onCheckChanged = { onEvent(PrivacySettingsEvent.DisablePassphraseClicked) },
+      onCheckChanged = { enabled ->
+        if (enabled) {
+          onEvent(PrivacySettingsEvent.ChangePassphraseClicked)
+        } else {
+          onEvent(PrivacySettingsEvent.DisablePassphraseClicked)
+        }
+      },
       modifier = Modifier.testTag(PrivacySettingsTestTags.ROW_ENABLE_PASSPHRASE)
     )
+  }
+
+  if (!state.isObsoletePassphraseEnabled) {
+    return
   }
 
   item {

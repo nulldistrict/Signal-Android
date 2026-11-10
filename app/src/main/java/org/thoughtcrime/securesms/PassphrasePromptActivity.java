@@ -19,6 +19,7 @@ package org.thoughtcrime.securesms;
 import android.app.KeyguardManager;
 import android.content.Context;
 import android.content.Intent;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.InputType;
@@ -50,6 +51,7 @@ import org.signal.core.util.ThreadUtil;
 import org.signal.core.ui.biometrics.BiometricDeviceAuthentication;
 import org.signal.core.util.logging.Log;
 import org.thoughtcrime.securesms.components.AnimatingToggle;
+import org.thoughtcrime.securesms.crypto.DatabaseSecretProvider;
 import org.thoughtcrime.securesms.crypto.InvalidPassphraseException;
 import org.thoughtcrime.securesms.crypto.MasterSecret;
 import org.thoughtcrime.securesms.crypto.MasterSecretUtil;
@@ -129,7 +131,8 @@ public class PassphrasePromptActivity extends PassphraseActivity {
 
     setLockTypeVisibility();
 
-    if (SignalStore.settings().getScreenLockEnabled() && !authenticated && !hadFailure) {
+    if (ApplicationContext.getInstance(this).isAppInitialized() &&
+        SignalStore.settings().getScreenLockEnabled() && !authenticated && !hadFailure) {
       ThreadUtil.postToMain(resumeScreenLockRunnable);
     }
 
@@ -192,28 +195,36 @@ public class PassphrasePromptActivity extends PassphraseActivity {
   }
 
   private void handlePassphrase() {
-    try {
-      Editable text             = passphraseText.getText();
-      String passphrase         = (text == null ? "" : text.toString());
-      MasterSecret masterSecret = MasterSecretUtil.getMasterSecret(this, passphrase);
+    Editable text     = passphraseText.getText();
+    String   passphrase = (text == null ? "" : text.toString());
 
-      setMasterSecret(masterSecret);
-    } catch (InvalidPassphraseException ipe) {
-      passphraseText.setText("");
-      passphraseText.setError(
-              getString(R.string.PassphrasePromptActivity_invalid_passphrase_exclamation));
-    }
+    new UnlockTask().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, passphrase);
   }
 
   private void handleAuthenticated() {
+    if (MasterSecretUtil.isPassphraseRequired(this)) {
+      // A passphrase protects the database; the device credential alone cannot unlock it.
+      return;
+    }
+
     try {
       authenticated = true;
-      
+
       MasterSecret masterSecret = MasterSecretUtil.getMasterSecret(this, MasterSecretUtil.UNENCRYPTED_PASSPHRASE);
       setMasterSecret(masterSecret);
     } catch (InvalidPassphraseException e) {
       throw new AssertionError(e);
     }
+  }
+
+  private void onUnlockSucceeded(@NonNull UnlockResult result) {
+    if (result.databaseSecret != null) {
+      DatabaseSecretProvider.setDatabaseSecretForPassphrase(result.databaseSecret);
+      ApplicationContext.getInstance(this).initializeApplicationAfterUnlock();
+      java.util.Arrays.fill(result.databaseSecret, (byte) 0);
+    }
+
+    setMasterSecret(result.masterSecret);
   }
 
   private void setPassphraseVisibility(boolean visibility) {
@@ -266,6 +277,14 @@ public class PassphrasePromptActivity extends PassphraseActivity {
   }
 
   private void setLockTypeVisibility() {
+    if (MasterSecretUtil.isPassphraseRequired(this) ||
+        !ApplicationContext.getInstance(this).isAppInitialized()) {
+      passphraseAuthContainer.setVisibility(View.VISIBLE);
+      unlockView.setVisibility(View.GONE);
+      lockScreenButton.setVisibility(View.GONE);
+      return;
+    }
+
     if (SignalStore.settings().getScreenLockEnabled()) {
       passphraseAuthContainer.setVisibility(View.GONE);
       unlockView.setVisibility(View.VISIBLE);
@@ -348,6 +367,56 @@ public class PassphrasePromptActivity extends PassphraseActivity {
   protected void cleanup() {
     this.passphraseText.setText("");
     System.gc();
+  }
+
+  private static final class UnlockResult {
+    final MasterSecret masterSecret;
+    final byte[]       databaseSecret;
+
+    UnlockResult(MasterSecret masterSecret, byte[] databaseSecret) {
+      this.masterSecret   = masterSecret;
+      this.databaseSecret = databaseSecret;
+    }
+  }
+
+  private final class UnlockTask extends AsyncTask<String, Void, UnlockResult> {
+
+    @Override
+    protected void onPreExecute() {
+      passphraseText.setEnabled(false);
+    }
+
+    @Override
+    protected UnlockResult doInBackground(String... params) {
+      Context context = getApplicationContext();
+
+      try {
+        MasterSecret masterSecret = MasterSecretUtil.getMasterSecret(context, params[0]);
+
+        if (MasterSecretUtil.isPassphraseRequired(context)) {
+          return new UnlockResult(masterSecret, DatabaseSecretProvider.unlockDatabaseSecret(context, masterSecret));
+        }
+
+        return new UnlockResult(masterSecret, null);
+      } catch (InvalidPassphraseException e) {
+        Log.w(TAG, "Invalid passphrase", e);
+        return null;
+      }
+    }
+
+    @Override
+    protected void onPostExecute(UnlockResult result) {
+      passphraseText.setEnabled(true);
+
+      if (result == null) {
+        passphraseText.setText("");
+        passphraseText.setError(
+            getString(R.string.PassphrasePromptActivity_invalid_passphrase_exclamation));
+        return;
+      }
+
+      onUnlockSucceeded(result);
+    }
   }
 
   private void showHelpDialog() {

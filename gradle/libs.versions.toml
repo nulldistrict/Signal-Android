@@ -179,6 +179,8 @@ signal-aesgcmprovider = "org.signal:aesgcmprovider:0.0.4"
 signal-ringrtc = "org.signal:ringrtc-android:2.73.0"
 
 # Third Party
+molly-argon2 = "im.molly:argon2:13.1-1"
+gosimple-nbvcxz = "me.gosimple:nbvcxz:1.5.0"
 signal-android-database-sqlcipher = "net.zetetic:sqlcipher-android:4.17.0"
 jackson-core = "com.fasterxml.jackson.core:jackson-databind:2.12.0"
 jackson-module-kotlin = "com.fasterxml.jackson.module:jackson-module-kotlin:2.12.0"

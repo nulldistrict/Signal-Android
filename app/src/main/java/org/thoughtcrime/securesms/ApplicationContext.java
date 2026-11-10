@@ -60,6 +60,7 @@ import org.thoughtcrime.securesms.preferences.EditProxyActivity;
 import org.thoughtcrime.securesms.conversation.drafts.DraftBlobs;
 import org.thoughtcrime.securesms.crypto.AppAttachmentSecretStore;
 import org.thoughtcrime.securesms.crypto.DatabaseSecretProvider;
+import org.thoughtcrime.securesms.crypto.MasterSecretUtil;
 import org.thoughtcrime.securesms.database.LogDatabase;
 import org.thoughtcrime.securesms.database.SignalDatabase;
 import org.thoughtcrime.securesms.database.SqlCipherLibraryLoader;
@@ -144,6 +145,7 @@ import java.security.Security;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import io.reactivex.rxjava3.exceptions.OnErrorNotImplementedException;
 import io.reactivex.rxjava3.exceptions.UndeliverableException;
@@ -164,6 +166,8 @@ public class ApplicationContext extends Application implements AppForegroundObse
 
   private static final String TAG = Log.tag(ApplicationContext.class);
 
+  private final AtomicBoolean appInitialized = new AtomicBoolean(false);
+
   public static ApplicationContext getInstance(Context context) {
     return (ApplicationContext) context.getApplicationContext();
   }
@@ -175,12 +179,38 @@ public class ApplicationContext extends Application implements AppForegroundObse
     AppStartup.getInstance().onApplicationCreate();
     SignalLocalMetrics.ColdStart.start();
 
-    long startTime = System.currentTimeMillis();
-
     super.onCreate();
 
+    // A minimal subset of startup has to run before we know whether the database is locked by a
+    // passphrase: the security providers are needed to derive keys, and AppDependencies is needed
+    // by the unlock screen itself.
+    SqlCipherLibraryLoader.load();
+    initializeSecurityProvider();
+    initializeRx();
+    initializeCrashHandling();
+    initializeAppDependencies();
+    DynamicTheme.setDefaultDayNightMode(this);
+
+    if (MasterSecretUtil.isPassphraseRequired(this)) {
+      Log.i(TAG, "Database is protected by a passphrase; deferring startup until unlock.");
+      return;
+    }
+
+    initializeApplicationAfterUnlock();
+  }
+
+  /**
+   * Runs the rest of app startup. When a passphrase protects the database, this is called by the
+   * unlock screen after the database secret has been unwrapped.
+   */
+  public void initializeApplicationAfterUnlock() {
+    if (!appInitialized.compareAndSet(false, true)) {
+      return;
+    }
+
+    long startTime = System.currentTimeMillis();
+
     AppStartup.getInstance().addBlocking("sqlcipher-init", () -> {
-                SqlCipherLibraryLoader.load();
                 SignalDatabase.init(this,
                                     DatabaseSecretProvider.getOrCreateDatabaseSecret(this),
                                     AttachmentSecretProvider.getInstance(this, AppAttachmentSecretStore.INSTANCE).getOrCreateAttachmentSecret());
@@ -191,18 +221,13 @@ public class ApplicationContext extends Application implements AppForegroundObse
                 initializeLogging();
                 Log.i(TAG, "onCreate()");
               })
-              .addBlocking("security-provider", this::initializeSecurityProvider)
-              .addBlocking("app-dependencies", this::initializeAppDependencies)
               .addBlocking("anr-detector", this::startAnrDetector)
-              .addBlocking("crash-handling", this::initializeCrashHandling)
-              .addBlocking("rx-init", this::initializeRx)
               .addBlocking("scrubber", () -> Scrubber.setIdentifierHmacKeyProvider(() -> SignalStore.svr().getMasterKey().deriveLoggingKey()))
               .addBlocking("first-launch", this::initializeFirstEverAppLaunch)
               .addBlocking("app-migrations", this::initializeApplicationMigrations)
               .addBlocking("lifecycle-observer", () -> AppForegroundObserver.addListener(this))
               .addBlocking("assistant-screen-security", () -> registerActivityLifecycleCallbacks(new AssistantScreenSecurityObserver()))
               .addBlocking("message-retriever", this::initializeMessageRetrieval)
-              .addBlocking("dynamic-theme", () -> DynamicTheme.setDefaultDayNightMode(this))
               .addBlocking("proxy-init", () -> {
                 if (SignalStore.proxy().isProxyEnabled()) {
                   Log.w(TAG, "Proxy detected. Enabling Conscrypt.setUseEngineSocketByDefault()");
@@ -268,8 +293,17 @@ public class ApplicationContext extends Application implements AppForegroundObse
     SignalLocalMetrics.ColdStart.onApplicationCreateFinished();
   }
 
+  public boolean isAppInitialized() {
+    return appInitialized.get();
+  }
+
   @Override
   public void onForeground() {
+    if (!isAppInitialized()) {
+      Log.i(TAG, "App is visible, but the database is still locked.");
+      return;
+    }
+
     long startTime = System.currentTimeMillis();
     Log.i(TAG, "App is now visible. Battery: " + DeviceProperties.getBatteryLevel(this) + "% (charging: " + DeviceProperties.isCharging(this) + ")");
 
@@ -319,6 +353,11 @@ public class ApplicationContext extends Application implements AppForegroundObse
 
   @Override
   public void onBackground() {
+    if (!isAppInitialized()) {
+      Log.i(TAG, "App is no longer visible, but the database was never unlocked.");
+      return;
+    }
+
     Log.i(TAG, "App is no longer visible.");
     BatterySnapshotTracker.emit(this, "background");
     KeyCachingService.onAppBackgrounded(this);

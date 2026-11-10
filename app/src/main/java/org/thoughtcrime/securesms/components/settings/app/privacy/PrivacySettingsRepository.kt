@@ -4,6 +4,7 @@ import android.content.Intent
 import kotlinx.coroutines.withContext
 import org.signal.core.util.ServiceUtil
 import org.signal.core.util.concurrent.SignalDispatchers
+import org.thoughtcrime.securesms.crypto.DatabaseSecretProvider
 import org.thoughtcrime.securesms.crypto.MasterSecretUtil
 import org.thoughtcrime.securesms.database.SignalDatabase
 import org.thoughtcrime.securesms.dependencies.AppDependencies
@@ -87,7 +88,12 @@ object PrivacySettingsRepository {
   suspend fun disableObsoletePassphrase() {
     withContext(SignalDispatchers.Default) {
       val application = AppDependencies.application
-      MasterSecretUtil.changeMasterSecretPassphrase(application, KeyCachingService.getMasterSecret(application), MasterSecretUtil.UNENCRYPTED_PASSPHRASE)
+      val masterSecret = requireNotNull(KeyCachingService.getMasterSecret(application)) {
+        "Cannot disable the passphrase without an unlocked master secret"
+      }
+
+      DatabaseSecretProvider.disablePassphraseProtection(application, masterSecret)
+      MasterSecretUtil.changeMasterSecretPassphrase(application, masterSecret, MasterSecretUtil.UNENCRYPTED_PASSPHRASE)
       SignalStore.settings.passphraseDisabled = true
 
       val intent = Intent(application, KeyCachingService::class.java)

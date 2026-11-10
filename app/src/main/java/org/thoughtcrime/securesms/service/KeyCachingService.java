@@ -44,6 +44,7 @@ import org.thoughtcrime.securesms.BuildConfig;
 import org.thoughtcrime.securesms.DummyActivity;
 import org.thoughtcrime.securesms.MainActivity;
 import org.thoughtcrime.securesms.R;
+import org.thoughtcrime.securesms.ApplicationContext;
 import org.thoughtcrime.securesms.crypto.InvalidPassphraseException;
 import org.thoughtcrime.securesms.crypto.MasterSecret;
 import org.thoughtcrime.securesms.crypto.MasterSecretUtil;
@@ -83,6 +84,11 @@ public class KeyCachingService extends Service {
   public KeyCachingService() {}
 
   public static synchronized boolean isLocked(Context context) {
+    if (!ApplicationContext.getInstance(context).isAppInitialized()) {
+      Log.d(TAG, "Locked! The database has not been unlocked yet.");
+      return true;
+    }
+
     boolean locked = masterSecret == null && (!SignalStore.settings().getPassphraseDisabled() || SignalStore.settings().getScreenLockEnabled());
 
     if (locked) {
@@ -93,6 +99,10 @@ public class KeyCachingService extends Service {
   }
 
   public static synchronized @Nullable MasterSecret getMasterSecret(Context context) {
+    if (!ApplicationContext.getInstance(context).isAppInitialized()) {
+      return null;
+    }
+
     if (masterSecret == null && (SignalStore.settings().getPassphraseDisabled() && !SignalStore.settings().getScreenLockEnabled())) {
       try {
         return MasterSecretUtil.getMasterSecret(context, MasterSecretUtil.UNENCRYPTED_PASSPHRASE);
@@ -105,12 +115,20 @@ public class KeyCachingService extends Service {
   }
 
   public static void onAppForegrounded(@NonNull Context context) {
+    if (!ApplicationContext.getInstance(context).isAppInitialized()) {
+      return;
+    }
+
     if (SignalStore.settings().getScreenLockEnabled() || !SignalStore.settings().getPassphraseDisabled()) {
       ServiceUtil.getAlarmManager(context).cancel(buildExpirationPendingIntent(context));
     }
   }
 
   public static void onAppBackgrounded(@NonNull Context context) {
+    if (!ApplicationContext.getInstance(context).isAppInitialized()) {
+      return;
+    }
+
     startTimeoutIfAppropriate(context);
   }
 
@@ -152,6 +170,11 @@ public class KeyCachingService extends Service {
   public void onCreate() {
     Log.i(TAG, "onCreate()");
     super.onCreate();
+
+    if (!ApplicationContext.getInstance(this).isAppInitialized()) {
+      Log.i(TAG, "Database is not initialized yet; not caching a master secret.");
+      return;
+    }
 
     if (SignalStore.settings().getPassphraseDisabled() && !SignalStore.settings().getScreenLockEnabled()) {
       try {

@@ -817,6 +817,10 @@ dependencies {
   implementation(libs.kotlinx.coroutines.rx3)
   implementation(libs.jackson.module.kotlin)
   implementation(libs.square.okhttp3.dnsoverhttps)
+
+  // Molly: Argon2id passphrase KDF and passphrase strength estimation.
+  implementation(libs.molly.argon2) { artifact { type = "aar" } }
+  implementation(libs.gosimple.nbvcxz)
   implementation(libs.rxjava3.rxandroid)
   implementation(libs.rxjava3.rxkotlin)
   implementation(libs.rxdogtag)

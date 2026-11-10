@@ -23,6 +23,7 @@ Version numbers and release dates must reflect actual releases.
 - Molly application-lock extensions: restored the "Immediately" screen-lock timeout, made a zero timeout actually lock on backgrounding instead of being coerced to 60 seconds, and block screen-lock-protected content from Android 13+ recents screenshots and from FLAG_SECURE windows while locked.
 - Molly secure RAM wiper: wipe free process memory on lock and restart the process, matching Molly, using the GPLv3 `im.molly:native-utils` native code, vendored as `libmolly-wipe.so`. The wipe is skipped during migrations and device transfers; process death is the fallback when the foreground service cannot start.
 - Molly SOCKS5/Orbot proxy: the proxy address field accepts `socks5://host:port` and `socks5h://host:port` (default port 9050). User SOCKS5 proxies always use remote DNS, and OkHttp traffic (including content and media) is routed through the same proxy with DNS-over-HTTPS resolved through it. WebRTC media is not proxied.
+- Molly data encryption at rest: the local master secret is now protected by an Argon2id-derived key bound to a non-exportable keystore HMAC key, and the SQLCipher database secret is wrapped under the passphrase-derived master secret instead of remaining keystore-sealed. App startup waits for the passphrase to unlock the database. Existing legacy passphrase formats are migrated on first successful unlock.
 
 ### Changed
 
@@ -43,6 +44,7 @@ Version numbers and release dates must reflect actual releases.
 - Unknown-contact blocking is local-only (`settings.block_unknown`) and does not alter existing contacts, trusted conversations or group membership. Group-profile sharing remains an allow-list exception.
 - Debug logs no longer include app instrumentation traces; the in-app WebViews no longer use Google Safe Browsing, which is a privacy/security trade-off documented in `FEATURE_MATRIX.md`.
 - User SOCKS5 proxy configuration fails closed: an invalid or unreachable proxy prevents connections instead of falling back to a direct connection. DNS for proxied OkHttp traffic is resolved via DNS-over-HTTPS through the proxy, and the content proxy is bypassed while SOCKS5 is active.
+- A passphrase-protected database now requires the passphrase to unwrap the SQLCipher database secret; the keystore-sealed copy is removed while the passphrase is active. The derived key is bound to the device keystore, and there is no passphrase-recovery path. While locked, background process starts cannot open the database until the user unlocks.
 
 ## Release History
 

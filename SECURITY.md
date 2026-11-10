@@ -68,6 +68,17 @@ Document the difference between:
 - Database encryption
 - Android device encryption
 
+### 4.1 Implemented passphrase protection
+
+When the user enables the local passphrase:
+
+- The master secret is encrypted with an Argon2id-derived key using AES-GCM. The derived key is bound to a non-exportable Android Keystore HMAC key, so copying the preferences file alone is not enough for an offline attack.
+- The SQLCipher database secret is wrapped with `MasterCipher` under that master secret, and the keystore-sealed copy is removed while the passphrase is active.
+- App startup defers database initialization until the passphrase unwraps the database secret. Background process starts cannot open the database while the app is locked.
+- There is no passphrase-recovery path. Losing the passphrase makes the wrapped database secret unrecoverable.
+
+The application lock remains separate: it controls UI access after the database is open and does not by itself change database encryption.
+
 ## 5. Backup Security
 
 Encrypted backups should be the preferred option.

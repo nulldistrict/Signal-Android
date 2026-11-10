@@ -50,7 +50,7 @@ public abstract class BaseActivity extends AppCompatActivity {
     // Molly: don't leave a screenshot of protected content in the recents switcher while screen lock is enabled.
     // API 33+ can block only the recents capture; older releases rely on FLAG_SECURE from the screenshot-security path.
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-      setRecentsScreenshotEnabled(!SignalStore.settings().getScreenLockEnabled());
+      setRecentsScreenshotEnabled(!ApplicationContext.getInstance(this).isAppInitialized() || !SignalStore.settings().getScreenLockEnabled());
     }
   }
 

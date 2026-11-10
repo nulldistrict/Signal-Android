@@ -187,6 +187,60 @@ public final class KeyStoreHelper {
     }
   }
 
+  /**
+   * Creates a keystore-backed HMAC-SHA256 key under the given alias. Used to bind passphrase-derived
+   * keys to this device's keystore, so that a copied preferences file alone cannot be used to
+   * brute-force the passphrase offline.
+   */
+  @RequiresApi(23)
+  public static SecretKey createKeyStoreEntryHmac(@NonNull String keyAlias, boolean useStrongBox) {
+    try {
+      KeyGenerator keyGenerator = KeyGenerator.getInstance(KeyProperties.KEY_ALGORITHM_HMAC_SHA256, ANDROID_KEY_STORE);
+
+      KeyGenParameterSpec.Builder keySpecBuilder = new KeyGenParameterSpec.Builder(keyAlias, KeyProperties.PURPOSE_SIGN);
+      if (useStrongBox) {
+        enableStrongBox(keySpecBuilder);
+      }
+      KeyGenParameterSpec keyGenParameterSpec = keySpecBuilder.build();
+
+      keyGenerator.init(keyGenParameterSpec);
+
+      return keyGenerator.generateKey();
+    } catch (NoSuchAlgorithmException | NoSuchProviderException | InvalidAlgorithmParameterException e) {
+      throw new AssertionError(e);
+    }
+  }
+
+  @RequiresApi(28)
+  private static void enableStrongBox(@NonNull final KeyGenParameterSpec.Builder builder) {
+    builder.setIsStrongBoxBacked(true);
+  }
+
+  @RequiresApi(23)
+  public static @NonNull SecretKey getKeyStoreEntryHmac(@NonNull String keyAlias) throws UnrecoverableEntryException {
+    try {
+      KeyStore keyStore = KeyStore.getInstance(ANDROID_KEY_STORE);
+      keyStore.load(null);
+
+      return ((KeyStore.SecretKeyEntry) keyStore.getEntry(keyAlias, null)).getSecretKey();
+    } catch (KeyStoreException | IOException | NoSuchAlgorithmException | CertificateException e) {
+      throw new AssertionError(e);
+    }
+  }
+
+  @RequiresApi(23)
+  public static void deleteKeyStoreEntry(@NonNull String keyAlias) {
+    try {
+      KeyStore keyStore = KeyStore.getInstance(ANDROID_KEY_STORE);
+      keyStore.load(null);
+      if (keyStore.containsAlias(keyAlias)) {
+        keyStore.deleteEntry(keyAlias);
+      }
+    } catch (KeyStoreException | IOException | NoSuchAlgorithmException | CertificateException e) {
+      throw new AssertionError(e);
+    }
+  }
+
   public static class SealedData {
 
     @SuppressWarnings("unused")

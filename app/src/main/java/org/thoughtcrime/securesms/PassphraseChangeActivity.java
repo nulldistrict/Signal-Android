@@ -26,12 +26,16 @@ import android.widget.Button;
 import android.widget.EditText;
 
 import org.signal.core.util.logging.Log;
+import org.thoughtcrime.securesms.crypto.DatabaseSecretProvider;
 import org.thoughtcrime.securesms.crypto.InvalidPassphraseException;
 import org.thoughtcrime.securesms.crypto.MasterSecret;
 import org.thoughtcrime.securesms.crypto.MasterSecretUtil;
+import org.thoughtcrime.securesms.crypto.PassphraseValidator;
 import org.thoughtcrime.securesms.keyvalue.SignalStore;
 import org.thoughtcrime.securesms.util.DynamicLanguage;
 import org.thoughtcrime.securesms.util.DynamicTheme;
+
+import java.util.Locale;
 
 /**
  * Activity for changing a user's local encryption passphrase.
@@ -109,9 +113,18 @@ public class PassphraseChangeActivity extends PassphraseActivity {
     } else if (passphrase.equals("")) {
       this.newPassphrase.setError(getString(R.string.PassphraseChangeActivity_enter_new_passphrase_exclamation));
       this.newPassphrase.requestFocus();
+    } else if (!isPassphraseStrong(passphrase)) {
+      this.newPassphrase.setError(getString(R.string.PassphraseChangeActivity_passphrase_too_weak_exclamation));
+      this.newPassphrase.requestFocus();
     } else {
       new ChangePassphraseTask(this).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, original, passphrase);
     }
+  }
+
+  private boolean isPassphraseStrong(String passphrase) {
+    return new PassphraseValidator(Locale.getDefault())
+        .estimate(passphrase.toCharArray())
+        .isValid();
   }
 
   private class CancelButtonClickListener implements OnClickListener {
@@ -140,8 +153,15 @@ public class PassphraseChangeActivity extends PassphraseActivity {
 
     @Override
     protected MasterSecret doInBackground(String... params) {
+      boolean enablingPassphrase = SignalStore.settings().getPassphraseDisabled();
+
       try {
         MasterSecret masterSecret = MasterSecretUtil.changeMasterSecretPassphrase(context, params[0], params[1]);
+
+        if (enablingPassphrase) {
+          DatabaseSecretProvider.enablePassphraseProtection(context, masterSecret);
+        }
+
         SignalStore.settings().setPassphraseDisabled(false);
 
         return masterSecret;

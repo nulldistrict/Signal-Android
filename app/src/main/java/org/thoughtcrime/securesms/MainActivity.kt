@@ -703,6 +703,11 @@ class MainActivity :
 
   override fun onResume() {
     super.onResume()
+
+    if (!ApplicationContext.getInstance(this).isAppInitialized) {
+      return
+    }
+
     dynamicTheme.onResume(this)
 
     toolbarViewModel.refresh()
@@ -738,6 +743,11 @@ class MainActivity :
 
   override fun onStop() {
     super.onStop()
+
+    if (!ApplicationContext.getInstance(this).isAppInitialized) {
+      return
+    }
+
     SplashScreenUtil.setSplashScreenThemeIfNecessary(this, SignalStore.settings.theme)
   }
 
