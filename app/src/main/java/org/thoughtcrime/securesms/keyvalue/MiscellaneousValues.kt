@@ -68,6 +68,7 @@ class MiscellaneousValues internal constructor(store: KeyValueStore, context: Co
   private const val IGNORE_REMOTE_DELETE = "misc.ignore_remote_delete"
   private const val IGNORE_ADMIN_DELETE = "misc.ignore_admin_delete"
   private const val DELETE_MEDIA_ONLY = "misc.delete_media_only"
+  private const val WHO_CAN_ADD_YOU_TO_GROUPS = "misc.who_can_add_you_to_groups"
     private const val DIRECTORY_REFRESH_TIME = "misc.directory_refresh_time"
     private const val HAS_SUCCESSFULLY_RETRIEVED_DIRECTORY = "misc.has_successfully_retrieved_directory"
     private const val LAST_FULL_CONTACT_SYNC_TIME = "misc.last_full_contact_sync_time"
@@ -499,4 +500,10 @@ class MiscellaneousValues internal constructor(store: KeyValueStore, context: Co
    * body. Disabled by default so the whole message is deleted.
    */
   var deleteMediaOnly: Boolean by booleanValue(DELETE_MEDIA_ONLY, false)
+
+  /**
+   * Who may add this account to a group: anyone, nonblocked, onlycontacts, onlysystemcontacts or nobody.
+   * Defaults to the upstream blocked-contact behavior.
+   */
+  var whoCanAddYouToGroups: String by stringValue(WHO_CAN_ADD_YOU_TO_GROUPS, "nonblocked")
 }

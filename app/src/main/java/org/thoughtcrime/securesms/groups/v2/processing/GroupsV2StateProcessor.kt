@@ -793,6 +793,27 @@ class GroupsV2StateProcessor private constructor(
   @VisibleForTesting
   internal class ProfileAndMessageHelper(private val aci: ACI, private val masterKey: GroupMasterKey, private val groupId: GroupId.V2) {
 
+    /**
+     * Whether [addedBy] is allowed to add this user to a group, based on the user's
+     * "who can add me to groups" setting. Linked devices always fall back to the upstream
+     * blocked-only check so a setting change on one device cannot silently remove the account
+     * from groups on another.
+     */
+    private fun mayThisPersonAddYouToAGroup(addedBy: Recipient): Boolean {
+      if (SignalStore.account.isLinkedDevice) {
+        return !addedBy.isBlocked
+      }
+
+      return when (SignalStore.misc.whoCanAddYouToGroups) {
+        "anyone" -> true
+        "nonblocked" -> !addedBy.isBlocked
+        "onlycontacts" -> addedBy.isProfileSharing && !addedBy.isBlocked
+        "onlysystemcontacts" -> addedBy.isSystemContact && !addedBy.isBlocked
+        "nobody" -> false
+        else -> true
+      }
+    }
+
     fun setProfileSharing(groupStateDiff: GroupStateDiff, newLocalState: DecryptedGroup, needsAvatarFetch: Boolean) {
       val previousGroupState = groupStateDiff.previousGroupState
 
@@ -822,11 +843,11 @@ class GroupsV2StateProcessor private constructor(
         if (addedBy != null) {
           Log.i(TAG, "Added as a full member of $groupId by ${addedBy.id}")
 
-          if (addedBy.isBlocked && (previousGroupState == null || !DecryptedGroupUtil.isRequesting(previousGroupState, aci))) {
-            Log.i(TAG, "Added by a blocked user. Leaving group.")
+          if (!mayThisPersonAddYouToAGroup(addedBy) && (previousGroupState == null || !DecryptedGroupUtil.isRequesting(previousGroupState, aci))) {
+            Log.i(TAG, "Added by a user who is not allowed to add this account to groups. Leaving group.")
             AppDependencies.jobManager.add(LeaveGroupV2Job(groupId))
             return
-          } else if ((addedBy.isSystemContact || addedBy.isProfileSharing) && !addedBy.isHidden) {
+          } else if ((addedBy.isSystemContact || addedBy.isProfileSharing) && !addedBy.isHidden && !addedBy.isBlocked) {
             Log.i(TAG, "Group 'adder' is trusted. contact: " + addedBy.isSystemContact + ", profileSharing: " + addedBy.isProfileSharing)
             Log.i(TAG, "Added to a group and auto-enabling profile sharing and redownloading avatar if needed")
             SignalDatabase.recipients.setProfileSharing(Recipient.externalGroupExact(groupId).id, true)
@@ -842,8 +863,8 @@ class GroupsV2StateProcessor private constructor(
       } else if (selfAsPending != null) {
         val addedBy = UuidUtil.fromByteStringOrNull(selfAsPending.addedByAci)?.let { Recipient.externalPush(ACI.from(it)) }
 
-        if (addedBy?.isBlocked == true) {
-          Log.i(TAG, "Added to group $groupId by a blocked user ${addedBy.id}. Leaving group.")
+        if (addedBy != null && !mayThisPersonAddYouToAGroup(addedBy)) {
+          Log.i(TAG, "Added to group $groupId by a user who is not allowed to add this account to groups. Leaving group.")
           AppDependencies.jobManager.add(LeaveGroupV2Job(groupId))
           return
         } else {

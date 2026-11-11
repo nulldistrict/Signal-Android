@@ -66,6 +66,12 @@ object ChatsSettingsRepository {
     SignalStore.misc.deleteMediaOnly = enabled
   }
 
+  fun getWhoCanAddYouToGroups(): String = SignalStore.misc.whoCanAddYouToGroups
+
+  fun setWhoCanAddYouToGroups(value: String) {
+    SignalStore.misc.whoCanAddYouToGroups = value
+  }
+
   fun isPreferSystemContactPhotos(): Boolean = SignalStore.settings.isPreferSystemContactPhotos
 
   fun setPreferSystemContactPhotos(enabled: Boolean) {

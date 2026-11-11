@@ -52,7 +52,8 @@ class ChatsSettingsViewModel(
       keepViewOnceMessages = ChatsSettingsRepository.isKeepViewOnceMessages(),
       ignoreRemoteDelete = ChatsSettingsRepository.isIgnoreRemoteDelete(),
       ignoreAdminDelete = ChatsSettingsRepository.isIgnoreAdminDelete(),
-      deleteMediaOnly = ChatsSettingsRepository.isDeleteMediaOnly()
+      deleteMediaOnly = ChatsSettingsRepository.isDeleteMediaOnly(),
+      whoCanAddYouToGroups = ChatsSettingsRepository.getWhoCanAddYouToGroups()
     )
   )
 
@@ -74,6 +75,7 @@ class ChatsSettingsViewModel(
       is ChatsSettingsEvents.IgnoreRemoteDeleteChanged -> setIgnoreRemoteDelete(event.enabled)
       is ChatsSettingsEvents.IgnoreAdminDeleteChanged -> setIgnoreAdminDelete(event.enabled)
       is ChatsSettingsEvents.DeleteMediaOnlyChanged -> setDeleteMediaOnly(event.enabled)
+      is ChatsSettingsEvents.WhoCanAddYouToGroupsChanged -> setWhoCanAddYouToGroups(event.value)
       is ChatsSettingsEvents.UseAddressBookChanged -> setUseAddressBook(event.enabled)
       is ChatsSettingsEvents.KeepMutedChatsArchivedChanged -> setKeepMutedChatsArchived(event.enabled)
       is ChatsSettingsEvents.UseSystemEmojiChanged -> setUseSystemEmoji(event.enabled)
@@ -146,6 +148,11 @@ class ChatsSettingsViewModel(
   private fun setDeleteMediaOnly(enabled: Boolean) {
     _state.update { it.copy(deleteMediaOnly = enabled) }
     ChatsSettingsRepository.setDeleteMediaOnly(enabled)
+  }
+
+  private fun setWhoCanAddYouToGroups(value: String) {
+    _state.update { it.copy(whoCanAddYouToGroups = value) }
+    ChatsSettingsRepository.setWhoCanAddYouToGroups(value)
   }
 
   private fun setUseAddressBook(enabled: Boolean) {

@@ -6,15 +6,29 @@
 package org.signal.appsettings.chats
 
 import androidx.annotation.VisibleForTesting
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.RadioButton
 import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.PreviewWrapper
+import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.LifecycleResumeEffect
 import kotlinx.coroutines.launch
 import org.signal.appsettings.AppSettingsLazyColumn
@@ -40,6 +54,13 @@ object ChatsSettingsTestTags {
   const val ROW_IGNORE_REMOTE_DELETE = "row-ignore-remote-delete"
   const val ROW_IGNORE_ADMIN_DELETE = "row-ignore-admin-delete"
   const val ROW_DELETE_MEDIA_ONLY = "row-delete-media-only"
+  const val ROW_WHO_CAN_ADD_YOU_TO_GROUPS = "row-who-can-add-you-to-groups"
+  const val DIALOG_WHO_CAN_ADD_YOU_TO_GROUPS = "dialog-who-can-add-you-to-groups"
+  const val OPTION_WHO_CAN_ADD_ANYONE = "option-who-can-add-anyone"
+  const val OPTION_WHO_CAN_ADD_NONBLOCKED = "option-who-can-add-nonblocked"
+  const val OPTION_WHO_CAN_ADD_ONLYCONTACTS = "option-who-can-add-onlycontacts"
+  const val OPTION_WHO_CAN_ADD_ONLYSYSTEMCONTACTS = "option-who-can-add-onlysystemcontacts"
+  const val OPTION_WHO_CAN_ADD_NOBODY = "option-who-can-add-nobody"
   const val ROW_AUTOPLAY_STICKERS_AND_GIFS = "row-autoplay-stickers-and-gifs"
   const val ROW_USE_ADDRESS_BOOK = "row-use-address-book"
   const val ROW_KEEP_MUTED_CHATS_ARCHIVED = "row-keep-muted-chats-archived"
@@ -62,6 +83,7 @@ fun ChatsSettingsScreen(
     onPauseOrDispose {}
   }
 
+  var showWhoCanAddYouToGroupsDialog by remember { mutableStateOf(false) }
   val coroutineScope = rememberCoroutineScope()
   val snackbarHostState = remember { SnackbarHostState() }
   val authenticationFailedMessage = stringResource(R.string.ChatsSettingsFragment__authentication_failed)
@@ -177,6 +199,16 @@ fun ChatsSettingsScreen(
       }
 
       item {
+        Rows.TextRow(
+          modifier = Modifier.testTag(ChatsSettingsTestTags.ROW_WHO_CAN_ADD_YOU_TO_GROUPS),
+          text = stringResource(R.string.ChatsSettingsScreen__who_can_add_you_to_groups),
+          label = stringResource(whoCanAddYouToGroupsLabel(state.whoCanAddYouToGroups)),
+          enabled = state.isRegisteredAndUpToDate(),
+          onClick = { showWhoCanAddYouToGroupsDialog = true }
+        )
+      }
+
+      item {
         Rows.ToggleRow(
           modifier = Modifier.testTag(ChatsSettingsTestTags.ROW_KEEP_MUTED_CHATS_ARCHIVED),
           text = stringResource(R.string.preferences__pref_keep_muted_chats_archived),
@@ -286,6 +318,75 @@ fun ChatsSettingsScreen(
       onEvent = onEvent
     )
   }
+
+  if (showWhoCanAddYouToGroupsDialog) {
+    WhoCanAddYouToGroupsDialog(
+      selected = state.whoCanAddYouToGroups,
+      onSelect = {
+        onEvent(ChatsSettingsEvents.WhoCanAddYouToGroupsChanged(it))
+        showWhoCanAddYouToGroupsDialog = false
+      },
+      onDismiss = { showWhoCanAddYouToGroupsDialog = false }
+    )
+  }
+}
+
+private fun whoCanAddYouToGroupsLabel(value: String): Int {
+  return when (value) {
+    "anyone" -> R.string.ChatsSettingsScreen__who_can_add_anyone
+    "onlycontacts" -> R.string.ChatsSettingsScreen__who_can_add_onlycontacts
+    "onlysystemcontacts" -> R.string.ChatsSettingsScreen__who_can_add_onlysystemcontacts
+    "nobody" -> R.string.ChatsSettingsScreen__who_can_add_nobody
+    else -> R.string.ChatsSettingsScreen__who_can_add_nonblocked
+  }
+}
+
+@Composable
+private fun WhoCanAddYouToGroupsDialog(
+  selected: String,
+  onSelect: (String) -> Unit,
+  onDismiss: () -> Unit
+) {
+  AlertDialog(
+    onDismissRequest = onDismiss,
+    modifier = Modifier.testTag(ChatsSettingsTestTags.DIALOG_WHO_CAN_ADD_YOU_TO_GROUPS),
+    title = { Text(text = stringResource(R.string.ChatsSettingsScreen__who_can_add_you_to_groups)) },
+    text = {
+      Column {
+        Text(text = stringResource(R.string.ChatsSettingsScreen__who_can_add_you_to_groups_description))
+        WhoCanAddOption("anyone", ChatsSettingsTestTags.OPTION_WHO_CAN_ADD_ANYONE, selected, onSelect)
+        WhoCanAddOption("nonblocked", ChatsSettingsTestTags.OPTION_WHO_CAN_ADD_NONBLOCKED, selected, onSelect)
+        WhoCanAddOption("onlycontacts", ChatsSettingsTestTags.OPTION_WHO_CAN_ADD_ONLYCONTACTS, selected, onSelect)
+        WhoCanAddOption("onlysystemcontacts", ChatsSettingsTestTags.OPTION_WHO_CAN_ADD_ONLYSYSTEMCONTACTS, selected, onSelect)
+        WhoCanAddOption("nobody", ChatsSettingsTestTags.OPTION_WHO_CAN_ADD_NOBODY, selected, onSelect)
+      }
+    },
+    confirmButton = {
+      TextButton(onClick = onDismiss) {
+        Text(text = stringResource(android.R.string.cancel))
+      }
+    }
+  )
+}
+
+@Composable
+private fun WhoCanAddOption(
+  value: String,
+  testTag: String,
+  selected: String,
+  onSelect: (String) -> Unit
+) {
+  Row(
+    modifier = Modifier
+      .fillMaxWidth()
+      .clickable { onSelect(value) }
+      .padding(vertical = 8.dp)
+      .testTag(testTag),
+    verticalAlignment = Alignment.CenterVertically
+  ) {
+    RadioButton(selected = selected == value, onClick = { onSelect(value) })
+    Text(text = stringResource(whoCanAddYouToGroupsLabel(value)))
+  }
 }
 
 @PreviewWrapper(SignalPreviewWrapper::class)
@@ -314,5 +415,6 @@ internal val chatsSettingsPreviewState = ChatsSettingsState(
   keepViewOnceMessages = false,
   ignoreRemoteDelete = false,
   ignoreAdminDelete = false,
-  deleteMediaOnly = false
+  deleteMediaOnly = false,
+  whoCanAddYouToGroups = "nonblocked"
 )

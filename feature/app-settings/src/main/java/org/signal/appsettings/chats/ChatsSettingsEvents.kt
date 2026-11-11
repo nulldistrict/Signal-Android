@@ -46,6 +46,8 @@ sealed interface ChatsSettingsEvents {
 
   data class DeleteMediaOnlyChanged(val enabled: Boolean) : ChatsSettingsEvents
 
+  data class WhoCanAddYouToGroupsChanged(val value: String) : ChatsSettingsEvents
+
   data class AutoplayStickersAndGifsChanged(val enabled: Boolean) : ChatsSettingsEvents
 
   data class UseAddressBookChanged(val enabled: Boolean) : ChatsSettingsEvents

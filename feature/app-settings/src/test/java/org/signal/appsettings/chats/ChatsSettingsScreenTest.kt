@@ -124,6 +124,17 @@ class ChatsSettingsScreenTest {
   }
 
   @Test
+  fun givenWhoCanAddYouNonblocked_whenOptionChosen_thenIExpectWhoCanAddYouChangedEvent() {
+    setContent(createState(whoCanAddYouToGroups = "nonblocked"))
+
+    scrollTo(ChatsSettingsTestTags.ROW_WHO_CAN_ADD_YOU_TO_GROUPS)
+    composeTestRule.onNodeWithTag(ChatsSettingsTestTags.ROW_WHO_CAN_ADD_YOU_TO_GROUPS).performClick()
+    composeTestRule.onNodeWithTag(ChatsSettingsTestTags.OPTION_WHO_CAN_ADD_NOBODY).performClick()
+
+    assertThat(events).contains(ChatsSettingsEvents.WhoCanAddYouToGroupsChanged("nobody"))
+  }
+
+  @Test
   fun givenKeepMutedChatsArchivedOff_whenToggleClicked_thenIExpectKeepMutedChatsArchivedOnEvent() {
     setContent(createState(keepMutedChatsArchived = false))
 
@@ -347,7 +358,8 @@ class ChatsSettingsScreenTest {
     keepViewOnceMessages: Boolean = false,
     ignoreRemoteDelete: Boolean = false,
     ignoreAdminDelete: Boolean = false,
-    deleteMediaOnly: Boolean = false
+    deleteMediaOnly: Boolean = false,
+    whoCanAddYouToGroups: String = "nonblocked"
   ): ChatsSettingsState {
     return ChatsSettingsState(
       generateLinkPreviews = generateLinkPreviews,
@@ -367,7 +379,8 @@ class ChatsSettingsScreenTest {
       keepViewOnceMessages = keepViewOnceMessages,
       ignoreRemoteDelete = ignoreRemoteDelete,
       ignoreAdminDelete = ignoreAdminDelete,
-      deleteMediaOnly = deleteMediaOnly
+      deleteMediaOnly = deleteMediaOnly,
+      whoCanAddYouToGroups = whoCanAddYouToGroups
     )
   }
 }

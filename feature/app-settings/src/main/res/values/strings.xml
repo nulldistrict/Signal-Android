@@ -379,6 +379,14 @@
     <string name="ChatsSettingsScreen__delete_media_only">Delete media only</string>
     <!-- Description beneath the delete media only toggle row in chat settings -->
     <string name="ChatsSettingsScreen__delete_media_only_description">When deleting a photo or video from the media gallery, remove only the media and keep the message text.</string>
+    <string name="ChatsSettingsScreen__who_can_add_you_to_groups">Who can add me to groups</string>
+    <!-- Description beneath the who can add me to groups row in chat settings -->
+    <string name="ChatsSettingsScreen__who_can_add_you_to_groups_description">If someone who is not allowed adds you to a group, Signal leaves the group automatically.</string>
+    <string name="ChatsSettingsScreen__who_can_add_anyone">Anyone</string>
+    <string name="ChatsSettingsScreen__who_can_add_nonblocked">Anyone except blocked contacts</string>
+    <string name="ChatsSettingsScreen__who_can_add_onlycontacts">Only people you\'ve shared your profile with</string>
+    <string name="ChatsSettingsScreen__who_can_add_onlysystemcontacts">Only your system contacts</string>
+    <string name="ChatsSettingsScreen__who_can_add_nobody">Nobody</string>
     <!-- Preference menu item description for a toggle switch for preserving the archived state of muted chats. -->
     <string name="preferences__muted_chats_that_are_archived_will_remain_archived">Muted chats that are archived will remain archived when a new message arrives.</string>
     <!-- Preference menu item title for a toggle switch for preserving the archived state of muted chats. -->
