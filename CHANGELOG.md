@@ -33,15 +33,13 @@ Version numbers and release dates must reflect actual releases.
 - Signal-JW feature: optional "Ignore group admin deletes" in Chat settings, off by default. When enabled, valid group-admin deletes keep the local copy and mark the attempt with a ‼ reaction; the administrator and target thread are still validated.
 - Signal-JW feature: optional "Delete media only" in Chat settings, off by default. When enabled, deleting the last photo or video from a message removes only its attachments and keeps the message text. The change is local and is not propagated to linked devices.
 - Signal-JW feature: "Who can add me to groups" in Chat settings (anyone, anyone except blocked contacts, people you share your profile with, system contacts, nobody), defaulting to the upstream blocked-contact behavior. When someone outside the policy adds this account, Signal leaves the group. This is client-side enforcement; linked devices keep the blocked-only fallback.
+- Feature audit correction: encrypted backup export/restore at any time is already provided by Signal's local and remote backup flows, so JW's raw-database snapshot exporter is not ported. JW's zip4j ZIP backups and its `ExitActivity` are only helpers for that raw snapshot path and are marked not applicable.
 
 ### Approved but not yet implemented
 
 The project owner approved the remaining Signal-JW candidates and the following project changes. They are not released functionality until each is implemented and tested.
 
-- Signal-JW: encrypted backup export/restore at any time.
-- Signal-JW: plaintext backup export/import (requires explicit warning flow).
-- Signal-JW: encrypted ZIP backups.
-- Signal-JW: exit-app action.
+- Signal-JW: plaintext backup import (export already exists as chat export; import needs an explicit warning flow).
 - APK self-updater.
 - MobileCoin payment removal.
 
