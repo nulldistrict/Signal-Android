@@ -292,10 +292,10 @@ Verified against Signal-JW `v8.33.2.0-JW` (`da443926af`) and compared with Signa
 
 | Feature | Status | Complexity | Security impact |
 |---|---|---|---|
-| Encrypted backup export/restore at any time | APPROVED | High | High |
+| Encrypted backup export/restore at any time | EXISTS_SIGNAL | — | — |
 | Plaintext backup export/import | APPROVED | Medium–High | High |
 | Backup location / removable storage selection | EXISTS_SIGNAL (largely) | Low | Medium |
-| Encrypted ZIP backups (`zip4j`) | APPROVED | Low–Medium | Medium |
+| Encrypted ZIP backups (`zip4j`) | NOT_APPLICABLE | — | — |
 | Application passphrase (soft) lock | EXCLUDED (duplicates Molly) | Medium | High |
 | Link preview image toggle | TESTED | Low | Low–Medium |
 | Keep view-once media | TESTED | Low | High |
@@ -305,15 +305,15 @@ Verified against Signal-JW `v8.33.2.0-JW` (`da443926af`) and compared with Signa
 | Map type selection | TESTED | Low | Low |
 | Group invitation controls | TESTED | Medium–High | Medium |
 | FCM / WebSocket notification preference | EXISTS_SIGNAL | — | — |
-| Exit-app action | APPROVED | Low | Low |
+| Exit-app action | NOT_APPLICABLE | — | — |
 | APK expiry removal | EXCLUDED (NOT_RECOMMENDED) | Low | High |
 
 ### 3.2 Candidate Detail
 
-- **Encrypted backup export/restore at any time** — `EncryptedBackupExporter.java` (~529 lines), `XmlBackup`, `ImportExportFragment`, `ImportExportActivity`. Lets the user export/import a full encrypted backup outside onboarding. High security/complexity: overwrites the current database on restore; must interoperate with Signal's current backup format and key model. Duplicate of nothing in current Signal (Signal restricts full backup restore to setup).
+- **Encrypted backup export/restore at any time** — Status: `EXISTS_SIGNAL`. Current Signal provides encrypted on-device local backups (`LocalBackupsSettingsScreen`, `LocalBackupJob`) and encrypted remote backup export plus an at-any-time restore flow in remote backup settings (`RemoteBackupsSettingsViewModel`, `BackupRestoreState`). JW's `EncryptedBackupExporter` instead copies the raw app database, database secret, attachment secret, log secret and backup key to external storage, optionally inside a zip. That is a different, more dangerous mechanism and is not needed to satisfy this feature.
 - **Plaintext backup export/import** — `PlaintextBackupExporter.java`, `PlaintextBackupImporter.java`. Adds XML plaintext export and additive import. High security risk (plaintext of messages). Would require a dedicated warning flow and explicit confirmation. Not recommended without a security review.
 - **Backup location / removable storage selection** — `BACKUP_LOCATION_REMOVABLE_PREF`, `BACKUP_LOCATION_CHANGED`, `MANAGE_EXTERNAL_STORAGE`. Current Signal already has a backup folder picker (SAF). Likely `EXISTS_SIGNAL` or a legacy duplicate; the broad `MANAGE_EXTERNAL_STORAGE` permission is undesirable.
-- **Encrypted ZIP backups** — uses `net.lingala.zip4j:zip4j:2.11.6`. Low priority; evaluate only if backup work is approved.
+- **Encrypted ZIP backups** — uses `net.lingala.zip4j:zip4j:2.11.6`. Status: `NOT_APPLICABLE`. JW uses zip4j only to wrap the raw snapshot from `EncryptedBackupExporter` and the plaintext XML backup. It is not part of Signal's own encrypted backup format, so it is not ported.
 - **Application passphrase (soft) lock** — `PassphrasePromptActivity`, `Passphrase`/`softlock` branches. Duplicates Molly's passphrase lock; do not implement twice. **Excluded by the project owner**; the Molly-aligned passphrase and database protection remains the single implementation.
 - **Link preview image toggle** — `preferences_chats__send_link_preview_images`. Current Signal only has a single link-preview on/off setting, no image-specific toggle. Low complexity. Status: `TESTED`; implemented as `SignalStore.misc.sendLinkPreviewImages` (default on) and a Chat settings toggle that is disabled while link previews themselves are off. Image downloading is skipped only for the outgoing preview attachment; link metadata is still fetched when previews are enabled.
 - **Keep view-once media** — `preferences_chats__chat_keep_view_once_messages`. Privacy-sensitive; breaks the view-once expectation. Status: `TESTED`; implemented as `SignalStore.misc.keepViewOnceMessages` (default off) with a Chat settings toggle that discloses the broken expectation. When on, incoming view-once messages are stored as normal messages and the view-once expiry manager is not scheduled.
@@ -325,7 +325,7 @@ Verified against Signal-JW `v8.33.2.0-JW` (`da443926af`) and compared with Signa
   - This is client-side enforcement: the group update still exists on the server until this client processes it and sends a leave, so another linked device that has not yet applied the setting may briefly join. Linked devices deliberately fall back to the upstream blocked-only rule so a setting change on one device cannot silently remove the account from groups on another.
   - The upstream profile-sharing refinement (`!addedBy.isBlocked`) is preserved. JW's additional suppression of all group update messages from blocked editors was not ported, to keep the change scoped to invitation handling.
 - **FCM / WebSocket notification preference** — Current Signal already exposes `forceWebsocketMode` in Data & Storage. `EXISTS_SIGNAL`; do not duplicate.
-- **Exit-app action** — `ExitActivity.java`, `MainToolbar`. Minor convenience; low risk.
+- **Exit-app action** — Status: `NOT_APPLICABLE`. JW has no standalone exit action in its menus. `ExitActivity.java` is used only by `ImportExportFragment` to clear the task from recents after a raw database restore. It is not a portable user-facing feature; if the raw import path is ever implemented, the activity ships with it.
 - **APK expiry removal** — `BuildConfig` expiry behavior. **Excluded by the project owner** (marked `NOT_RECOMMENDED`): removing update enforcement weakens a security control.
 
 ### 3.3 Approval Rule
