@@ -25,7 +25,8 @@ data class ChatsSettingsState(
   val shouldAutoplayStickersAndGifs: Boolean = false,
   val keepViewOnceMessages: Boolean = false,
   val ignoreRemoteDelete: Boolean = false,
-  val ignoreAdminDelete: Boolean = false
+  val ignoreAdminDelete: Boolean = false,
+  val deleteMediaOnly: Boolean = false
 ) {
   fun isRegisteredAndUpToDate(): Boolean {
     return !userUnregistered && !clientDeprecated

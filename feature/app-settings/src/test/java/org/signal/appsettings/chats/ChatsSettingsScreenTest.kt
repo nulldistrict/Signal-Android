@@ -114,6 +114,16 @@ class ChatsSettingsScreenTest {
   }
 
   @Test
+  fun givenDeleteMediaOnlyOff_whenToggleClicked_thenIExpectDeleteMediaOnlyOnEvent() {
+    setContent(createState(deleteMediaOnly = false))
+
+    scrollTo(ChatsSettingsTestTags.ROW_DELETE_MEDIA_ONLY)
+    composeTestRule.onNodeWithTag(ChatsSettingsTestTags.ROW_DELETE_MEDIA_ONLY).performClick()
+
+    assertThat(events).contains(ChatsSettingsEvents.DeleteMediaOnlyChanged(true))
+  }
+
+  @Test
   fun givenKeepMutedChatsArchivedOff_whenToggleClicked_thenIExpectKeepMutedChatsArchivedOnEvent() {
     setContent(createState(keepMutedChatsArchived = false))
 
@@ -227,6 +237,8 @@ class ChatsSettingsScreenTest {
     composeTestRule.onNodeWithTag(ChatsSettingsTestTags.ROW_IGNORE_REMOTE_DELETE).assertIsNotEnabled()
     scrollTo(ChatsSettingsTestTags.ROW_IGNORE_ADMIN_DELETE)
     composeTestRule.onNodeWithTag(ChatsSettingsTestTags.ROW_IGNORE_ADMIN_DELETE).assertIsNotEnabled()
+    scrollTo(ChatsSettingsTestTags.ROW_DELETE_MEDIA_ONLY)
+    composeTestRule.onNodeWithTag(ChatsSettingsTestTags.ROW_DELETE_MEDIA_ONLY).assertIsNotEnabled()
     scrollTo(ChatsSettingsTestTags.ROW_KEEP_MUTED_CHATS_ARCHIVED)
     composeTestRule.onNodeWithTag(ChatsSettingsTestTags.ROW_KEEP_MUTED_CHATS_ARCHIVED).assertIsNotEnabled()
   }
@@ -334,7 +346,8 @@ class ChatsSettingsScreenTest {
     shouldAutoplayStickersAndGifs: Boolean = false,
     keepViewOnceMessages: Boolean = false,
     ignoreRemoteDelete: Boolean = false,
-    ignoreAdminDelete: Boolean = false
+    ignoreAdminDelete: Boolean = false,
+    deleteMediaOnly: Boolean = false
   ): ChatsSettingsState {
     return ChatsSettingsState(
       generateLinkPreviews = generateLinkPreviews,
@@ -353,7 +366,8 @@ class ChatsSettingsScreenTest {
       shouldAutoplayStickersAndGifs = shouldAutoplayStickersAndGifs,
       keepViewOnceMessages = keepViewOnceMessages,
       ignoreRemoteDelete = ignoreRemoteDelete,
-      ignoreAdminDelete = ignoreAdminDelete
+      ignoreAdminDelete = ignoreAdminDelete,
+      deleteMediaOnly = deleteMediaOnly
     )
   }
 }

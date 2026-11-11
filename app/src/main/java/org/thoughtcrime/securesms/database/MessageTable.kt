@@ -4091,6 +4091,20 @@ open class MessageTable(context: Context?, databaseHelper: SignalDatabase) : Dat
   }
 
   /**
+   * Removes every attachment from a message while keeping the message row and its body intact.
+   * Used by the "delete media only" option in the media gallery.
+   */
+  fun deleteAttachmentsOnly(messageId: Long, notify: Boolean = true): Boolean {
+    val threadId = getThreadIdForMessage(messageId)
+    attachments.deleteAttachmentsForMessage(messageId)
+    if (notify) {
+      notifyConversationListeners(threadId)
+    }
+    OptimizeMessageSearchIndexJob.enqueue()
+    return true
+  }
+
+  /**
    * When an update gets deleted, check if it was the head of a set of collapsed events. If so,
    * set the next element to be the new head, and change all elements' head reference to the new one.
    */

@@ -97,6 +97,11 @@ object AttachmentUtil {
     val attachmentCount = attachments.getAttachmentsForMessage(mmsId).size
 
     if (attachmentCount <= 1) {
+      if (SignalStore.misc.deleteMediaOnly) {
+        messages.deleteAttachmentsOnly(mmsId)
+        return null
+      }
+
       val deletedMessageRecord = messages.getMessageRecordOrNull(mmsId)
       messages.deleteMessage(mmsId)
       return deletedMessageRecord
@@ -126,13 +131,19 @@ object AttachmentUtil {
         val mmsId = attachment.mmsId
         val attachmentCount = attachments.getAttachmentsForMessage(mmsId).size
 
-        // If it's the only attachment, just delete the message
+        // If it's the only attachment, normally the whole message is deleted. With "delete media
+        // only" enabled, keep the message and remove just its attachments.
         if (attachmentCount <= 1) {
           val deletedMessageRecord = messages.getMessageRecordOrNull(mmsId)
           if (deletedMessageRecord != null) {
-            messages.deleteMessage(mmsId, deletedMessageRecord.threadId, notify = false, updateThread = false)
-            touchedThreadIds += deletedMessageRecord.threadId
-            deletedMessageRecords += deletedMessageRecord
+            if (SignalStore.misc.deleteMediaOnly) {
+              messages.deleteAttachmentsOnly(mmsId, notify = false)
+              touchedThreadIds += deletedMessageRecord.threadId
+            } else {
+              messages.deleteMessage(mmsId, deletedMessageRecord.threadId, notify = false, updateThread = false)
+              touchedThreadIds += deletedMessageRecord.threadId
+              deletedMessageRecords += deletedMessageRecord
+            }
           }
         } else {
           attachments.deleteAttachment(attachment.attachmentId)

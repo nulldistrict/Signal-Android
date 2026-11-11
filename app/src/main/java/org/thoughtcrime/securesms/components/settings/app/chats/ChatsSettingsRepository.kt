@@ -60,6 +60,12 @@ object ChatsSettingsRepository {
     SignalStore.misc.ignoreAdminDelete = enabled
   }
 
+  fun isDeleteMediaOnly(): Boolean = SignalStore.misc.deleteMediaOnly
+
+  fun setDeleteMediaOnly(enabled: Boolean) {
+    SignalStore.misc.deleteMediaOnly = enabled
+  }
+
   fun isPreferSystemContactPhotos(): Boolean = SignalStore.settings.isPreferSystemContactPhotos
 
   fun setPreferSystemContactPhotos(enabled: Boolean) {
