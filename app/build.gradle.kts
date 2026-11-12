@@ -33,6 +33,11 @@ staticIps.stringPropertyNames().forEach { rootProject.extra[it] = staticIps.getP
 
 val canonicalVersionCode = 1775
 val canonicalVersionName = "8.34.2"
+
+// GitHub repository that publishes this fork's releases. The in-app updater reads
+// <repository>/releases/latest/download/latest.json, so this must be the repository that
+// the reproducible-release workflow publishes to.
+val forkReleaseRepository = "OWNER/REPO"
 val currentHotfixVersion = 0
 val maxHotfixVersions = 100
 
@@ -472,8 +477,8 @@ android {
 
     create("github") {
       dimension = "distribution"
-      buildConfigField("boolean", "MANAGES_APP_UPDATES", "false")
-      buildConfigField("String", "APK_UPDATE_MANIFEST_URL", "null")
+      buildConfigField("boolean", "MANAGES_APP_UPDATES", "true")
+      buildConfigField("String", "APK_UPDATE_MANIFEST_URL", "\"https://github.com/${forkReleaseRepository}/releases/latest/download/latest.json\"")
       buildConfigField("String", "BUILD_DISTRIBUTION_TYPE", "\"github\"")
     }
 

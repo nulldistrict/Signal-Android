@@ -14,6 +14,7 @@ import org.signal.appsettings.home.AppSettingsState
 import org.signal.appsettings.home.BackupFailureState
 import org.signal.core.util.Util
 import org.signal.core.util.concurrent.SignalDispatchers
+import org.thoughtcrime.securesms.BuildConfig
 import org.thoughtcrime.securesms.backup.v2.BackupRepository
 import org.thoughtcrime.securesms.components.settings.app.subscription.InAppDonations
 import org.thoughtcrime.securesms.components.settings.app.subscription.InAppPaymentsRepository
@@ -56,7 +57,7 @@ object AppSettingsRepository {
 
   fun showInternalPreferences(): Boolean = RemoteConfig.internalUser
 
-  fun showAppUpdates(): Boolean = Environment.IS_NIGHTLY
+  fun showAppUpdates(): Boolean = BuildConfig.MANAGES_APP_UPDATES || Environment.IS_NIGHTLY
 
   /** A quick guess at whether the user can manage donations in the app, before [canManageDonations] has an answer. */
   fun likelyCanManageDonations(): Boolean = SignalStore.inAppPayments.isLikelyASustainer() || InAppDonations.hasAtLeastOnePaymentMethodAvailable()

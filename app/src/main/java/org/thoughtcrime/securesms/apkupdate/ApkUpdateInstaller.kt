@@ -9,7 +9,11 @@ import android.app.DownloadManager
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageInfo
 import android.content.pm.PackageInstaller
+import android.content.pm.PackageManager
+import android.content.pm.Signature
+import android.net.Uri
 import android.os.Build
 import org.signal.core.util.AppForegroundObserver
 import org.signal.core.util.PendingIntentFlags
@@ -85,6 +89,14 @@ object ApkUpdateInstaller {
             Log.w(TAG, "DownloadId matches, but digest does not! Bad download or inconsistent state. Failing and clearing state.")
             SignalStore.apkUpdate.clearDownloadAttributes()
             ApkUpdateNotifications.showInstallFailed(context, ApkUpdateNotifications.FailureReason.UNKNOWN)
+            return
+          }
+
+          if (!isSignerCompatible(context, downloadId)) {
+            Log.w(TAG, "Downloaded APK is signed by a different key than the installed app. Refusing to install.")
+            SignalStore.apkUpdate.clearDownloadAttributes()
+            ApkUpdateNotifications.dismissInstallPrompt(context)
+            ApkUpdateNotifications.showInstallFailed(context, ApkUpdateNotifications.FailureReason.INVALID)
             return
           }
 
@@ -182,6 +194,95 @@ object ApkUpdateInstaller {
     } catch (e: IOException) {
       Log.w(TAG, e)
       false
+    }
+  }
+
+  /**
+   * Verifies that the downloaded APK is signed by the same key (or a key in the installed app's
+   * rotation history) as the currently installed app. This mirrors the check the package installer
+   * performs, but fails earlier with a clear notification instead of a generic install conflict.
+   *
+   * If the downloaded file's path can't be resolved, we fall back to the package installer's own
+   * signature enforcement rather than blocking a legitimate update.
+   */
+  private fun isSignerCompatible(context: Context, downloadId: Long): Boolean {
+    val localUri = getLocalUri(context, downloadId)
+    val path = localUri?.path
+    if (localUri == null || path == null) {
+      Log.w(TAG, "Could not resolve the downloaded APK path. Relying on the package installer's signature check.")
+      return true
+    }
+
+    val archiveInfo = try {
+      context.packageManager.getPackageArchiveInfo(path, signingFlags())
+    } catch (e: Exception) {
+      Log.w(TAG, "Failed to read the downloaded APK's signature.", e)
+      return false
+    } ?: run {
+      Log.w(TAG, "Downloaded APK could not be parsed.")
+      return false
+    }
+
+    val installedInfo = try {
+      context.packageManager.getPackageInfo(context.packageName, signingFlags())
+    } catch (e: PackageManager.NameNotFoundException) {
+      Log.w(TAG, "Could not read the installed app's signature.", e)
+      return false
+    }
+
+    val archiveSigners = currentSigners(archiveInfo)
+    val installedHistory = installedSignerHistory(installedInfo)
+
+    if (archiveSigners.isEmpty() || installedHistory.isEmpty()) {
+      Log.w(TAG, "Missing signature data. Relying on the package installer's signature check.")
+      return true
+    }
+
+    return archiveSigners.all { archiveSigner ->
+      installedHistory.any { installedSigner -> MessageDigest.isEqual(archiveSigner, installedSigner) }
+    }
+  }
+
+  private fun getLocalUri(context: Context, downloadId: Long): Uri? {
+    val query = DownloadManager.Query().setFilterById(downloadId)
+    return context.getDownloadManager().query(query).use { cursor ->
+      if (!cursor.moveToFirst()) {
+        return@use null
+      }
+      val index = cursor.getColumnIndex(DownloadManager.COLUMN_LOCAL_URI)
+      if (index == -1) {
+        return@use null
+      }
+      cursor.getString(index)?.let(Uri::parse)
+    }
+  }
+
+  private fun signingFlags(): Int {
+    return if (Build.VERSION.SDK_INT >= 28) {
+      PackageManager.GET_SIGNING_CERTIFICATES
+    } else {
+      @Suppress("DEPRECATION")
+      PackageManager.GET_SIGNATURES
+    }
+  }
+
+  private fun currentSigners(info: PackageInfo): List<ByteArray> {
+    return if (Build.VERSION.SDK_INT >= 28) {
+      info.signingInfo?.apkContentsSigners?.map(Signature::toByteArray).orEmpty()
+    } else {
+      @Suppress("DEPRECATION")
+      info.signatures?.map(Signature::toByteArray).orEmpty()
+    }
+  }
+
+  private fun installedSignerHistory(info: PackageInfo): List<ByteArray> {
+    return if (Build.VERSION.SDK_INT >= 28) {
+      val signingInfo = info.signingInfo ?: return emptyList()
+      (signingInfo.signingCertificateHistory ?: signingInfo.apkContentsSigners)
+        .map(Signature::toByteArray)
+    } else {
+      @Suppress("DEPRECATION")
+      info.signatures?.map(Signature::toByteArray).orEmpty()
     }
   }
 
