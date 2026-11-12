@@ -39,7 +39,6 @@ class AppSettingsViewModel(
       isPrimaryDevice = AppSettingsRepository.isPrimaryDevice(),
       allowUserToGoToDonationManagementScreen = AppSettingsRepository.likelyCanManageDonations(),
       showInternalPreferences = AppSettingsRepository.showInternalPreferences(),
-      showPayments = AppSettingsRepository.showPayments(),
       showAppUpdates = AppSettingsRepository.showAppUpdates()
     )
   )
@@ -53,10 +52,6 @@ class AppSettingsViewModel(
 
     viewModelScope.launch {
       AppSettingsRepository.observeProfile().collect { profile -> _state.update { it.copy(profile = profile) } }
-    }
-
-    viewModelScope.launch {
-      AppSettingsRepository.observeUnreadPaymentsCount().collect { count -> _state.update { it.copy(unreadPaymentsCount = count) } }
     }
 
     viewModelScope.launch {
@@ -95,7 +90,6 @@ class AppSettingsViewModel(
       }
       AppSettingsEvent.DataAndStorageClicked -> parentEventEmitter.navigateTo(AppSettingsRoute.DataAndStorageRoute.DataAndStorage)
       AppSettingsEvent.AppUpdatesClicked -> parentEventEmitter.navigateTo(AppSettingsRoute.AppUpdates)
-      AppSettingsEvent.PaymentsClicked -> parentEventEmitter.navigateTo(AppSettingsRoute.Payments)
       AppSettingsEvent.HelpClicked -> parentEventEmitter.navigateTo(AppSettingsRoute.HelpRoute.Settings())
       AppSettingsEvent.InviteClicked -> parentEventEmitter.navigateTo(AppSettingsRoute.Invite)
       AppSettingsEvent.LabsClicked -> parentEventEmitter.navigateTo(AppSettingsRoute.LabsRoute.Labs)

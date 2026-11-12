@@ -15,13 +15,11 @@ import org.signal.core.util.censor
 data class AppSettingsState(
   val profile: Profile? = null,
   val isPrimaryDevice: Boolean = true,
-  val unreadPaymentsCount: Int = 0,
   val hasExpiredGiftBadge: Boolean = false,
   val allowUserToGoToDonationManagementScreen: Boolean = false,
   val userUnregistered: Boolean = false,
   val clientDeprecated: Boolean = false,
   val showInternalPreferences: Boolean = false,
-  val showPayments: Boolean = false,
   val showAppUpdates: Boolean = false,
   val backupFailureState: BackupFailureState = BackupFailureState.NONE,
   val snackbar: Snackbar = Snackbar.None

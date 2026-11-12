@@ -85,13 +85,6 @@ class DeleteAccountWithNumberScreenTest {
   }
 
   @Test
-  fun givenAWalletBalance_whenTheScreenIsShown_thenIExpectAPaymentsBullet() {
-    setContent(createState(walletBalance = "0.1000 MOB"))
-
-    composeTestRule.onNodeWithText(context.getString(R.string.DeleteAccountFragment__delete_s_in_your_payments_account, "0.1000 MOB")).assertIsDisplayed()
-  }
-
-  @Test
   fun givenTheConfirmationDialog_whenIConfirm_thenIExpectDeletionConfirmedEvent() {
     setContent(createState(dialog = Dialog.ConfirmDeletion))
 
@@ -137,7 +130,6 @@ class DeleteAccountWithNumberScreenTest {
     countryCode: String = "1",
     nationalNumber: String = "6105550103",
     formattedNumber: String = "(610) 555-0103",
-    walletBalance: String? = null,
     dialog: Dialog = Dialog.None
   ): DeleteAccountState {
     return DeleteAccountState(
@@ -146,7 +138,6 @@ class DeleteAccountWithNumberScreenTest {
       countryCode = countryCode,
       nationalNumber = nationalNumber,
       formattedNumber = formattedNumber,
-      walletBalance = walletBalance,
       dialog = dialog
     )
   }

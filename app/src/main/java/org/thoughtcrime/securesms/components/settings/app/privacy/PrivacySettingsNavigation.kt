@@ -16,6 +16,6 @@ import org.signal.core.ui.compose.split.detailEntry
  */
 fun EntryProviderScope<NavKey>.registerPrivacyRoutes(parentEventEmitter: (AppSettingsNavigationEvent) -> Unit) {
   detailEntry<AppSettingsRoute.PrivacyRoute.Privacy> {
-    PrivacySettingsEntry(scrollToPaymentLock = false, parentEventEmitter = parentEventEmitter)
+    PrivacySettingsEntry(parentEventEmitter = parentEventEmitter)
   }
 }

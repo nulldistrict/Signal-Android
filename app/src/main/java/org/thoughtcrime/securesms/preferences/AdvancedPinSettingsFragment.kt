@@ -37,8 +37,6 @@ import org.signal.core.ui.compose.showSnackbar
 import org.thoughtcrime.securesms.R
 import org.thoughtcrime.securesms.components.settings.app.backups.remote.BackupKeyDisplayFragment
 import org.thoughtcrime.securesms.lock.v2.CreateSvrPinActivity
-import org.thoughtcrime.securesms.payments.backup.PaymentsRecoveryStartFragmentArgs.Builder
-import org.thoughtcrime.securesms.payments.preferences.PaymentsActivity
 import org.thoughtcrime.securesms.pin.PinOptOutDialog
 import org.thoughtcrime.securesms.util.navigation.safeNavigate
 
@@ -65,13 +63,6 @@ class AdvancedPinSettingsFragment : ComposeFragment() {
             }
             AdvancedPinSettingsViewModel.Event.LAUNCH_PIN_CREATION_FLOW -> {
               startActivityForResult(CreateSvrPinActivity.getIntentForPinCreate(requireContext()), CreateSvrPinActivity.REQUEST_NEW_PIN)
-            }
-            AdvancedPinSettingsViewModel.Event.LAUNCH_RECOVERY_PHRASE_HANDLING -> {
-              val intent = Intent(requireContext(), PaymentsActivity::class.java)
-              intent.putExtra(PaymentsActivity.EXTRA_PAYMENTS_STARTING_ACTION, R.id.action_directly_to_paymentsBackup)
-              intent.putExtra(PaymentsActivity.EXTRA_STARTING_ARGUMENTS, Builder().setFinishOnConfirm(true).build().toBundle())
-
-              startActivity(intent)
             }
             AdvancedPinSettingsViewModel.Event.SHOW_PIN_DISABLED_SNACKBAR -> {
               displayOptOutSnackbar()
@@ -110,14 +101,6 @@ class AdvancedPinSettingsFragment : ComposeFragment() {
 
     when (dialog) {
       AdvancedPinSettingsViewModel.Dialog.REGISTRATION_LOCK -> PinsAreRequiredForRegistrationLockDialog(
-        onDismiss = {
-          viewModel.dismissDialog()
-        }
-      )
-      AdvancedPinSettingsViewModel.Dialog.RECORD_PAYMENTS_RECOVERY_PHRASE -> RecordPaymentsRecoveryPhraseDialog(
-        onConfirm = {
-          viewModel.launchRecoveryPhraseHandling()
-        },
         onDismiss = {
           viewModel.dismissDialog()
         }
@@ -205,21 +188,6 @@ private fun PinsAreRequiredForRegistrationLockDialog(
 }
 
 @Composable
-private fun RecordPaymentsRecoveryPhraseDialog(
-  onConfirm: () -> Unit,
-  onDismiss: () -> Unit
-) {
-  Dialogs.SimpleAlertDialog(
-    title = stringResource(R.string.ApplicationPreferencesActivity_record_payments_recovery_phrase),
-    body = stringResource(R.string.ApplicationPreferencesActivity_before_you_can_disable_your_pin),
-    confirm = stringResource(R.string.ApplicationPreferencesActivity_record_phrase),
-    onConfirm = onConfirm,
-    dismiss = stringResource(android.R.string.cancel),
-    onDismiss = onDismiss
-  )
-}
-
-@Composable
 private fun RotateAepDialog(
   onConfirm: () -> Unit,
   onDismiss: () -> Unit
@@ -259,14 +227,6 @@ private fun AdvancedPinSettingsFragmentContentDisabledPreview() {
 private fun PinsAreRequiredForRegistrationLockDialogPreview() {
   Previews.Preview {
     PinsAreRequiredForRegistrationLockDialog()
-  }
-}
-
-@DayNightPreviews
-@Composable
-private fun RecordPaymentsRecoveryPhraseDialogPreview() {
-  Previews.Preview {
-    RecordPaymentsRecoveryPhraseDialog({}, {})
   }
 }
 

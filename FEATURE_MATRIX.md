@@ -85,7 +85,7 @@ Verified against Molly `892d6264ba` and compared with Signal `515db93fb4`.
 | FOSS / degoogled build variant | OWNER_DECISION | — | Medium |
 | GitHub reproducible builds | IMPLEMENTED (CI verification pending) | Medium–High | Medium |
 | APK self-updater | APPROVED | Medium | Medium |
-| MobileCoin removal | APPROVED | Medium | Low |
+| MobileCoin removal | IMPLEMENTED | Medium | Low |
 
 ### 2.2 Feature Detail
 
@@ -278,9 +278,12 @@ Verified against Molly `892d6264ba` and compared with Signal `515db93fb4`.
 
 #### MobileCoin removal
 
-- Status: `APPROVED`
+- Status: `IMPLEMENTED`
 - Evidence: Molly commit `5a8a33070d Remove MobileCoin payments`.
 - This is a deliberate divergence from Signal. Remove MobileCoin payment UI, jobs and dependencies without changing the application identity; keep all non-payment functionality intact.
+- Implemented: removed the wallet, ledger, network, send/create, recovery and preferences UI, payment jobs, notification/message views, MobileCoin dependency and its Maven repository, and the related settings rows (payments entry, payment lock, wallet balance in delete-account). Retained the `PaymentTable` schema, `PaymentsValues` backup keys, `Payment`, `Entropy`, `MoneyView`, `FiatMoneyUtil`, `CurrencyUtil` and `PaymentsAvailability` for database/backup compatibility. Payment notifications are skipped on backup export and ignored on import. In-app donations (`InAppPayment*`, Stripe/PayPal) are unaffected.
+- Verification: `:Signal-Android:compilePlayProdDebugKotlin`, `:Signal-Android:compilePlayProdDebugJavaWithJavac`, `:Signal-Android:assemblePlayProdDebug`, app-settings unit tests (60 tests) and feature app-settings unit tests (105 tests) passed.
+- Risk: existing databases may still contain payment messages or tombstones from earlier installs; they remain readable but no new payments can be sent or received. On-device verification of upgrade and backup import/export is still pending.
 
 ## 3. Signal-JW Feature Candidates
 

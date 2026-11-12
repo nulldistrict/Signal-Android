@@ -104,7 +104,6 @@ fun DeleteAccountWithoutNumberScreen(
 
         Bullets(
           username = state.username,
-          walletBalance = state.walletBalance,
           modifier = Modifier.padding(top = 16.dp)
         )
 
@@ -143,7 +142,6 @@ fun DeleteAccountWithoutNumberScreen(
 @Composable
 private fun Bullets(
   username: String?,
-  walletBalance: String?,
   modifier: Modifier = Modifier
 ) {
   Column(
@@ -160,9 +158,6 @@ private fun Bullets(
 
     Bullet(text = stringResource(R.string.DeleteAccountFragment__delete_all_your_messages))
 
-    if (walletBalance != null) {
-      Bullet(text = stringResource(R.string.DeleteAccountFragment__delete_s_in_your_payments_account, walletBalance))
-    }
 
     Bullet(text = stringResource(R.string.DeleteAccountScreen__delete_your_account_id_and_recovery_key))
 

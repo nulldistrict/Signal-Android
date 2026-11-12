@@ -74,12 +74,6 @@ object PrivacySettingsRepository {
     SignalStore.settings.isIncognitoKeyboardEnabled = enabled
   }
 
-  fun isPaymentLockEnabled(): Boolean = SignalStore.payments.paymentLock
-
-  fun setPaymentLockEnabled(enabled: Boolean) {
-    SignalStore.payments.paymentLock = enabled
-  }
-
   fun isObsoletePassphraseEnabled(): Boolean = !SignalStore.settings.passphraseDisabled
 
   fun isObsoletePassphraseInitialized(): Boolean = MasterSecretUtil.isPassphraseInitialized(AppDependencies.application)

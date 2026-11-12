@@ -26,12 +26,10 @@ data class DeleteAccountState(
   val formattedNumber: String = "",
   /** The user's username, or null when they don't have one. Only shown on [DeleteAccountWithoutNumberScreen]. */
   val username: String? = null,
-  /** The user's payments balance, formatted for display, or null when they have nothing in there. */
-  val walletBalance: String? = null,
   val dialog: Dialog = Dialog.None
 ) {
 
-  override fun toString(): String = "DeleteAccountState(hasPhoneNumber=$hasPhoneNumber, regionCode=$regionCode, countryDisplayName=$countryDisplayName, countryCode=$countryCode, nationalNumber=${nationalNumber.censor()}, formattedNumber=${formattedNumber.censor()}, username=${username?.censor()}, walletBalance=${walletBalance?.censor()}, dialog=$dialog)"
+  override fun toString(): String = "DeleteAccountState(hasPhoneNumber=$hasPhoneNumber, regionCode=$regionCode, countryDisplayName=$countryDisplayName, countryCode=$countryCode, nationalNumber=${nationalNumber.censor()}, formattedNumber=${formattedNumber.censor()}, username=${username?.censor()}, dialog=$dialog)"
 
   /** Whichever dialog the screen is showing, if any. Only one is ever up at a time. */
   sealed interface Dialog {

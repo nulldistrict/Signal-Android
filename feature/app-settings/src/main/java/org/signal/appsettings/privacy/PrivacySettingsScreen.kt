@@ -10,13 +10,10 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyListScope
-import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
@@ -35,7 +32,6 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.LifecycleResumeEffect
-import kotlinx.coroutines.flow.first
 import org.signal.appsettings.AppSettingsLazyColumn
 import org.signal.appsettings.R
 import org.signal.core.ui.biometrics.rememberBiometricsAuthentication
@@ -74,7 +70,6 @@ object PrivacySettingsTestTags {
   const val ROW_SCREEN_SECURITY = "row-screen-security"
   const val ROW_INCOGNITO_KEYBOARD = "row-incognito-keyboard"
   const val TEXT_INCOGNITO_KEYBOARD_DISCLAIMER = "text-incognito-keyboard-disclaimer"
-  const val ROW_PAYMENT_LOCK = "row-payment-lock"
   const val ROW_ADVANCED = "row-advanced"
 }
 
@@ -96,13 +91,6 @@ fun PrivacySettingsScreen(
   }
 
   val listState = rememberLazyListState()
-
-  if (state.scrollToPaymentLock) {
-    LaunchedEffect(Unit) {
-      scrollToPaymentLock(listState)
-      onEvent(PrivacySettingsEvent.ScrolledToPaymentLock)
-    }
-  }
 
   Scaffolds.Settings(
     title = stringResource(R.string.PrivacySettingsScreen__privacy),
@@ -252,18 +240,6 @@ fun PrivacySettingsScreen(
       }
 
       item {
-        Texts.SectionHeader(text = stringResource(R.string.preferences_app_protection__payments))
-      }
-
-      item {
-        PaymentLockRow(state = state, onEvent = onEvent)
-      }
-
-      item {
-        Dividers.Default()
-      }
-
-      item {
         Rows.TextRow(
           text = stringResource(R.string.PrivacySettingsScreen__advanced),
           label = stringResource(R.string.PrivacySettingsFragment__signal_message_and_calls),
@@ -295,25 +271,8 @@ fun PrivacySettingsScreen(
           onDismiss = { onEvent(PrivacySettingsEvent.DialogDismissed) }
         )
       }
-      PrivacySettingsState.Dialog.PaymentLockNeedsDeviceSecurity -> {
-        Dialogs.SimpleAlertDialog(
-          title = stringResource(R.string.PrivacySettingsFragment__cant_enable_title),
-          body = stringResource(R.string.PrivacySettingsFragment__cant_enable_description),
-          confirm = stringResource(R.string.PrivacySettingsScreen__turn_on),
-          dismiss = stringResource(R.string.PrivacySettingsScreen__not_now),
-          onConfirm = { onEvent(PrivacySettingsEvent.OpenDeviceSecuritySettingsClicked) },
-          onDeny = { onEvent(PrivacySettingsEvent.DialogDismissed) },
-          onDismissRequest = { onEvent(PrivacySettingsEvent.DialogDismissed) }
-        )
-      }
     }
   }
-}
-
-/** Payment lock is the second to last row, so landing on the last row brings it fully into view. */
-private suspend fun scrollToPaymentLock(listState: LazyListState) {
-  val itemCount = snapshotFlow { listState.layoutInfo.totalItemsCount }.first { it > 0 }
-  listState.scrollToItem(itemCount - 1)
 }
 
 private fun LazyListScope.obsoletePassphraseRows(
@@ -436,41 +395,11 @@ private fun IncognitoKeyboardDisclaimer(onEvent: (PrivacySettingsEvent) -> Unit)
 }
 
 @Composable
-private fun PaymentLockRow(
-  state: PrivacySettingsState,
-  onEvent: (PrivacySettingsEvent) -> Unit
-) {
-  val disableBiometrics = rememberBiometricsAuthentication(
-    promptTitle = stringResource(R.string.PrivacySettingsScreen__signal),
-    proceedWhenUnavailable = false
-  )
-
-  LifecycleEventEffect(Lifecycle.Event.ON_PAUSE) {
-    disableBiometrics.cancelAuthentication()
-  }
-
-  Rows.ToggleRow(
-    checked = state.isPaymentLockOn,
-    text = stringResource(R.string.preferences__payment_lock),
-    label = stringResource(R.string.PrivacySettingsFragment__payment_lock_require_lock),
-    onCheckChanged = { enabled ->
-      if (enabled) {
-        onEvent(PrivacySettingsEvent.EnablePaymentLockClicked)
-      } else {
-        disableBiometrics.withBiometricsAuthentication { onEvent(PrivacySettingsEvent.PaymentLockDisableAuthenticated) }
-      }
-    },
-    modifier = Modifier.testTag(PrivacySettingsTestTags.ROW_PAYMENT_LOCK)
-  )
-}
-
-@Composable
 private fun PrivacySettingsState.Snackbar.message(): String? {
   return when (this) {
     PrivacySettingsState.Snackbar.None -> null
     PrivacySettingsState.Snackbar.ScreenLockNeedsDeviceSecurity -> stringResource(R.string.preferences_app_protection__to_use_screen_lock)
     PrivacySettingsState.Snackbar.PassphraseNotSet -> stringResource(R.string.ApplicationPreferenceActivity_you_havent_set_a_passphrase_yet)
-    PrivacySettingsState.Snackbar.DeviceSecuritySettingsUnavailable -> stringResource(R.string.PrivacySettingsFragment__failed_to_navigate_to_system_settings)
   }
 }
 
@@ -481,8 +410,7 @@ private val previewState = PrivacySettingsState(
   universalExpireTimer = 1.days,
   screenLock = true,
   screenLockTimeout = 5.minutes,
-  screenSecurity = true,
-  paymentLock = true
+  screenSecurity = true
 )
 
 @PreviewWrapper(SignalPreviewWrapper::class)
@@ -532,16 +460,6 @@ private fun PrivacySettingsScreenDisablePassphraseDialogPreview() {
 private fun PrivacySettingsScreenPassphraseTimeoutDialogPreview() {
   PrivacySettingsScreen(
     state = previewState.copy(isObsoletePassphraseEnabled = true, dialog = PrivacySettingsState.Dialog.PassphraseTimeout),
-    onEvent = {}
-  )
-}
-
-@PreviewWrapper(SignalPreviewWrapper::class)
-@DayNightPreviews
-@Composable
-private fun PrivacySettingsScreenPaymentLockDialogPreview() {
-  PrivacySettingsScreen(
-    state = previewState.copy(isDeviceSecure = false, dialog = PrivacySettingsState.Dialog.PaymentLockNeedsDeviceSecurity),
     onEvent = {}
   )
 }

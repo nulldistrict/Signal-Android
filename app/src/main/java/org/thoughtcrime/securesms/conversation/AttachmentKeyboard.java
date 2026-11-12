@@ -27,8 +27,6 @@ import org.signal.core.ui.util.StorageUtil;
 
 import java.util.Arrays;
 import java.util.List;
-import java.util.function.Predicate;
-import java.util.stream.Collectors;
 
 public class AttachmentKeyboard extends FrameLayout implements InputAwareLayout.InputView {
 
@@ -38,8 +36,7 @@ public class AttachmentKeyboard extends FrameLayout implements InputAwareLayout.
       AttachmentKeyboardButton.FILE,
       AttachmentKeyboardButton.POLL,
       AttachmentKeyboardButton.CONTACT,
-      AttachmentKeyboardButton.LOCATION,
-      AttachmentKeyboardButton.PAYMENT
+      AttachmentKeyboardButton.LOCATION
   );
 
   private View                            container;
@@ -109,14 +106,6 @@ public class AttachmentKeyboard extends FrameLayout implements InputAwareLayout.
 
   public void setCallback(@NonNull Callback callback) {
     this.callback = callback;
-  }
-
-  public void filterAttachmentKeyboardButtons(@Nullable Predicate<AttachmentKeyboardButton> buttonPredicate) {
-    if (buttonPredicate == null) {
-      buttonAdapter.setButtons(DEFAULT_BUTTONS);
-    } else {
-      buttonAdapter.setButtons(DEFAULT_BUTTONS.stream().filter(buttonPredicate).collect(Collectors.toList()));
-    }
   }
 
   public void onMediaChanged(@NonNull List<Media> media) {

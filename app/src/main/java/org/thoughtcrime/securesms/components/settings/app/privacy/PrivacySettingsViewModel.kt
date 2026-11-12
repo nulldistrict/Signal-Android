@@ -23,15 +23,14 @@ import org.signal.core.util.logging.Log
  * Drives [org.signal.appsettings.privacy.PrivacySettingsScreen]. Navigation goes straight to [parentEventEmitter].
  */
 class PrivacySettingsViewModel(
-  private val parentEventEmitter: (AppSettingsNavigationEvent) -> Unit,
-  scrollToPaymentLock: Boolean = false
+  private val parentEventEmitter: (AppSettingsNavigationEvent) -> Unit
 ) : EventDrivenViewModel<PrivacySettingsEvent>(TAG) {
 
   companion object {
     private val TAG = Log.tag(PrivacySettingsViewModel::class)
   }
 
-  private val _state = MutableStateFlow(PrivacySettingsState(scrollToPaymentLock = scrollToPaymentLock))
+  private val _state = MutableStateFlow(PrivacySettingsState())
   private val _actions = Channel<PrivacySettingsAction>(Channel.BUFFERED)
 
   val state: StateFlow<PrivacySettingsState> = _state.asStateFlow()
@@ -49,8 +48,6 @@ class PrivacySettingsViewModel(
       }
 
       PrivacySettingsEvent.NavigateBackClicked -> parentEventEmitter.navigateBack()
-
-      PrivacySettingsEvent.ScrolledToPaymentLock -> _state.update { it.copy(scrollToPaymentLock = false) }
 
       PrivacySettingsEvent.PhoneNumberClicked -> parentEventEmitter.navigateTo(AppSettingsRoute.PrivacyRoute.PhoneNumberPrivacy)
 
@@ -121,27 +118,6 @@ class PrivacySettingsViewModel(
 
       PrivacySettingsEvent.IncognitoKeyboardLearnMoreClicked -> _actions.send(PrivacySettingsAction.OpenIncognitoKeyboardLearnMore)
 
-      PrivacySettingsEvent.EnablePaymentLockClicked -> {
-        if (PrivacySettingsRepository.isDeviceSecure()) {
-          PrivacySettingsRepository.setPaymentLockEnabled(true)
-          refresh()
-        } else {
-          _state.update { it.copy(dialog = Dialog.PaymentLockNeedsDeviceSecurity) }
-        }
-      }
-
-      PrivacySettingsEvent.PaymentLockDisableAuthenticated -> {
-        PrivacySettingsRepository.setPaymentLockEnabled(false)
-        refresh()
-      }
-
-      PrivacySettingsEvent.OpenDeviceSecuritySettingsClicked -> {
-        _state.update { it.copy(dialog = Dialog.None) }
-        _actions.send(PrivacySettingsAction.OpenDeviceSecuritySettings)
-      }
-
-      PrivacySettingsEvent.DeviceSecuritySettingsUnavailable -> _state.update { it.copy(snackbar = Snackbar.DeviceSecuritySettingsUnavailable) }
-
       PrivacySettingsEvent.AdvancedClicked -> parentEventEmitter.navigateTo(AppSettingsRoute.PrivacyRoute.Advanced)
 
       PrivacySettingsEvent.DialogDismissed -> _state.update { it.copy(dialog = Dialog.None) }
@@ -165,8 +141,7 @@ class PrivacySettingsViewModel(
         screenLock = PrivacySettingsRepository.isScreenLockEnabled(),
         screenLockTimeout = PrivacySettingsRepository.getScreenLockTimeout(),
         screenSecurity = PrivacySettingsRepository.isScreenSecurityEnabled(),
-        incognitoKeyboard = PrivacySettingsRepository.isIncognitoKeyboardEnabled(),
-        paymentLock = PrivacySettingsRepository.isPaymentLockEnabled()
+        incognitoKeyboard = PrivacySettingsRepository.isIncognitoKeyboardEnabled()
       )
     }
   }

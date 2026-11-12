@@ -24,8 +24,7 @@ class PrivacySettingsLayoutTest : SignalLayoutStressTest() {
     screenLock = true,
     screenLockTimeout = 6.days + 23.hours,
     screenSecurity = true,
-    incognitoKeyboard = true,
-    paymentLock = true
+    incognitoKeyboard = true
   )
 
   @Test
@@ -56,11 +55,6 @@ class PrivacySettingsLayoutTest : SignalLayoutStressTest() {
   @Test
   fun `picking a passphrase timeout`() = assertPassesLayoutChecks {
     Screen(populated.copy(isObsoletePassphraseEnabled = true, dialog = PrivacySettingsState.Dialog.PassphraseTimeout))
-  }
-
-  @Test
-  fun `payment lock needs device security`() = assertPassesLayoutChecks {
-    Screen(populated.copy(isDeviceSecure = false, dialog = PrivacySettingsState.Dialog.PaymentLockNeedsDeviceSecurity))
   }
 
   @Test

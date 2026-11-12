@@ -347,7 +347,6 @@ import org.thoughtcrime.securesms.mms.StickerSlide
 import org.thoughtcrime.securesms.mms.VideoSlide
 import org.thoughtcrime.securesms.nicknames.NicknameActivity
 import org.thoughtcrime.securesms.notifications.v2.ConversationId
-import org.thoughtcrime.securesms.payments.preferences.PaymentsActivity
 import org.thoughtcrime.securesms.polls.Poll
 import org.thoughtcrime.securesms.polls.PollOption
 import org.thoughtcrime.securesms.polls.PollRecord
@@ -3564,33 +3563,11 @@ class ConversationFragment :
     startActionMode()
   }
 
-  private fun handleViewPaymentDetails(conversationMessage: ConversationMessage) {
-    val record: MmsMessageRecord = conversationMessage.messageRecord as? MmsMessageRecord ?: return
-    val payment = record.payment
-    if (payment == null || record.isPaymentTombstone) {
-      showPaymentTombstoneLearnMoreDialog()
-      return
-    }
-    if (record.isPaymentNotification) {
-      startActivity(PaymentsActivity.navigateToPaymentDetails(requireContext(), payment.uuid))
-    }
-  }
-
   private fun handleViewStickerPack(conversationMessage: ConversationMessage) {
     val record: MmsMessageRecord = conversationMessage.messageRecord as? MmsMessageRecord ?: return
     val stickerLocator = record.slideDeck.stickerSlide?.asAttachment()?.stickerLocator ?: return
 
     startActivity(StickerPackPreviewActivityV2.createIntent(StickerPackId(stickerLocator.packId), StickerPackKey(stickerLocator.packKey)))
-  }
-
-  private fun showPaymentTombstoneLearnMoreDialog() {
-    val dialogBuilder = MaterialAlertDialogBuilder(requireContext())
-    dialogBuilder
-      .setTitle(R.string.PaymentTombstoneLearnMoreDialog_title)
-      .setMessage(R.string.PaymentTombstoneLearnMoreDialog_message)
-      .setPositiveButton(android.R.string.ok, null)
-
-    dialogBuilder.show()
   }
 
   private fun showAttachmentBackfillFailureDialog(reason: AttachmentBackfill.FailureReason) {
@@ -4171,9 +4148,7 @@ class ConversationFragment :
       DoubleTapEditEducationSheet(conversationMessage).show(childFragmentManager, DoubleTapEditEducationSheet.KEY)
     }
 
-    override fun onPaymentTombstoneClicked() {
-      this@ConversationFragment.showPaymentTombstoneLearnMoreDialog()
-    }
+    override fun onPaymentTombstoneClicked() = Unit
 
     override fun onDisplayMediaNoLongerAvailableSheet() {
       viewLifecycleOwner.lifecycleScope.launch {
@@ -4433,14 +4408,9 @@ class ConversationFragment :
       )
     }
 
-    override fun onActivatePaymentsClicked() {
-      startActivity(Intent(requireContext(), PaymentsActivity::class.java))
-    }
+    override fun onActivatePaymentsClicked() = Unit
 
-    override fun onSendPaymentClicked(recipientId: RecipientId) {
-      val recipient = viewModel.recipientSnapshot ?: return
-      AttachmentManager.selectPayment(this@ConversationFragment, recipient)
-    }
+    override fun onSendPaymentClicked(recipientId: RecipientId) = Unit
 
     override fun onScheduledIndicatorClicked(view: View, conversationMessage: ConversationMessage) = Unit
 
@@ -5054,7 +5024,6 @@ class ConversationFragment :
         ReactionAction.DOWNLOAD -> handleSaveAttachment(conversationMessage.messageRecord as MmsMessageRecord)
         ReactionAction.COPY -> handleCopyMessage(conversationMessage.multiselectCollection.toSet())
         ReactionAction.MULTISELECT -> handleEnterMultiselect(conversationMessage)
-        ReactionAction.PAYMENT_DETAILS -> handleViewPaymentDetails(conversationMessage)
         ReactionAction.VIEW_INFO -> handleDisplayDetails(conversationMessage)
         ReactionAction.DELETE -> handleDeleteMessages(conversationMessage.multiselectCollection.toSet())
         ReactionAction.END_POLL -> handleEndPoll(conversationMessage.messageRecord.getPoll()?.id)
@@ -5679,8 +5648,6 @@ class ConversationFragment :
           AttachmentKeyboardButton.CONTACT -> conversationActivityResultContracts.launchSelectContact(recipient.id)
 
           AttachmentKeyboardButton.LOCATION -> conversationActivityResultContracts.launchSelectLocation(recipient.chatColors)
-
-          AttachmentKeyboardButton.PAYMENT -> AttachmentManager.selectPayment(this@ConversationFragment, recipient)
 
           AttachmentKeyboardButton.FILE -> {
             if (!conversationActivityResultContracts.launchSelectFile()) {

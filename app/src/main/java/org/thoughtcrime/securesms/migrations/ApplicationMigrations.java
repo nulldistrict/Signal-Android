@@ -138,6 +138,8 @@ public class ApplicationMigrations {
     static final int EMOJI_SEARCH_INDEX_CHECK      = 93;
     static final int IDENTITY_FIX                  = 94;
     static final int COPY_USERNAME_TO_SIGNAL_STORE = 95;
+    // 96 was RECHECK_PAYMENTS, removed with MobileCoin support. The value is kept reserved so
+    // later migration version numbers do not shift.
     static final int RECHECK_PAYMENTS              = 96;
     static final int THREAD_COUNT_DB_MIGRATION     = 97;
     static final int SYNC_KEYS_MIGRATION           = 98;
@@ -711,10 +713,6 @@ public class ApplicationMigrations {
 
     if (lastSeenVersion < Version.COPY_USERNAME_TO_SIGNAL_STORE) {
       jobs.put(Version.COPY_USERNAME_TO_SIGNAL_STORE, new CopyUsernameToSignalStoreMigrationJob());
-    }
-
-    if (lastSeenVersion < Version.RECHECK_PAYMENTS) {
-      jobs.put(Version.RECHECK_PAYMENTS, new RecheckPaymentsMigrationJob());
     }
 
     if (lastSeenVersion < Version.THREAD_COUNT_DB_MIGRATION) {

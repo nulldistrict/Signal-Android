@@ -777,12 +777,6 @@
             android:windowSoftInputMode="stateVisible|adjustResize" />
 
         <activity
-            android:name=".payments.preferences.PaymentsActivity"
-            android:configChanges="touchscreen|keyboard|keyboardHidden|orientation|screenLayout|screenSize"
-            android:exported="false"
-            android:theme="@style/TextSecure.LightRegistrationTheme" />
-
-        <activity
             android:name=".lock.v2.CreateSvrPinActivity"
             android:configChanges="touchscreen|keyboard|keyboardHidden|orientation|screenLayout|screenSize"
             android:exported="false"

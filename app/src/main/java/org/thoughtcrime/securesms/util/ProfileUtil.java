@@ -30,9 +30,6 @@ import org.thoughtcrime.securesms.jobs.RefreshAttributesJob;
 import org.thoughtcrime.securesms.jobs.RefreshOwnProfileJob;
 import org.thoughtcrime.securesms.keyvalue.SignalStore;
 import org.thoughtcrime.securesms.net.SignalNetwork;
-import org.thoughtcrime.securesms.payments.MobileCoinPublicAddress;
-import org.thoughtcrime.securesms.payments.MobileCoinPublicAddressProfileUtil;
-import org.thoughtcrime.securesms.payments.PaymentsAddressException;
 import org.thoughtcrime.securesms.profiles.AvatarHelper;
 import org.thoughtcrime.securesms.profiles.ProfileName;
 import org.thoughtcrime.securesms.recipients.Recipient;
@@ -192,64 +189,6 @@ public final class ProfileUtil {
 
     ProfileCipher profileCipher = new ProfileCipher(profileKey);
     return profileCipher.decryptBoolean(Base64.decode(encryptedBooleanBase64));
-  }
-
-  @WorkerThread
-  public static @NonNull MobileCoinPublicAddress getAddressForRecipient(@NonNull Recipient recipient)
-      throws IOException, PaymentsAddressException
-  {
-    ProfileKey profileKey;
-    try {
-      profileKey = getProfileKey(recipient);
-    } catch (IOException e) {
-      Log.w(TAG, "Profile key not available for " + recipient.getId());
-      throw new PaymentsAddressException(PaymentsAddressException.Code.NO_PROFILE_KEY);
-    }
-    ProfileAndCredential profileAndCredential     = ProfileUtil.retrieveProfileSync(AppDependencies.getApplication(), recipient, SignalServiceProfile.RequestType.PROFILE);
-    SignalServiceProfile profile                  = profileAndCredential.getProfile();
-    byte[]               encryptedPaymentsAddress = profile.getPaymentAddress();
-
-    if (encryptedPaymentsAddress == null) {
-      Log.w(TAG, "Payments not enabled for " + recipient.getId());
-      throw new PaymentsAddressException(PaymentsAddressException.Code.NOT_ENABLED);
-    }
-
-    try {
-      IdentityKey remoteIdentityKey = new IdentityKey(Base64.decode(profileAndCredential.getProfile().getIdentityKey()), 0);
-      IdentityKey localIdentityKey  = getLocalIdentityKey(recipient);
-
-      if (localIdentityKey != null && !localIdentityKey.equals(remoteIdentityKey)) {
-        Log.w(TAG, "Server-provided identity key does not match locally-stored identity key for " + recipient.getId());
-        throw new PaymentsAddressException(PaymentsAddressException.Code.IDENTITY_MISMATCH);
-      }
-
-      ProfileCipher           profileCipher           = new ProfileCipher(profileKey);
-      byte[]                  decrypted               = profileCipher.decryptWithLength(encryptedPaymentsAddress);
-      PaymentAddress          paymentAddress          = PaymentAddress.ADAPTER.decode(decrypted);
-      byte[]                  bytes                   = MobileCoinPublicAddressProfileUtil.verifyPaymentsAddress(paymentAddress, localIdentityKey != null ? localIdentityKey : remoteIdentityKey);
-      MobileCoinPublicAddress mobileCoinPublicAddress = MobileCoinPublicAddress.fromBytes(bytes);
-
-      if (mobileCoinPublicAddress == null) {
-        throw new PaymentsAddressException(PaymentsAddressException.Code.INVALID_ADDRESS);
-      }
-
-      return mobileCoinPublicAddress;
-    } catch (InvalidCiphertextException | IOException e) {
-      Log.w(TAG, "Could not decrypt payments address, ProfileKey may be outdated for " + recipient.getId(), e);
-      throw new PaymentsAddressException(PaymentsAddressException.Code.COULD_NOT_DECRYPT);
-    } catch (InvalidKeyException e) {
-      Log.w(TAG, "Could not verify payments address due to bad identity key " + recipient.getId(), e);
-      throw new PaymentsAddressException(PaymentsAddressException.Code.INVALID_ADDRESS_SIGNATURE);
-    }
-  }
-
-  private static @Nullable IdentityKey getLocalIdentityKey(@NonNull Recipient recipient) {
-    if (!recipient.getHasServiceId()) {
-      return null;
-    }
-
-    IdentityStoreRecord record = SignalDatabase.identities().getIdentityStoreRecord(recipient.requireServiceId());
-    return record != null ? record.getIdentityKey() : null;
   }
 
   private static ProfileKey getProfileKey(@NonNull Recipient recipient) throws IOException {
@@ -422,18 +361,8 @@ public final class ProfileUtil {
   }
 
   private static @Nullable PaymentAddress getSelfPaymentsAddressProtobuf() {
-    if (!SignalStore.payments().mobileCoinPaymentsEnabled()) {
-      return null;
-    } else {
-      IdentityKeyPair         identityKeyPair = SignalStore.account().getAciIdentityKey();
-      MobileCoinPublicAddress publicAddress   = AppDependencies.getPayments()
-                                                               .getWallet()
-                                                               .getMobileCoinPublicAddress();
-
-      return MobileCoinPublicAddressProfileUtil.signPaymentsAddress(publicAddress.serialize(), identityKeyPair);
-    }
+    return null;
   }
-
   private static @NonNull SignalServiceAddress toSignalServiceAddress(@NonNull Context context, @NonNull Recipient recipient) throws IOException {
     if (recipient.getRegistered() == RecipientTable.RegisteredState.NOT_REGISTERED) {
       if (recipient.getHasServiceId()) {

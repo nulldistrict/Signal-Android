@@ -67,7 +67,6 @@ fun OutgoingMessage.toDataMessage(): Either<DataMessageError, DataMessage> = eit
   builder.pollCreate = poll?.toProto()
   builder.pollTerminate = messageExtras?.pollTerminate?.toProto()
   builder.pinMessage = messageExtras?.pinnedMessage?.toProto()?.bind()
-  builder.payment = toPaymentProtoIfPresent().bind()
   builder.isViewOnce = isViewOnce
   builder.flags = if (isExpirationUpdate) DataMessage.Flags.EXPIRATION_TIMER_UPDATE.value else null
   builder.expireTimer = (expiresIn / 1000).toInt()
@@ -77,7 +76,7 @@ fun OutgoingMessage.toDataMessage(): Either<DataMessageError, DataMessage> = eit
     .map { it.toAttachmentPointerProto().bind() }
     .capIncrementalMacs(RemoteConfig.maxIncrementalMacsPerEnvelope)
 
-  if (giftBadge != null || isPaymentsNotification) {
+  if (giftBadge != null) {
     builder.body = null
   }
 
@@ -176,32 +175,6 @@ private fun Attachment.toQuoteAttachmentProto(): Either<DataMessageError, DataMe
     fileName = fileName,
     thumbnail = toAttachmentPointerProto().getOrNull()
   )
-}
-
-private fun OutgoingMessage.toPaymentProtoIfPresent(): Either<DataMessageError, DataMessage.Payment?> = either {
-  when {
-    isPaymentsNotification -> {
-      val paymentUuid = UuidUtil.parseOrThrow(body)
-      val payment = ensureNotNull(SignalDatabase.payments.getPayment(paymentUuid)) { DataMessageError.MissingPayment }
-      val receipt = ensureNotNull(payment.receipt) { DataMessageError.MissingPaymentReceipt }
-
-      DataMessage.Payment(
-        notification = DataMessage.Payment.Notification(
-          note = payment.note,
-          mobileCoin = DataMessage.Payment.Notification.MobileCoin(receipt = receipt.toByteString())
-        )
-      )
-    }
-    isRequestToActivatePayments -> {
-      DataMessage.Payment(activation = DataMessage.Payment.Activation(type = DataMessage.Payment.Activation.Type.REQUEST))
-    }
-    isPaymentsActivated -> {
-      DataMessage.Payment(activation = DataMessage.Payment.Activation(type = DataMessage.Payment.Activation.Type.ACTIVATED))
-    }
-    else -> {
-      null
-    }
-  }
 }
 
 private fun Recipient.selfProfileKeyForOutgoing(): ByteString? {
@@ -533,8 +506,6 @@ private fun CallMessage.isUrgent(): Boolean {
 sealed interface DataMessageError {
   data object MissingParentStory : DataMessageError
   data object MissingQuoteAuthorServiceId : DataMessageError
-  data object MissingPayment : DataMessageError
-  data object MissingPaymentReceipt : DataMessageError
   data object MissingAttachmentRemoteFields : DataMessageError
   data object FailedToDecodeAttachmentKey : DataMessageError
   data object FailedToDecodeAttachmentSize : DataMessageError

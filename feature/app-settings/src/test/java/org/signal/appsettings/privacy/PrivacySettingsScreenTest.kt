@@ -202,36 +202,6 @@ class PrivacySettingsScreenTest {
   }
 
   @Test
-  fun `turning on payment lock emits EnablePaymentLockClicked`() {
-    setContent(PrivacySettingsState(paymentLock = false))
-
-    scrollTo(PrivacySettingsTestTags.ROW_PAYMENT_LOCK)
-    composeTestRule.onNodeWithTag(PrivacySettingsTestTags.ROW_PAYMENT_LOCK).performClick()
-
-    assertThat(interactionEvents).containsExactly(PrivacySettingsEvent.EnablePaymentLockClicked)
-  }
-
-  @Test
-  fun `turning off payment lock emits PaymentLockDisableAuthenticated once authenticated`() {
-    setContent(PrivacySettingsState(paymentLock = true))
-
-    scrollTo(PrivacySettingsTestTags.ROW_PAYMENT_LOCK)
-    composeTestRule.onNodeWithTag(PrivacySettingsTestTags.ROW_PAYMENT_LOCK).performClick()
-
-    assertThat(interactionEvents).containsExactly(PrivacySettingsEvent.PaymentLockDisableAuthenticated)
-  }
-
-  @Test
-  fun `payment lock reads as off on an insecure device, so tapping it tries to turn it on`() {
-    setContent(PrivacySettingsState(paymentLock = true, isDeviceSecure = false))
-
-    scrollTo(PrivacySettingsTestTags.ROW_PAYMENT_LOCK)
-    composeTestRule.onNodeWithTag(PrivacySettingsTestTags.ROW_PAYMENT_LOCK).performClick()
-
-    assertThat(interactionEvents).containsExactly(PrivacySettingsEvent.EnablePaymentLockClicked)
-  }
-
-  @Test
   fun `clicking the advanced row emits AdvancedClicked`() {
     setContent(PrivacySettingsState())
 
@@ -242,40 +212,12 @@ class PrivacySettingsScreenTest {
   }
 
   @Test
-  fun `asking to scroll to payment lock emits ScrolledToPaymentLock`() {
-    setContent(PrivacySettingsState(scrollToPaymentLock = true))
-
-    composeTestRule.waitForIdle()
-    composeTestRule.onNodeWithTag(PrivacySettingsTestTags.ROW_PAYMENT_LOCK).assertIsDisplayed()
-
-    assertThat(interactionEvents).containsExactly(PrivacySettingsEvent.ScrolledToPaymentLock)
-  }
-
-  @Test
   fun `confirming the disable passphrase dialog emits DisablePassphraseConfirmed`() {
     setContent(PrivacySettingsState(isObsoletePassphraseEnabled = true, dialog = PrivacySettingsState.Dialog.ConfirmDisablePassphrase))
 
     composeTestRule.onNodeWithText("Disable").performClick()
 
     assertThat(interactionEvents).containsExactly(PrivacySettingsEvent.DisablePassphraseConfirmed)
-  }
-
-  @Test
-  fun `accepting the payment lock dialog emits OpenDeviceSecuritySettingsClicked`() {
-    setContent(PrivacySettingsState(dialog = PrivacySettingsState.Dialog.PaymentLockNeedsDeviceSecurity))
-
-    composeTestRule.onNodeWithText("Turn On").performClick()
-
-    assertThat(interactionEvents).containsExactly(PrivacySettingsEvent.OpenDeviceSecuritySettingsClicked)
-  }
-
-  @Test
-  fun `declining the payment lock dialog emits DialogDismissed`() {
-    setContent(PrivacySettingsState(dialog = PrivacySettingsState.Dialog.PaymentLockNeedsDeviceSecurity))
-
-    composeTestRule.onNodeWithText("Not Now").performClick()
-
-    assertThat(interactionEvents).containsExactly(PrivacySettingsEvent.DialogDismissed)
   }
 
   @Test
@@ -329,13 +271,6 @@ class PrivacySettingsScreenTest {
     setContent(PrivacySettingsState(snackbar = PrivacySettingsState.Snackbar.PassphraseNotSet))
 
     composeTestRule.onNodeWithText("You haven't set a passphrase yet!").assertIsDisplayed()
-  }
-
-  @Test
-  fun `the settings unavailable snackbar explains the failure`() {
-    setContent(PrivacySettingsState(snackbar = PrivacySettingsState.Snackbar.DeviceSecuritySettingsUnavailable))
-
-    composeTestRule.onNodeWithText("Failed to navigate to system settings").assertIsDisplayed()
   }
 
   private fun setContent(state: PrivacySettingsState) {

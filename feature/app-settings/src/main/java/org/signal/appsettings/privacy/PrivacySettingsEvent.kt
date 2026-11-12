@@ -18,9 +18,6 @@ sealed interface PrivacySettingsEvent {
   /** The user tapped the navigation (back) icon. */
   data object NavigateBackClicked : PrivacySettingsEvent
 
-  /** The screen finished scrolling to the payment lock row it was asked to show. */
-  data object ScrolledToPaymentLock : PrivacySettingsEvent
-
   /** The user tapped the phone number row. */
   data object PhoneNumberClicked : PrivacySettingsEvent
 
@@ -71,18 +68,6 @@ sealed interface PrivacySettingsEvent {
 
   /** The user tapped "Learn more" under the incognito keyboard switch. */
   data object IncognitoKeyboardLearnMoreClicked : PrivacySettingsEvent
-
-  /** The user tapped the switch to turn payment lock on. */
-  data object EnablePaymentLockClicked : PrivacySettingsEvent
-
-  /** The user authenticated to turn payment lock off. Only sent once authentication succeeds. */
-  data object PaymentLockDisableAuthenticated : PrivacySettingsEvent
-
-  /** The user chose to open the system settings to set up a device screen lock. */
-  data object OpenDeviceSecuritySettingsClicked : PrivacySettingsEvent
-
-  /** The host couldn't open any of the system settings screens for setting up a device screen lock. */
-  data object DeviceSecuritySettingsUnavailable : PrivacySettingsEvent
 
   /** The user tapped the advanced row. */
   data object AdvancedClicked : PrivacySettingsEvent

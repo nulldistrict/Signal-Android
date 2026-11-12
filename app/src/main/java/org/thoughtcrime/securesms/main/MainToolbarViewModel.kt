@@ -153,12 +153,6 @@ class MainToolbarViewModel : ViewModel() {
     }
   }
 
-  fun setHasUnreadPayments(hasUnreadPayments: Boolean) {
-    internalStateFlow.update {
-      it.copy(hasUnreadPayments = hasUnreadPayments)
-    }
-  }
-
   fun setChatFilter(conversationFilter: ConversationFilter) {
     internalStateFlow.update {
       it.copy(chatFilter = conversationFilter)

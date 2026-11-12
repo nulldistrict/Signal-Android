@@ -1,7 +1,6 @@
 package org.thoughtcrime.securesms.jobs
 
 import okio.utf8Size
-import org.signal.core.util.UuidUtil.parseOrThrow
 import org.signal.core.util.logging.Log
 import org.signal.libsignal.protocol.NoSessionException
 import org.thoughtcrime.securesms.crypto.SealedSenderAccessUtil
@@ -29,7 +28,6 @@ import org.whispersystems.signalservice.api.crypto.ContentHint
 import org.whispersystems.signalservice.api.crypto.UntrustedIdentityException
 import org.whispersystems.signalservice.api.messages.SignalServiceAttachment
 import org.whispersystems.signalservice.api.messages.SignalServiceDataMessage
-import org.whispersystems.signalservice.api.messages.SignalServiceDataMessage.PaymentActivation
 import org.whispersystems.signalservice.api.messages.SignalServiceEditMessage
 import org.whispersystems.signalservice.api.messages.SignalServiceMessageLimits
 import org.whispersystems.signalservice.api.messages.SignalServicePreview
@@ -38,7 +36,6 @@ import org.whispersystems.signalservice.api.push.exceptions.ProofRequiredExcepti
 import org.whispersystems.signalservice.api.push.exceptions.ServerRejectedException
 import org.whispersystems.signalservice.api.push.exceptions.UnregisteredUserException
 import org.whispersystems.signalservice.internal.push.BodyRange
-import org.whispersystems.signalservice.internal.push.DataMessage
 import java.io.FileNotFoundException
 import java.io.IOException
 import java.util.Optional
@@ -216,7 +213,6 @@ class IndividualSendJob private constructor(parameters: Parameters, private val 
       val sharedContacts: List<SharedContact> = getSharedContactsFor(message)
       val previews: List<SignalServicePreview> = getPreviewsFor(message)
       val giftBadge = getGiftBadgeFor(message)
-      val payment = getPayment(message)
       val bodyRanges: List<BodyRange>? = getBodyRanges(message)
       val pollCreate = getPollCreate(message)
       val pollTerminate = getPollTerminate(message)
@@ -234,7 +230,6 @@ class IndividualSendJob private constructor(parameters: Parameters, private val 
         .withPreviews(previews)
         .withGiftBadge(giftBadge)
         .asExpirationUpdate(message.isExpirationUpdate)
-        .withPayment(payment)
         .withBodyRanges(bodyRanges)
         .withPollCreate(pollCreate)
         .withPollTerminate(pollTerminate)
@@ -260,7 +255,7 @@ class IndividualSendJob private constructor(parameters: Parameters, private val 
         mediaMessageBuilder.withQuote(getQuoteFor(message).orElse(null))
       }
 
-      if (message.giftBadge != null || message.isPaymentsNotification) {
+      if (message.giftBadge != null) {
         mediaMessageBuilder.withBody(null)
       }
 
@@ -315,39 +310,6 @@ class IndividualSendJob private constructor(parameters: Parameters, private val 
       throw UndeliverableMessageException(e)
     } catch (e: ServerRejectedException) {
       throw UndeliverableMessageException(e)
-    }
-  }
-
-  private fun getPayment(message: OutgoingMessage): SignalServiceDataMessage.Payment? {
-    if (message.isPaymentsNotification) {
-      val paymentUuid = parseOrThrow(message.body)
-      val payment = SignalDatabase.payments.getPayment(paymentUuid)
-
-      if (payment == null) {
-        Log.w(TAG, "Could not find payment, cannot send notification $paymentUuid")
-        return null
-      }
-
-      if (payment.receipt == null) {
-        Log.w(TAG, "Could not find payment receipt, cannot send notification $paymentUuid")
-        return null
-      }
-
-      return SignalServiceDataMessage.Payment(SignalServiceDataMessage.PaymentNotification(payment.receipt!!, payment.note), null)
-    } else {
-      var type: DataMessage.Payment.Activation.Type? = null
-
-      if (message.isRequestToActivatePayments) {
-        type = DataMessage.Payment.Activation.Type.REQUEST
-      } else if (message.isPaymentsActivated) {
-        type = DataMessage.Payment.Activation.Type.ACTIVATED
-      }
-
-      return if (type != null) {
-        SignalServiceDataMessage.Payment(null, PaymentActivation(type))
-      } else {
-        null
-      }
     }
   }
 

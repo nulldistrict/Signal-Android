@@ -2,7 +2,6 @@ package org.thoughtcrime.securesms.messages
 
 import android.content.Context
 import android.text.TextUtils
-import com.mobilecoin.lib.exceptions.SerializationException
 import okio.ByteString.Companion.toByteString
 import org.signal.core.models.ServiceId
 import org.signal.core.models.ServiceId.ACI
@@ -32,7 +31,6 @@ import org.thoughtcrime.securesms.database.MessageTable
 import org.thoughtcrime.securesms.database.MessageTable.InsertResult
 import org.thoughtcrime.securesms.database.MessageType
 import org.thoughtcrime.securesms.database.NoSuchMessageException
-import org.thoughtcrime.securesms.database.PaymentTable.PublicKeyConflictException
 import org.thoughtcrime.securesms.database.SignalDatabase
 import org.thoughtcrime.securesms.database.model.GroupRecord
 import org.thoughtcrime.securesms.database.model.Mention
@@ -57,8 +55,6 @@ import org.thoughtcrime.securesms.groups.GroupId
 import org.thoughtcrime.securesms.jobs.AttachmentDownloadJob
 import org.thoughtcrime.securesms.jobs.DirectoryRefreshJob
 import org.thoughtcrime.securesms.jobs.GroupV2UpdateSelfProfileKeyJob
-import org.thoughtcrime.securesms.jobs.PaymentLedgerUpdateJob
-import org.thoughtcrime.securesms.jobs.PaymentTransactionCheckJob
 import org.thoughtcrime.securesms.jobs.ProfileKeySendJob
 import org.thoughtcrime.securesms.jobs.PushProcessMessageJob
 import org.thoughtcrime.securesms.jobs.RefreshAttributesJob
@@ -105,7 +101,6 @@ import org.thoughtcrime.securesms.util.SignalTrace
 import org.thoughtcrime.securesms.util.hasGiftBadge
 import org.thoughtcrime.securesms.util.isStory
 import org.whispersystems.signalservice.api.crypto.EnvelopeMetadata
-import org.whispersystems.signalservice.api.payments.Money
 import org.whispersystems.signalservice.internal.push.BodyRange
 import org.whispersystems.signalservice.internal.push.Content
 import org.whispersystems.signalservice.internal.push.DataMessage
@@ -173,9 +168,7 @@ object DataMessageProcessor {
       message.isStoryReaction -> insertResult = handleStoryReaction(context, envelope, metadata, message, senderRecipient.id, groupId)
       message.reaction != null -> messageId = handleReaction(context, envelope, message, senderRecipient.id, earlyMessageCacheEntry, batchCache)
       message.hasRemoteDelete -> messageId = handleRemoteDelete(context, envelope, message, senderRecipient.id, earlyMessageCacheEntry, batchCache)
-      message.isPaymentActivationRequest -> insertResult = handlePaymentActivation(envelope, metadata, message, senderRecipient.id, receivedTime, isActivatePaymentsRequest = true, isPaymentsActivated = false)
-      message.isPaymentActivated -> insertResult = handlePaymentActivation(envelope, metadata, message, senderRecipient.id, receivedTime, isActivatePaymentsRequest = false, isPaymentsActivated = true)
-      message.payment != null -> insertResult = handlePayment(context, envelope, metadata, message, senderRecipient.id, receivedTime)
+      message.isPaymentActivationRequest || message.isPaymentActivated || message.payment != null -> log(envelope.clientTimestamp!!, "Ignoring payment message.")
       message.storyContext != null -> insertResult = handleStoryReply(context, envelope, metadata, message, senderRecipient, groupId, receivedTime)
       message.giftBadge != null -> insertResult = handleGiftMessage(context, envelope, metadata, message, senderRecipient, threadRecipient.id, receivedTime)
       message.isMediaMessage -> insertResult = handleMediaMessage(context, envelope, metadata, message, senderRecipient, threadRecipient, groupId, receivedTime, localMetrics, batchCache)
@@ -635,110 +628,6 @@ object DataMessageProcessor {
       )
       null
     }
-  }
-
-  /**
-   * @param isActivatePaymentsRequest True if payments activation request message.
-   * @param isPaymentsActivated       True if payments activated message.
-   * @throws StorageFailedException
-   */
-  @Throws(StorageFailedException::class)
-  private fun handlePaymentActivation(
-    envelope: Envelope,
-    metadata: EnvelopeMetadata,
-    message: DataMessage,
-    senderRecipientId: RecipientId,
-    receivedTime: Long,
-    isActivatePaymentsRequest: Boolean,
-    isPaymentsActivated: Boolean
-  ): InsertResult? {
-    log(envelope.clientTimestamp!!, "Payment activation request: $isActivatePaymentsRequest activated: $isPaymentsActivated")
-    Preconditions.checkArgument(isActivatePaymentsRequest || isPaymentsActivated)
-
-    try {
-      val mediaMessage = IncomingMessage(
-        from = senderRecipientId,
-        sentTimeMillis = envelope.clientTimestamp!!,
-        serverTimeMillis = envelope.serverTimestamp!!,
-        receivedTimeMillis = receivedTime,
-        expiresIn = message.expireTimerDuration.inWholeMilliseconds,
-        isUnidentified = metadata.sealedSender,
-        serverGuid = UuidUtil.getStringUUID(envelope.serverGuid, envelope.serverGuidBinary),
-        type = if (isActivatePaymentsRequest) MessageType.ACTIVATE_PAYMENTS_REQUEST else MessageType.PAYMENTS_ACTIVATED
-      )
-
-      return SignalDatabase.messages.insertMessageInbox(mediaMessage, -1).orNull()
-    } catch (e: MmsException) {
-      throw StorageFailedException(e, metadata.sourceServiceId.toString(), metadata.sourceDeviceId)
-    }
-    return null
-  }
-
-  @Throws(StorageFailedException::class)
-  private fun handlePayment(
-    context: Context,
-    envelope: Envelope,
-    metadata: EnvelopeMetadata,
-    message: DataMessage,
-    senderRecipientId: RecipientId,
-    receivedTime: Long
-  ): InsertResult? {
-    log(envelope.clientTimestamp!!, "Payment message.")
-
-    if (message.payment?.notification?.mobileCoin?.receipt == null) {
-      warn(envelope.clientTimestamp!!, "Ignoring payment message without notification")
-      return null
-    }
-
-    val paymentNotification = message.payment!!.notification!!
-    val uuid = UUID.randomUUID()
-    val queue = "Payment_" + PushProcessMessageJob.getQueueName(senderRecipientId)
-
-    try {
-      SignalDatabase.payments.createIncomingPayment(
-        uuid,
-        senderRecipientId,
-        message.timestamp!!,
-        paymentNotification.note ?: "",
-        Money.MobileCoin.ZERO,
-        Money.MobileCoin.ZERO,
-        paymentNotification.mobileCoin!!.receipt!!.toByteArray(),
-        true
-      )
-
-      val mediaMessage = IncomingMessage(
-        from = senderRecipientId,
-        body = uuid.toString(),
-        sentTimeMillis = envelope.clientTimestamp!!,
-        serverTimeMillis = envelope.serverTimestamp!!,
-        receivedTimeMillis = receivedTime,
-        expiresIn = message.expireTimerDuration.inWholeMilliseconds,
-        isUnidentified = metadata.sealedSender,
-        serverGuid = UuidUtil.getStringUUID(envelope.serverGuid, envelope.serverGuidBinary),
-        type = MessageType.PAYMENTS_NOTIFICATION
-      )
-
-      val insertResult: InsertResult? = SignalDatabase.messages.insertMessageInbox(mediaMessage, -1).orNull()
-      if (insertResult != null) {
-        AppDependencies.messageNotifier.updateNotification(context, ConversationId.forConversation(insertResult.threadId))
-        return insertResult
-      }
-    } catch (e: PublicKeyConflictException) {
-      warn(envelope.clientTimestamp!!, "Ignoring payment with public key already in database")
-    } catch (e: SerializationException) {
-      warn(envelope.clientTimestamp!!, "Ignoring payment with bad data.", e)
-    } catch (e: MmsException) {
-      throw StorageFailedException(e, metadata.sourceServiceId.toString(), metadata.sourceDeviceId)
-    } finally {
-      SignalDatabase.runPostSuccessfulTransaction {
-        AppDependencies.jobManager
-          .startChain(PaymentTransactionCheckJob(uuid, queue))
-          .then(PaymentLedgerUpdateJob.updateLedger())
-          .enqueue()
-      }
-    }
-
-    return null
   }
 
   @Throws(StorageFailedException::class)
@@ -1604,10 +1493,6 @@ object DataMessageProcessor {
           .filter { it.thumbnail.isPresent }
           .map { it.thumbnail.get() }
           .firstOrNull()
-      }
-
-      if (quotedMessage.isPaymentNotification) {
-        quotedMessage = SignalDatabase.payments.updateMessageWithPayment(quotedMessage) as MmsMessageRecord
       }
 
       val sharedContact = quotedMessage.sharedContacts.firstOrNull()

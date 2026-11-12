@@ -16,9 +16,6 @@ sealed interface PrivacySettingsAction {
   /** Open the flow to change the legacy passphrase. */
   data object LaunchChangePassphrase : PrivacySettingsAction
 
-  /** Open the system settings where the user can set up a device screen lock. */
-  data object OpenDeviceSecuritySettings : PrivacySettingsAction
-
   /** Open the support article explaining incognito keyboard. */
   data object OpenIncognitoKeyboardLearnMore : PrivacySettingsAction
 

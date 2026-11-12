@@ -6,7 +6,6 @@ import androidx.compose.runtime.Composable
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.Lifecycle
 import androidx.navigation.fragment.findNavController
-import androidx.navigation.fragment.navArgs
 import org.signal.appsettings.routes.AppSettingsNavigationEvent
 import org.signal.appsettings.routes.AppSettingsRoute
 import org.signal.appsettings.routes.AppSettingsRouter
@@ -20,7 +19,6 @@ import org.thoughtcrime.securesms.util.navigation.safeNavigate
  */
 class PrivacySettingsFragment : ComposeFragment() {
 
-  private val args: PrivacySettingsFragmentArgs by navArgs()
   private val appSettingsRouter by viewModels<AppSettingsRouter>()
 
   override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -48,7 +46,6 @@ class PrivacySettingsFragment : ComposeFragment() {
   @Composable
   override fun FragmentContent() {
     PrivacySettingsEntry(
-      scrollToPaymentLock = args.showPaymentLock,
       parentEventEmitter = appSettingsRouter::onEvent
     )
   }

@@ -30,10 +30,8 @@ class AppSettingsLayoutTest : SignalLayoutStressTest() {
       about = "Usually hiking somewhere without any signal, back on Monday"
     ),
     isPrimaryDevice = true,
-    unreadPaymentsCount = 1234,
     hasExpiredGiftBadge = true,
     showInternalPreferences = true,
-    showPayments = true,
     showAppUpdates = true
   )
 

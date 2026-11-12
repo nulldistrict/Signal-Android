@@ -101,7 +101,6 @@ fun DeleteAccountWithNumberScreen(
       )
 
       Bullets(
-        walletBalance = state.walletBalance,
         modifier = Modifier
           .fillMaxWidth()
           .padding(horizontal = 16.dp, vertical = 8.dp)
@@ -161,16 +160,12 @@ fun DeleteAccountWithNumberScreen(
 
 @Composable
 private fun Bullets(
-  walletBalance: String?,
   modifier: Modifier = Modifier
 ) {
   Column(modifier = modifier) {
     Bullet(text = stringResource(R.string.DeleteAccountFragment__delete_your_account_info_and_profile_photo))
     Bullet(text = stringResource(R.string.DeleteAccountFragment__delete_all_your_messages))
 
-    if (walletBalance != null) {
-      Bullet(text = stringResource(R.string.DeleteAccountFragment__delete_s_in_your_payments_account, walletBalance))
-    }
   }
 }
 
@@ -316,8 +311,7 @@ private fun DeleteAccountWithNumberScreenFilledPreview() {
         countryDisplayName = "United States",
         countryCode = "1",
         nationalNumber = "6105550103",
-        formattedNumber = "(610) 555-0103",
-        walletBalance = "0.1000 MOB"
+        formattedNumber = "(610) 555-0103"
       ),
       onEvent = {}
     )

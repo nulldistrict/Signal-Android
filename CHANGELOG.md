@@ -34,6 +34,7 @@ Version numbers and release dates must reflect actual releases.
 - Signal-JW feature: optional "Delete media only" in Chat settings, off by default. When enabled, deleting the last photo or video from a message removes only its attachments and keeps the message text. The change is local and is not propagated to linked devices.
 - Signal-JW feature: "Who can add me to groups" in Chat settings (anyone, anyone except blocked contacts, people you share your profile with, system contacts, nobody), defaulting to the upstream blocked-contact behavior. When someone outside the policy adds this account, Signal leaves the group. This is client-side enforcement; linked devices keep the blocked-only fallback.
 - Feature audit correction: encrypted backup export/restore at any time is already provided by Signal's local and remote backup flows, so JW's raw-database snapshot exporter is not ported. JW's zip4j ZIP backups and its `ExitActivity` are only helpers for that raw snapshot path and are marked not applicable.
+- MobileCoin payments removed following Molly's final state. The wallet, ledger, network, send/create and recovery UI, payment jobs, in-conversation payment views, app-settings payments entry, privacy payment lock, delete-account wallet balance and the `com.mobilecoin` dependency (plus its Maven repository and ProGuard rules) are gone. The `PaymentTable` schema, payment backup keys and shared money-formatting helpers remain so existing databases and backups stay compatible. In-app donations are unaffected.
 
 ### Approved but not yet implemented
 
@@ -41,7 +42,6 @@ The project owner approved the remaining Signal-JW candidates and the following 
 
 - Signal-JW: plaintext backup import (export already exists as chat export; import needs an explicit warning flow).
 - APK self-updater.
-- MobileCoin payment removal.
 
 Explicitly not approved: the Signal-JW application passphrase (soft) lock and APK expiry removal.
 

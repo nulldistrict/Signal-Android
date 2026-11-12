@@ -54,7 +54,6 @@ import org.thoughtcrime.securesms.database.model.MessageRecord;
 import org.thoughtcrime.securesms.database.model.UpdateDescription;
 import org.thoughtcrime.securesms.database.model.databaseprotos.GroupCallUpdateDetails;
 import org.thoughtcrime.securesms.groups.LiveGroup;
-import org.thoughtcrime.securesms.keyvalue.SignalStore;
 import org.thoughtcrime.securesms.recipients.LiveRecipient;
 import org.thoughtcrime.securesms.recipients.Recipient;
 import org.thoughtcrime.securesms.util.CommunicationActions;
@@ -697,26 +696,6 @@ public final class ConversationUpdateItem extends FrameLayout
       });
 
       actionButton.setText(R.string.ConversationActivity__invite_to_signal);
-    } else if (conversationMessage.getMessageRecord().isPaymentsRequestToActivate() && !conversationMessage.getMessageRecord().isOutgoing() && !SignalStore.payments().mobileCoinPaymentsEnabled() && SignalStore.account().isPrimaryDevice()) {
-      actionButton.setText(R.string.ConversationUpdateItem_activate_payments);
-      actionButton.setVisibility(VISIBLE);
-      actionButton.setOnClickListener(v -> {
-        if (batchSelected.isEmpty() && eventListener != null) {
-          eventListener.onActivatePaymentsClicked();
-        } else {
-          passthroughClickListener.onClick(v);
-        }
-      });
-    } else if (conversationMessage.getMessageRecord().isPaymentsActivated() && !conversationMessage.getMessageRecord().isOutgoing() && SignalStore.account().isPrimaryDevice()) {
-      actionButton.setText(R.string.ConversationUpdateItem_send_payment);
-      actionButton.setVisibility(VISIBLE);
-      actionButton.setOnClickListener(v -> {
-        if (batchSelected.isEmpty() && eventListener != null) {
-          eventListener.onSendPaymentClicked(conversationMessage.getMessageRecord().getFromRecipient().getId());
-        } else {
-          passthroughClickListener.onClick(v);
-        }
-      });
     } else if (conversationMessage.getMessageRecord().isReportedSpam()) {
       actionButton.setText(R.string.ConversationUpdateItem_learn_more);
       actionButton.setVisibility(VISIBLE);

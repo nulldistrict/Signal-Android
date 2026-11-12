@@ -12,11 +12,9 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.absoluteOffset
-import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -31,7 +29,6 @@ import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDirection
 import androidx.compose.ui.tooling.preview.PreviewWrapper
 import androidx.compose.ui.unit.dp
@@ -75,7 +72,6 @@ object AppSettingsTestTags {
   const val ROW_BACKUPS = "row-backups"
   const val ROW_DATA_AND_STORAGE = "row-data-and-storage"
   const val ROW_APP_UPDATES = "row-app-updates"
-  const val ROW_PAYMENTS = "row-payments"
   const val ROW_HELP = "row-help"
   const val ROW_INVITE = "row-invite"
   const val ROW_LABS = "row-labs"
@@ -311,20 +307,6 @@ fun AppSettingsScreen(
           }
         }
 
-        if (state.isPrimaryDevice && state.showPayments) {
-          item {
-            Dividers.Default()
-          }
-
-          item {
-            PaymentsRow(
-              unreadPaymentsCount = state.unreadPaymentsCount,
-              onClick = { onEvent(AppSettingsEvent.PaymentsClicked) },
-              modifier = Modifier.selectionHighlight(selectedRoute == AppSettingsRoute.Payments)
-            )
-          }
-        }
-
         item {
           Dividers.Default()
         }
@@ -443,47 +425,6 @@ private fun BackupWarningRow(
 }
 
 @Composable
-private fun PaymentsRow(
-  unreadPaymentsCount: Int,
-  onClick: () -> Unit,
-  modifier: Modifier = Modifier
-) {
-  Rows.TextRow(
-    text = {
-      Text(
-        text = stringResource(R.string.AppSettingsScreen__payments),
-        modifier = Modifier.weight(1f)
-      )
-
-      if (unreadPaymentsCount > 0) {
-        Text(
-          text = unreadPaymentsCount.toString(),
-          color = MaterialTheme.colorScheme.inverseOnSurface,
-          style = MaterialTheme.typography.bodyMedium,
-          textAlign = TextAlign.Center,
-          modifier = Modifier
-            .background(
-              color = MaterialTheme.colorScheme.primary,
-              shape = RoundedCornerShape(50)
-            )
-            .defaultMinSize(minWidth = 30.dp)
-            .padding(4.dp)
-        )
-      }
-    },
-    icon = {
-      Icon(
-        painter = SignalIcons.Payment.painter,
-        contentDescription = null,
-        tint = MaterialTheme.colorScheme.onSurface
-      )
-    },
-    onClick = onClick,
-    modifier = modifier.testTag(AppSettingsTestTags.ROW_PAYMENTS)
-  )
-}
-
-@Composable
 private fun ProfileRow(
   profile: AppSettingsState.Profile,
   avatar: @Composable () -> Unit,
@@ -591,11 +532,9 @@ internal val appSettingsPreviewState = AppSettingsState(
     about = "❤\uFE0F About"
   ),
   isPrimaryDevice = true,
-  unreadPaymentsCount = 5,
   hasExpiredGiftBadge = true,
   allowUserToGoToDonationManagementScreen = true,
   showInternalPreferences = true,
-  showPayments = true,
   showAppUpdates = true,
   backupFailureState = BackupFailureState.OUT_OF_STORAGE_SPACE
 )

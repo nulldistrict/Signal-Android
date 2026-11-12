@@ -61,7 +61,6 @@ import org.thoughtcrime.securesms.jobmanager.JobManager
 import org.thoughtcrime.securesms.megaphone.MegaphoneRepository
 import org.thoughtcrime.securesms.messages.IncomingMessageObserver
 import org.thoughtcrime.securesms.notifications.MessageNotifier
-import org.thoughtcrime.securesms.payments.Payments
 import org.thoughtcrime.securesms.push.SignalServiceNetworkAccess
 import org.thoughtcrime.securesms.recipients.LiveRecipientCache
 import org.thoughtcrime.securesms.revealable.ViewOnceMessageManager
@@ -367,10 +366,6 @@ object AppDependencies {
     get() = networkModule.clientZkReceiptOperations
 
   @JvmStatic
-  val payments: Payments
-    get() = networkModule.payments
-
-  @JvmStatic
   val profileService: ProfileService
     get() = networkModule.profileService
 
@@ -538,7 +533,6 @@ object AppDependencies {
     fun provideTypingStatusRepository(): TypingStatusRepository
     fun provideTypingStatusSender(): TypingStatusSender
     fun provideDatabaseObserver(): DatabaseObserver
-    fun providePayments(paymentsApi: PaymentsApi): Payments
     fun provideShakeToReport(): ShakeToReport
     fun provideSignalCallManager(): SignalCallManager
     fun providePendingRetryReceiptManager(): PendingRetryReceiptManager

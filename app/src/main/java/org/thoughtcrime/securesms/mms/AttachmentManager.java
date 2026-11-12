@@ -35,18 +35,15 @@ import androidx.fragment.app.Fragment;
 
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.RequestManager;
-import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 
 import org.signal.core.models.recipients.RecipientId;
 import org.signal.core.ui.permissions.Permissions;
 import org.signal.core.ui.view.Stub;
-import org.signal.core.util.ExpiringProfileCredentialUtil;
 import org.signal.core.util.ThreadUtil;
 import org.signal.core.util.bitmaps.BitmapUtil;
 import org.signal.core.util.concurrent.ListenableFuture;
 import org.signal.core.util.concurrent.ListenableFuture.Listener;
 import org.signal.core.util.concurrent.SettableFuture;
-import org.signal.core.util.concurrent.SimpleTask;
 import org.signal.core.util.logging.Log;
 import org.signal.core.util.permissions.PermissionCompat;
 import org.signal.mediasend.MediaConstraints;
@@ -58,26 +55,15 @@ import org.thoughtcrime.securesms.components.ThumbnailView;
 import org.thoughtcrime.securesms.components.location.SignalMapView;
 import org.thoughtcrime.securesms.components.location.SignalPlace;
 import org.thoughtcrime.securesms.conversation.MessageSendType;
-import org.thoughtcrime.securesms.database.SignalDatabase;
 import org.thoughtcrime.securesms.dependencies.AppDependencies;
 import org.thoughtcrime.securesms.giph.ui.GiphyActivity;
 import org.thoughtcrime.securesms.maps.PlacePickerActivity;
 import org.thoughtcrime.securesms.mediasend.MediaSendLauncher;
-import org.thoughtcrime.securesms.payments.CanNotSendPaymentDialog;
-import org.thoughtcrime.securesms.payments.PaymentsAddressException;
-import org.thoughtcrime.securesms.payments.create.CreatePaymentFragmentArgs;
-import org.thoughtcrime.securesms.payments.preferences.PaymentsActivity;
-import org.thoughtcrime.securesms.payments.preferences.RecipientHasNotEnabledPaymentsDialog;
-import org.thoughtcrime.securesms.payments.preferences.model.PayeeParcelable;
 import org.thoughtcrime.securesms.recipients.Recipient;
-import org.thoughtcrime.securesms.sms.MessageSender;
 import org.thoughtcrime.securesms.util.MediaUtil;
-import org.thoughtcrime.securesms.util.ProfileUtil;
-import org.thoughtcrime.securesms.util.RemoteConfig;
 import org.signal.core.ui.util.ViewUtil;
 import org.thoughtcrime.securesms.util.concurrent.AssertedSuccessListener;
 
-import java.io.IOException;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -296,47 +282,6 @@ public class AttachmentManager {
     intent.putExtra(GiphyActivity.EXTRA_TRANSPORT, sendType);
     intent.putExtra(GiphyActivity.EXTRA_TEXT, textTrimmed);
     fragment.startActivityForResult(intent, requestCode);
-  }
-
-  public static void selectPayment(@NonNull Fragment fragment, @NonNull Recipient recipient) {
-    if (!ExpiringProfileCredentialUtil.isValid(recipient.getExpiringProfileKeyCredential())) {
-      CanNotSendPaymentDialog.show(fragment.requireContext());
-      return;
-    }
-
-    SimpleTask.run(fragment.getViewLifecycleOwner().getLifecycle(),
-                   () -> {
-                     try {
-                       return ProfileUtil.getAddressForRecipient(recipient);
-                     } catch (IOException | PaymentsAddressException e) {
-                       Log.w(TAG, "Could not get address for recipient: ", e);
-                       return null;
-                     }
-                   },
-                   (address) -> {
-                     if (address != null) {
-                       Intent intent = new Intent(fragment.requireContext(), PaymentsActivity.class);
-                       intent.putExtra(PaymentsActivity.EXTRA_PAYMENTS_STARTING_ACTION, R.id.action_directly_to_createPayment);
-                       intent.putExtra(PaymentsActivity.EXTRA_STARTING_ARGUMENTS, new CreatePaymentFragmentArgs.Builder(new PayeeParcelable(recipient.getId())).setFinishOnConfirm(true).build().toBundle());
-                       fragment.startActivity(intent);
-                     } else if (RemoteConfig.paymentsRequestActivateFlow()) {
-                       showRequestToActivatePayments(fragment.requireContext(), recipient);
-                     } else {
-                       RecipientHasNotEnabledPaymentsDialog.show(fragment.requireContext());
-                     }
-                   });
-  }
-
-  public static void showRequestToActivatePayments(@NonNull Context context, @NonNull Recipient recipient) {
-    new MaterialAlertDialogBuilder(context)
-        .setTitle(context.getString(R.string.AttachmentManager__not_activated_payments, recipient.getShortDisplayName(context)))
-        .setMessage(context.getString(R.string.AttachmentManager__request_to_activate_payments))
-        .setPositiveButton(context.getString(R.string.AttachmentManager__send_request), (dialog, which) -> {
-          OutgoingMessage outgoingMessage = OutgoingMessage.requestToActivatePaymentsMessage(recipient, System.currentTimeMillis(), 0);
-          MessageSender.send(context, outgoingMessage, SignalDatabase.threads().getOrCreateThreadIdFor(recipient), MessageSender.SendType.SIGNAL, null, null);
-        })
-        .setNegativeButton(context.getString(R.string.AttachmentManager__cancel), null)
-        .show();
   }
 
   private @Nullable Uri getSlideUri() {

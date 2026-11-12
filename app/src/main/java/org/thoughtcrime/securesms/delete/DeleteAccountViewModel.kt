@@ -42,8 +42,7 @@ class DeleteAccountViewModel(
   private val _state = MutableStateFlow(
     DeleteAccountState(
       hasPhoneNumber = !repository.isPhoneNumberless(),
-      username = repository.getUsername(),
-      walletBalance = repository.getFormattedWalletBalance()
+      username = repository.getUsername()
     )
   )
   private val _actions = Channel<DeleteAccountAction>(Channel.BUFFERED)

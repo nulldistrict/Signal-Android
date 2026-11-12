@@ -18,7 +18,6 @@ import org.thoughtcrime.securesms.backup.v2.BackupRepository
 import org.thoughtcrime.securesms.components.settings.app.subscription.InAppDonations
 import org.thoughtcrime.securesms.components.settings.app.subscription.InAppPaymentsRepository
 import org.thoughtcrime.securesms.components.settings.app.subscription.RecurringInAppPaymentRepository
-import org.thoughtcrime.securesms.conversationlist.model.UnreadPaymentsLiveData
 import org.thoughtcrime.securesms.database.model.InAppPaymentSubscriberRecord
 import org.thoughtcrime.securesms.dependencies.AppDependencies
 import org.thoughtcrime.securesms.keyvalue.SignalStore
@@ -47,10 +46,6 @@ object AppSettingsRepository {
     }
   }
 
-  fun observeUnreadPaymentsCount(): Flow<Int> {
-    return UnreadPaymentsLiveData().asFlow().map { payments -> payments.map { it.unreadCount }.orElse(0) }
-  }
-
   fun isPrimaryDevice(): Boolean = SignalStore.account.isPrimaryDevice
 
   fun isUserUnregistered(): Boolean = SignalStore.account.isUnauthorizedReceived || !SignalStore.account.isRegistered
@@ -60,8 +55,6 @@ object AppSettingsRepository {
   fun hasExpiredGiftBadge(): Boolean = SignalStore.inAppPayments.getExpiredGiftBadge() != null
 
   fun showInternalPreferences(): Boolean = RemoteConfig.internalUser
-
-  fun showPayments(): Boolean = SignalStore.payments.paymentsAvailability.showPaymentsMenu()
 
   fun showAppUpdates(): Boolean = Environment.IS_NIGHTLY
 

@@ -43,7 +43,6 @@ import org.thoughtcrime.securesms.keyvalue.SignalStore
 import org.thoughtcrime.securesms.megaphone.MegaphoneRepository
 import org.thoughtcrime.securesms.messages.IncomingMessageObserver
 import org.thoughtcrime.securesms.notifications.MessageNotifier
-import org.thoughtcrime.securesms.payments.Payments
 import org.thoughtcrime.securesms.push.SignalServiceNetworkAccess
 import org.thoughtcrime.securesms.recipients.LiveRecipientCache
 import org.thoughtcrime.securesms.revealable.ViewOnceMessageManager
@@ -210,10 +209,6 @@ class MockApplicationDependencyProvider : AppDependencies.Provider {
   }
 
   override fun provideDatabaseObserver(): DatabaseObserver {
-    return mockk(relaxed = true)
-  }
-
-  override fun providePayments(paymentsApi: PaymentsApi): Payments {
     return mockk(relaxed = true)
   }
 

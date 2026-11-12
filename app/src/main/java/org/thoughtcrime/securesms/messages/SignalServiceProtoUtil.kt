@@ -20,7 +20,6 @@ import org.thoughtcrime.securesms.util.RemoteConfig
 import org.whispersystems.signalservice.api.InvalidMessageStructureException
 import org.whispersystems.signalservice.api.crypto.EnvelopeMetadata
 import org.whispersystems.signalservice.api.messages.SignalServiceAttachmentPointer
-import org.whispersystems.signalservice.api.payments.Money
 import org.whispersystems.signalservice.api.util.AttachmentPointerUtil
 import org.whispersystems.signalservice.internal.push.AttachmentPointer
 import org.whispersystems.signalservice.internal.push.DataMessage
@@ -205,10 +204,6 @@ object SignalServiceProtoUtil {
 
   fun AttachmentPointer.toSignalServiceAttachmentPointer(): SignalServiceAttachmentPointer {
     return AttachmentPointerUtil.createSignalAttachmentPointer(this)
-  }
-
-  fun Long.toMobileCoinMoney(): Money {
-    return Money.picoMobileCoin(this)
   }
 
   fun SyncMessage.Builder.pad(length: Int = 512): SyncMessage.Builder {

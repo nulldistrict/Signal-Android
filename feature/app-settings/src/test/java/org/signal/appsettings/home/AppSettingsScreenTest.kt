@@ -99,7 +99,7 @@ class AppSettingsScreenTest {
 
   @Test
   fun `each row emits its click event`() {
-    setContent(createState(showAppUpdates = true, showPayments = true, showInternalPreferences = true))
+    setContent(createState(showAppUpdates = true, showInternalPreferences = true))
 
     val rows = listOf(
       AppSettingsTestTags.ROW_ACCOUNT to AppSettingsEvent.AccountClicked,
@@ -113,7 +113,6 @@ class AppSettingsScreenTest {
       AppSettingsTestTags.ROW_BACKUPS to AppSettingsEvent.BackupsClicked,
       AppSettingsTestTags.ROW_DATA_AND_STORAGE to AppSettingsEvent.DataAndStorageClicked,
       AppSettingsTestTags.ROW_APP_UPDATES to AppSettingsEvent.AppUpdatesClicked,
-      AppSettingsTestTags.ROW_PAYMENTS to AppSettingsEvent.PaymentsClicked,
       AppSettingsTestTags.ROW_HELP to AppSettingsEvent.HelpClicked,
       AppSettingsTestTags.ROW_INVITE to AppSettingsEvent.InviteClicked,
       AppSettingsTestTags.ROW_LABS to AppSettingsEvent.LabsClicked,
@@ -168,11 +167,10 @@ class AppSettingsScreenTest {
   }
 
   @Test
-  fun `linked devices and payments are hidden on a linked device`() {
-    setContent(createState(isPrimaryDevice = false, showPayments = true))
+  fun `linked devices are hidden on a linked device`() {
+    setContent(createState(isPrimaryDevice = false))
 
     composeTestRule.onNodeWithTag(AppSettingsTestTags.ROW_LINKED_DEVICES).assertDoesNotExist()
-    composeTestRule.onNodeWithTag(AppSettingsTestTags.ROW_PAYMENTS).assertDoesNotExist()
   }
 
   @Test
@@ -180,17 +178,8 @@ class AppSettingsScreenTest {
     setContent(createState())
 
     composeTestRule.onNodeWithTag(AppSettingsTestTags.ROW_APP_UPDATES).assertDoesNotExist()
-    composeTestRule.onNodeWithTag(AppSettingsTestTags.ROW_PAYMENTS).assertDoesNotExist()
     composeTestRule.onNodeWithTag(AppSettingsTestTags.ROW_LABS).assertDoesNotExist()
     composeTestRule.onNodeWithTag(AppSettingsTestTags.ROW_INTERNAL).assertDoesNotExist()
-  }
-
-  @Test
-  fun `the payments row shows the unread count`() {
-    setContent(createState(showPayments = true, unreadPaymentsCount = 4))
-
-    scrollTo(AppSettingsTestTags.ROW_PAYMENTS)
-    composeTestRule.onNodeWithText("4").assertIsDisplayed()
   }
 
   @Test
@@ -279,9 +268,7 @@ class AppSettingsScreenTest {
     isPrimaryDevice: Boolean = true,
     userUnregistered: Boolean = false,
     showAppUpdates: Boolean = false,
-    showPayments: Boolean = false,
     showInternalPreferences: Boolean = false,
-    unreadPaymentsCount: Int = 0,
     backupFailureState: BackupFailureState = BackupFailureState.NONE,
     snackbar: AppSettingsState.Snackbar = AppSettingsState.Snackbar.None
   ): AppSettingsState {
@@ -290,9 +277,7 @@ class AppSettingsScreenTest {
       isPrimaryDevice = isPrimaryDevice,
       userUnregistered = userUnregistered,
       showAppUpdates = showAppUpdates,
-      showPayments = showPayments,
       showInternalPreferences = showInternalPreferences,
-      unreadPaymentsCount = unreadPaymentsCount,
       backupFailureState = backupFailureState,
       snackbar = snackbar
     )

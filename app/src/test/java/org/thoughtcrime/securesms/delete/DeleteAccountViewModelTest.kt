@@ -50,7 +50,6 @@ class DeleteAccountViewModelTest {
 
     every { repository.isPhoneNumberless() } returns false
     every { repository.getUsername() } returns null
-    every { repository.getFormattedWalletBalance() } returns null
     every { repository.getRegionDisplayName(any()) } returns ""
     every { repository.getRegionDisplayName("US") } returns "United States"
     every { repository.getRegionCountryCode("US") } returns 1
@@ -61,15 +60,6 @@ class DeleteAccountViewModelTest {
   @After
   fun tearDown() {
     Dispatchers.resetMain()
-  }
-
-  @Test
-  fun `a wallet balance is read out of the repository up front`() = runTest(testDispatcher) {
-    every { repository.getFormattedWalletBalance() } returns "0.1000 MOB"
-
-    val viewModel = createViewModel()
-
-    assertThat(viewModel.state.value.walletBalance).isEqualTo("0.1000 MOB")
   }
 
   @Test

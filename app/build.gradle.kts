@@ -367,7 +367,6 @@ android {
         "proguard/proguard-shortcutbadger.pro",
         "proguard/proguard-retrofit.pro",
         "proguard/proguard-klinker.pro",
-        "proguard/proguard-mobilecoin.pro",
         "proguard/proguard-retrolambda.pro",
         "proguard/proguard-okhttp.pro",
         "proguard/proguard-ez-vcard.pro",
@@ -492,7 +491,6 @@ android {
 
       isDefault = true
 
-      buildConfigField("String", "MOBILE_COIN_ENVIRONMENT", "\"mainnet\"")
       buildConfigField("String", "BUILD_ENVIRONMENT_TYPE", "\"Prod\"")
     }
 
@@ -514,7 +512,6 @@ android {
       buildConfigField("String", "ZKGROUP_SERVER_PUBLIC_PARAMS", "\"ABSY21VckQcbSXVNCGRYJcfWHiAMZmpTtTELcDmxgdFbtp/bWsSxZdMKzfCp8rvIs8ocCU3B37fT3r4Mi5qAemeGeR2X+/YmOGR5ofui7tD5mDQfstAI9i+4WpMtIe8KC3wU5w3Inq3uNWVmoGtpKndsNfwJrCg0Hd9zmObhypUnSkfYn2ooMOOnBpfdanRtrvetZUayDMSC5iSRcXKpdlukrpzzsCIvEwjwQlJYVPOQPj4V0F4UXXBdHSLK05uoPBCQG8G9rYIGedYsClJXnbrgGYG3eMTG5hnx4X4ntARBgELuMWWUEEfSK0mjXg+/2lPmWcTZWR9nkqgQQP0tbzuiPm74H2wMO4u1Wafe+UwyIlIT9L7KLS19Aw8r4sPrXZSSsOZ6s7M1+rTJN0bI5CKY2PX29y5Ok3jSWufIKcgKOnWoP67d5b2du2ZVJjpjfibNIHbT/cegy/sBLoFwtHogVYUewANUAXIaMPyCLRArsKhfJ5wBtTminG/PAvuBdJ70Z/bXVPf8TVsR292zQ65xwvWTejROW6AZX6aqucUjlENAErBme1YHmOSpU6tr6doJ66dPzVAWIanmO/5mgjNEDeK7DDqQdB1xd03HT2Qs2TxY3kCK8aAb/0iM0HQiXjxZ9HIgYhbtvGEnDKW5ILSUydqH/KBhW4Pb0jZWnqN/YgbWDKeJxnDbYcUob5ZY5Lt5ZCMKuaGUvCJRrCtuugSMaqjowCGRempsDdJEt+cMaalhZ6gczklJB/IbdwENW9KeVFPoFNFzhxWUIS5ML9riVYhAtE6JE5jX0xiHNVIIPthb458cfA8daR0nYfYAUKogQArm0iBezOO+mPk5vCNWI+wwkyFCqNDXz/qxl1gAntuCJtSfq9OC3NkdhQlgYQ==\"")
       buildConfigField("String", "GENERIC_SERVER_PUBLIC_PARAMS", "\"AYhaw+NbxtNLo/RlGFEsHd904hW38LpPJ59jYJlNmT4wwtyOq4xzCs/MyXsfRbIsAYhQjDnpE0rhFtWkMcn/kV740SISwFfpPHunrtZ9h0YWz5QNNbI5I3DRGUjhKXgMU7J7s7qOr0fdms+g0e+L9FMSjJLobDkOngp/m0B5TsxTyqLscJ5VyU69Cj8txImTfHMCKrYphYfRHO78RwPoz2g2tGUAzEbKHm12OgDna2qutkE5TvYqwZczvgZyLVHdHXpvdyOlEdv4afVyWkI7u/S0XYDonIJoHlxqJoTSepZR\"")
       buildConfigField("String", "BACKUP_SERVER_PUBLIC_PARAMS", "\"AXYrGb9IfugAAJiPKp+mdXUx+OL9zBolPYHYQz6GI1gWjpEu5me3zVNSvmYY4zWboZHif+HG1sDHSuvwFd0QszS6h3nZ6vRdM/IYGK+cLynw3ucWo7idf3zjOG3b6JnGT/z7XYCr6HuOGkWH4DQWCH98hxVZMGOgmT8DCQoqebQb3oK1yrwEglRWmtI01KhRg9RGUKoQiwuej1JZEY8uaG4Uz9n1cVODJ1iuByhNqGHo+KfI4iWhjtx2AnhYqHViQ3CMd4ASGBJtic9UTFVk/4vegVIy0wfYsAmViftzK6t4\"")
-      buildConfigField("String", "MOBILE_COIN_ENVIRONMENT", "\"testnet\"")
       buildConfigField("String", "SIGNAL_CAPTCHA_URL", "\"https://signalcaptchas.org/staging/registration/generate.html\"")
       buildConfigField("String", "RECAPTCHA_PROOF_URL", "\"https://signalcaptchas.org/staging/challenge/generate.html\"")
       buildConfigField("org.signal.libsignal.net.Network.Environment", "LIBSIGNAL_NET_ENV", "org.signal.libsignal.net.Network.Environment.STAGING")
@@ -794,7 +791,6 @@ dependencies {
   implementation(libs.conscrypt.android)
   implementation(libs.signal.aesgcmprovider)
   implementation(libs.libsignal.android)
-  implementation(libs.mobilecoin)
   implementation(libs.signal.ringrtc)
   implementation(libs.leolin.shortcutbadger)
   implementation(libs.glide.glide)

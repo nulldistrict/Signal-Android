@@ -50,7 +50,6 @@ sealed interface AppSettingsRoute : Parcelable, DetailNavKey {
       DataAndStorageRoute.Proxy,
       ChangeNumberRoute.Start,
       AppUpdates,
-      Payments,
       is HelpRoute.Settings,
       Invite,
       LabsRoute.Labs,
@@ -98,9 +97,6 @@ sealed interface AppSettingsRoute : Parcelable, DetailNavKey {
     @Serializable
     data class Username(val mode: UsernameEditMode = UsernameEditMode.NORMAL) : AccountRoute
   }
-
-  @Serializable
-  data object Payments : AppSettingsRoute
 
   @Serializable
   data object Invite : AppSettingsRoute

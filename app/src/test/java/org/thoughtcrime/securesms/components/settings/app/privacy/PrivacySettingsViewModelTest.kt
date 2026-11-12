@@ -58,7 +58,6 @@ class PrivacySettingsViewModelTest {
   private var blockUnknown = false
   private var screenSecurity = false
   private var incognitoKeyboard = false
-  private var paymentLock = false
   private var deviceSecure = true
   private var passphraseEnabled = false
   private var passphraseInitialized = true
@@ -87,8 +86,6 @@ class PrivacySettingsViewModelTest {
     every { PrivacySettingsRepository.setScreenSecurityEnabled(any()) } answers { screenSecurity = firstArg() }
     every { PrivacySettingsRepository.isIncognitoKeyboardEnabled() } answers { incognitoKeyboard }
     every { PrivacySettingsRepository.setIncognitoKeyboardEnabled(any()) } answers { incognitoKeyboard = firstArg() }
-    every { PrivacySettingsRepository.isPaymentLockEnabled() } answers { paymentLock }
-    every { PrivacySettingsRepository.setPaymentLockEnabled(any()) } answers { paymentLock = firstArg() }
     every { PrivacySettingsRepository.isObsoletePassphraseEnabled() } answers { passphraseEnabled }
     every { PrivacySettingsRepository.isObsoletePassphraseInitialized() } answers { passphraseInitialized }
     coEvery { PrivacySettingsRepository.disableObsoletePassphrase() } answers { passphraseEnabled = false }
@@ -107,14 +104,11 @@ class PrivacySettingsViewModelTest {
   @Test
   fun `initial state is read out of the repository`() = runTest(testDispatcher) {
     readReceipts = true
-    paymentLock = true
 
     val state = createViewModel().state.value
 
     assertThat(state.readReceipts).isTrue()
-    assertThat(state.paymentLock).isTrue()
     assertThat(state.universalExpireTimer).isEqualTo(1.days)
-    assertThat(state.scrollToPaymentLock).isFalse()
     assertThat(state.isDeviceSecure).isTrue()
     assertThat(state.hasPhoneNumber).isTrue()
   }
@@ -132,13 +126,10 @@ class PrivacySettingsViewModelTest {
   fun `ScreenResumed picks up settings changed while away`() = runTest(testDispatcher) {
     val viewModel = createViewModel()
     deviceSecure = false
-    paymentLock = true
 
     viewModel.onEvent(PrivacySettingsEvent.ScreenResumed)
 
     assertThat(viewModel.state.value.isDeviceSecure).isFalse()
-    assertThat(viewModel.state.value.paymentLock).isTrue()
-    assertThat(viewModel.state.value.isPaymentLockOn).isFalse()
   }
 
   @Test
@@ -149,16 +140,6 @@ class PrivacySettingsViewModelTest {
     viewModel.onEvent(PrivacySettingsEvent.ScreenSecurityToggled(true))
 
     assertThat(navigationEvents).isEmpty()
-  }
-
-  @Test
-  fun `ScrolledToPaymentLock clears the scroll request`() = runTest(testDispatcher) {
-    val viewModel = createViewModel(scrollToPaymentLock = true)
-    assertThat(viewModel.state.value.scrollToPaymentLock).isTrue()
-
-    viewModel.onEvent(PrivacySettingsEvent.ScrolledToPaymentLock)
-
-    assertThat(viewModel.state.value.scrollToPaymentLock).isFalse()
   }
 
   @Test
@@ -209,50 +190,6 @@ class PrivacySettingsViewModelTest {
     viewModel.onEvent(PrivacySettingsEvent.IncognitoKeyboardToggled(true))
 
     assertThat(viewModel.state.value.incognitoKeyboard).isTrue()
-  }
-
-  @Test
-  fun `EnablePaymentLockClicked turns payment lock on when the device is secure`() = runTest(testDispatcher) {
-    val viewModel = createViewModel()
-
-    viewModel.onEvent(PrivacySettingsEvent.EnablePaymentLockClicked)
-
-    assertThat(viewModel.state.value.paymentLock).isTrue()
-    assertThat(viewModel.state.value.dialog).isEqualTo(Dialog.None)
-  }
-
-  @Test
-  fun `EnablePaymentLockClicked explains the device needs a screen lock when it has none`() = runTest(testDispatcher) {
-    deviceSecure = false
-    val viewModel = createViewModel()
-
-    viewModel.onEvent(PrivacySettingsEvent.EnablePaymentLockClicked)
-
-    verify(exactly = 0) { PrivacySettingsRepository.setPaymentLockEnabled(any()) }
-    assertThat(viewModel.state.value.dialog).isEqualTo(Dialog.PaymentLockNeedsDeviceSecurity)
-  }
-
-  @Test
-  fun `OpenDeviceSecuritySettingsClicked closes the dialog and opens system settings`() = runTest(testDispatcher) {
-    deviceSecure = false
-    val viewModel = createViewModel()
-    val actions = collectActions(viewModel.actions)
-
-    viewModel.onEvent(PrivacySettingsEvent.EnablePaymentLockClicked)
-    viewModel.onEvent(PrivacySettingsEvent.OpenDeviceSecuritySettingsClicked)
-
-    assertThat(viewModel.state.value.dialog).isEqualTo(Dialog.None)
-    assertThat(actions).containsExactly(PrivacySettingsAction.OpenDeviceSecuritySettings)
-  }
-
-  @Test
-  fun `PaymentLockDisableAuthenticated turns payment lock off`() = runTest(testDispatcher) {
-    paymentLock = true
-    val viewModel = createViewModel()
-
-    viewModel.onEvent(PrivacySettingsEvent.PaymentLockDisableAuthenticated)
-
-    assertThat(viewModel.state.value.paymentLock).isFalse()
   }
 
   @Test
@@ -320,15 +257,6 @@ class PrivacySettingsViewModelTest {
 
     assertThat(actions).isEmpty()
     assertThat(viewModel.state.value.snackbar).isEqualTo(Snackbar.PassphraseNotSet)
-  }
-
-  @Test
-  fun `DeviceSecuritySettingsUnavailable tells the user`() = runTest(testDispatcher) {
-    val viewModel = createViewModel()
-
-    viewModel.onEvent(PrivacySettingsEvent.DeviceSecuritySettingsUnavailable)
-
-    assertThat(viewModel.state.value.snackbar).isEqualTo(Snackbar.DeviceSecuritySettingsUnavailable)
   }
 
   @Test
@@ -412,10 +340,9 @@ class PrivacySettingsViewModelTest {
     assertThat(actions).containsExactly(PrivacySettingsAction.OpenIncognitoKeyboardLearnMore)
   }
 
-  private fun createViewModel(scrollToPaymentLock: Boolean = false): PrivacySettingsViewModel {
+  private fun createViewModel(): PrivacySettingsViewModel {
     return PrivacySettingsViewModel(
-      parentEventEmitter = { navigationEvents += it },
-      scrollToPaymentLock = scrollToPaymentLock
+      parentEventEmitter = { navigationEvents += it }
     )
   }
 

@@ -54,7 +54,6 @@ class AppSettingsViewModelTest {
   val dispatcherRule = CoroutineDispatcherRule(testDispatcher)
 
   private val profile = MutableStateFlow(AppSettingsState.Profile(name = "Miles Morales"))
-  private val unreadPaymentsCount = MutableStateFlow(0)
   private val navigationEvents = mutableListOf<AppSettingsNavigationEvent>()
 
   private var isPrimaryDevice = true
@@ -67,13 +66,11 @@ class AppSettingsViewModelTest {
     mockkObject(AppSettingsRepository)
 
     every { AppSettingsRepository.observeProfile() } returns profile
-    every { AppSettingsRepository.observeUnreadPaymentsCount() } returns unreadPaymentsCount
     every { AppSettingsRepository.isPrimaryDevice() } answers { isPrimaryDevice }
     every { AppSettingsRepository.isUserUnregistered() } answers { userUnregistered }
     every { AppSettingsRepository.isClientDeprecated() } returns false
     every { AppSettingsRepository.hasExpiredGiftBadge() } returns false
     every { AppSettingsRepository.showInternalPreferences() } returns false
-    every { AppSettingsRepository.showPayments() } returns true
     every { AppSettingsRepository.showAppUpdates() } returns false
     every { AppSettingsRepository.likelyCanManageDonations() } returns false
     coEvery { AppSettingsRepository.canManageDonations() } returns null
@@ -91,14 +88,10 @@ class AppSettingsViewModelTest {
 
   @Test
   fun `initial state is read out of the repository`() = runTest(testDispatcher) {
-    unreadPaymentsCount.value = 3
-
     val state = createViewModel().state.value
 
     assertThat(state.profile).isEqualTo(profile.value)
-    assertThat(state.unreadPaymentsCount).isEqualTo(3)
     assertThat(state.isPrimaryDevice).isTrue()
-    assertThat(state.showPayments).isTrue()
     assertThat(state.allowUserToGoToDonationManagementScreen).isFalse()
   }
 
@@ -118,15 +111,6 @@ class AppSettingsViewModelTest {
     val state = createViewModel().state.value
 
     assertThat(state.allowUserToGoToDonationManagementScreen).isTrue()
-  }
-
-  @Test
-  fun `unread payments update as they arrive`() = runTest(testDispatcher) {
-    val viewModel = createViewModel()
-
-    unreadPaymentsCount.value = 7
-
-    assertThat(viewModel.state.value.unreadPaymentsCount).isEqualTo(7)
   }
 
   @Test
@@ -167,7 +151,6 @@ class AppSettingsViewModelTest {
     viewModel.onEvent(AppSettingsEvent.BackupsClicked)
     viewModel.onEvent(AppSettingsEvent.DataAndStorageClicked)
     viewModel.onEvent(AppSettingsEvent.AppUpdatesClicked)
-    viewModel.onEvent(AppSettingsEvent.PaymentsClicked)
     viewModel.onEvent(AppSettingsEvent.HelpClicked)
     viewModel.onEvent(AppSettingsEvent.InviteClicked)
     viewModel.onEvent(AppSettingsEvent.LabsClicked)
@@ -186,7 +169,6 @@ class AppSettingsViewModelTest {
       AppSettingsRoute.BackupsRoute.Backups(),
       AppSettingsRoute.DataAndStorageRoute.DataAndStorage,
       AppSettingsRoute.AppUpdates,
-      AppSettingsRoute.Payments,
       AppSettingsRoute.HelpRoute.Settings(),
       AppSettingsRoute.Invite,
       AppSettingsRoute.LabsRoute.Labs,

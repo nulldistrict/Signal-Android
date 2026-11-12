@@ -64,13 +64,6 @@ class DeleteAccountWithoutNumberScreenTest {
   }
 
   @Test
-  fun givenAWalletBalance_whenTheScreenIsShown_thenIExpectAPaymentsBullet() {
-    setContent(createState(walletBalance = "0.1000 MOB"))
-
-    composeTestRule.onNodeWithText(context.getString(R.string.DeleteAccountFragment__delete_s_in_your_payments_account, "0.1000 MOB")).assertIsDisplayed()
-  }
-
-  @Test
   fun givenAnUncheckedConfirmationDialog_whenTheScreenIsShown_thenIExpectDeletionToBeBlocked() {
     setContent(createState(dialog = Dialog.ConfirmNumberlessDeletion()))
 
@@ -139,13 +132,11 @@ class DeleteAccountWithoutNumberScreenTest {
 
   private fun createState(
     username: String? = null,
-    walletBalance: String? = null,
     dialog: Dialog = Dialog.None
   ): DeleteAccountState {
     return DeleteAccountState(
       hasPhoneNumber = false,
       username = username,
-      walletBalance = walletBalance,
       dialog = dialog
     )
   }

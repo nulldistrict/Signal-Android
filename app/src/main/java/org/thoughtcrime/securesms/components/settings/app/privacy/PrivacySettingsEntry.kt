@@ -6,11 +6,7 @@
 package org.thoughtcrime.securesms.components.settings.app.privacy
 
 import android.app.Activity
-import android.content.ActivityNotFoundException
-import android.content.Context
 import android.content.Intent
-import android.os.Build
-import android.provider.Settings
 import android.view.WindowManager
 import androidx.activity.compose.LocalActivity
 import androidx.compose.runtime.Composable
@@ -24,12 +20,9 @@ import org.signal.appsettings.privacy.PrivacySettingsEvent
 import org.signal.appsettings.privacy.PrivacySettingsScreen
 import org.signal.appsettings.routes.AppSettingsNavigationEvent
 import org.signal.core.ui.compose.CollectActions
-import org.signal.core.util.logging.Log
 import org.thoughtcrime.securesms.PassphraseChangeActivity
 import org.thoughtcrime.securesms.util.CommunicationActions
 import org.signal.appsettings.R as AppSettingsR
-
-private val TAG = Log.tag(PrivacySettingsViewModel::class)
 
 /**
  * Hosts [PrivacySettingsScreen] and carries out its [PrivacySettingsAction]s. The view model navigates by sending
@@ -37,14 +30,10 @@ private val TAG = Log.tag(PrivacySettingsViewModel::class)
  */
 @Composable
 fun PrivacySettingsEntry(
-  scrollToPaymentLock: Boolean,
   parentEventEmitter: (AppSettingsNavigationEvent) -> Unit
 ) {
   val viewModel: PrivacySettingsViewModel = viewModel {
-    PrivacySettingsViewModel(
-      parentEventEmitter = parentEventEmitter,
-      scrollToPaymentLock = scrollToPaymentLock
-    )
+    PrivacySettingsViewModel(parentEventEmitter = parentEventEmitter)
   }
   val state by viewModel.state.collectAsStateWithLifecycle()
   val context = LocalContext.current
@@ -55,11 +44,6 @@ fun PrivacySettingsEntry(
     when (action) {
       PrivacySettingsAction.LaunchChangePassphrase -> context.startActivity(Intent(context, PassphraseChangeActivity::class.java))
       PrivacySettingsAction.OpenIncognitoKeyboardLearnMore -> CommunicationActions.openBrowserLink(context, incognitoLearnMore)
-      PrivacySettingsAction.OpenDeviceSecuritySettings -> {
-        if (!openDeviceSecuritySettings(context)) {
-          viewModel.onEvent(PrivacySettingsEvent.DeviceSecuritySettingsUnavailable)
-        }
-      }
       is PrivacySettingsAction.ApplyScreenSecurity -> applyScreenSecurity(activity, action.enabled)
     }
   }
@@ -68,22 +52,6 @@ fun PrivacySettingsEntry(
     state = state,
     onEvent = viewModel::onEvent
   )
-}
-
-private fun openDeviceSecuritySettings(context: Context): Boolean {
-  val intent = when {
-    Build.VERSION.SDK_INT >= 30 -> Intent(Settings.ACTION_BIOMETRIC_ENROLL)
-    Build.VERSION.SDK_INT >= 28 -> Intent(Settings.ACTION_FINGERPRINT_ENROLL)
-    else -> Intent(Settings.ACTION_SECURITY_SETTINGS)
-  }
-
-  return try {
-    context.startActivity(intent)
-    true
-  } catch (e: ActivityNotFoundException) {
-    Log.w(TAG, "Failed to navigate to system settings.", e)
-    false
-  }
 }
 
 private fun applyScreenSecurity(activity: Activity?, enabled: Boolean) {
