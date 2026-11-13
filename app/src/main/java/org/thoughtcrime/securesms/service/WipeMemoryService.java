@@ -1,6 +1,11 @@
 /*
  * Ported from Molly IM (https://github.com/mollyim/mollyim-android).
  * Licensed under the GNU General Public License v3.0 or later.
+ *
+ * The native code (app/src/main/jniLibs/<abi>/libmolly-wipe.so) is the GPLv3 library from
+ * https://github.com/mollyim/ndkutil (artifact im.molly:native-utils:1.0.0), unmodified apart from being
+ * renamed from libnative-utils.so so it does not collide with Signal's own core/util libnative-utils.so.
+ * It is checked in because the app has no native build configuration for it.
  */
 package org.thoughtcrime.securesms.service;
 
