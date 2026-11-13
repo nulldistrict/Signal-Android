@@ -214,7 +214,7 @@ jobs:
             -v "$PWD/unsigned:/unsigned:ro" \
             -v "$PWD/signed:/out" \
             -v "$RUNNER_TEMP/secrets:/secrets:ro" \
-            -v "$PWD/scripts/ci:/scripts:ro" \
+            -v "$PWD/src/scripts/ci:/scripts:ro" \
             -e APK_IN="/unsigned/fork-unsigned.apk" \
             -e OUT=/out \
             -e KEYSTORE=/secrets/release.jks \
@@ -243,7 +243,7 @@ jobs:
           docker run --rm \
             --user "$(id -u):$(id -g)" \
             -v "$PWD/signed:/signed" \
-            -v "$PWD/scripts/ci:/scripts:ro" \
+            -v "$PWD/src/scripts/ci:/scripts:ro" \
             -e APK=/signed/fork-release.apk \
             -e OUT=/signed \
             -e APK_URL="https://github.com/${REPO}/releases/download/${TAG}/fork-release.apk" \
