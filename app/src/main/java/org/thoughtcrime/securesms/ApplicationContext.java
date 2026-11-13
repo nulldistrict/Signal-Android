@@ -527,6 +527,11 @@ public class ApplicationContext extends Application implements AppForegroundObse
   }
 
   private void initializeFirstEverAppLaunch() {
+    // Fork: upstream assumes Signal no longer supports passphrases and turns the passphrase setting
+    // off on every start. While the database is protected by a passphrase, that protection is the
+    // source of truth, so those branches are skipped and the setting is kept in sync with it.
+    boolean passphraseRequired = MasterSecretUtil.isPassphraseRequired(this);
+
     if (SignalStore.misc().getFirstInstallVersion() == -1) {
       if (!SignalDatabase.databaseFileExists(this) || VersionTracker.getDaysSinceFirstInstalled(this) < 365) {
         Log.i(TAG, "First ever app launch!");
@@ -535,12 +540,17 @@ public class ApplicationContext extends Application implements AppForegroundObse
 
       Log.i(TAG, "Setting first install version to " + BuildConfig.CANONICAL_VERSION_CODE);
       SignalStore.misc().setFirstInstallVersion(BuildConfig.CANONICAL_VERSION_CODE);
-    } else if (!SignalStore.settings().getPassphraseDisabled() && VersionTracker.getDaysSinceFirstInstalled(this) < 90) {
+    } else if (!passphraseRequired && !SignalStore.settings().getPassphraseDisabled() && VersionTracker.getDaysSinceFirstInstalled(this) < 90) {
       Log.i(TAG, "Detected a new install that doesn't have passphrases disabled -- assuming bad initialization.");
       AppInitialization.onRepairFirstEverAppLaunch(this);
-    } else if (!SignalStore.settings().getPassphraseDisabled() && VersionTracker.getDaysSinceFirstInstalled(this) < 912) {
+    } else if (!passphraseRequired && !SignalStore.settings().getPassphraseDisabled() && VersionTracker.getDaysSinceFirstInstalled(this) < 912) {
       Log.i(TAG, "Detected a not-recent install that doesn't have passphrases disabled -- disabling now.");
       SignalStore.settings().setPassphraseDisabled(true);
+    }
+
+    if (passphraseRequired && SignalStore.settings().getPassphraseDisabled()) {
+      Log.w(TAG, "The database requires a passphrase but the passphrase setting was off -- re-enabling it.");
+      SignalStore.settings().setPassphraseDisabled(false);
     }
   }
 
