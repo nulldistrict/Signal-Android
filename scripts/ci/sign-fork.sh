@@ -36,7 +36,7 @@ if [ ! -x "$APKSIGNER" ]; then
   exit 1
 fi
 
-apksigner sign \
+"$APKSIGNER" sign \
   --ks "$KEYSTORE" \
   --ks-pass env:KS_PASS \
   --key-pass env:KEY_PASS \
@@ -44,7 +44,7 @@ apksigner sign \
   --out "$OUT/fork-release.apk" \
   "$APK_IN"
 
-apksigner verify --print-certs "$OUT/fork-release.apk"
+"$APKSIGNER" verify --print-certs "$OUT/fork-release.apk"
 
 (cd "$OUT" && sha256sum fork-release.apk > fork-release.apk.sha256)
 
