@@ -12,6 +12,7 @@ import java.util.stream.Collectors;
 import org.signal.core.models.recipients.RecipientId;
 import org.signal.core.util.concurrent.SignalExecutors;
 import org.signal.core.util.logging.Log;
+import org.thoughtcrime.securesms.ApplicationContext;
 import org.thoughtcrime.securesms.database.CallTable;
 import org.thoughtcrime.securesms.database.MessageTable.ExpirationInfo;
 import org.thoughtcrime.securesms.database.MessageTable.MarkedMessageInfo;
@@ -40,6 +41,11 @@ public class MarkReadReceiver extends BroadcastReceiver {
   public void onReceive(final Context context, Intent intent) {
     if (!CLEAR_ACTION.equals(intent.getAction()))
       return;
+
+    if (ApplicationContext.isDatabaseLocked(context)) {
+      Log.w(TAG, "Database is locked by a passphrase; ignoring mark-read action.");
+      return;
+    }
 
     final ArrayList<ConversationId> threads = intent.getParcelableArrayListExtra(THREADS_EXTRA);
 

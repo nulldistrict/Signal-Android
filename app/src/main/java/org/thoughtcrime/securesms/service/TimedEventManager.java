@@ -17,6 +17,7 @@ import androidx.annotation.WorkerThread;
 import org.signal.core.util.PendingIntentFlags;
 import org.signal.core.util.ThreadUtil;
 import org.signal.core.util.logging.Log;
+import org.thoughtcrime.securesms.ApplicationContext;
 import org.thoughtcrime.securesms.util.RemoteConfig;
 import org.signal.core.util.ServiceUtil;
 
@@ -44,6 +45,12 @@ public abstract class TimedEventManager<E> {
    */
   public void scheduleIfNecessary() {
     handler.removeCallbacksAndMessages(null);
+
+    if (ApplicationContext.isDatabaseLocked(application)) {
+      // Startup calls this again after the passphrase unlocks the database.
+      Log.i(TAG, "Database is locked by a passphrase; not scheduling events until unlock.");
+      return;
+    }
 
     handler.post(() -> {
       E event = getNextClosestEvent();

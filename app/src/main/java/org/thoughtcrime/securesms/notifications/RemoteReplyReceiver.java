@@ -28,6 +28,7 @@ import androidx.core.app.RemoteInput;
 import org.signal.core.models.recipients.RecipientId;
 import org.signal.core.util.concurrent.SignalExecutors;
 import org.signal.core.util.logging.Log;
+import org.thoughtcrime.securesms.ApplicationContext;
 import org.thoughtcrime.securesms.database.MessageTable.MarkedMessageInfo;
 import org.thoughtcrime.securesms.database.SignalDatabase;
 import org.thoughtcrime.securesms.database.model.ParentStoryId;
@@ -59,6 +60,11 @@ public class RemoteReplyReceiver extends BroadcastReceiver {
   @Override
   public void onReceive(final Context context, Intent intent) {
     if (!REPLY_ACTION.equals(intent.getAction())) return;
+
+    if (ApplicationContext.isDatabaseLocked(context)) {
+      Log.w(TAG, "Database is locked by a passphrase; dropping notification reply.");
+      return;
+    }
 
     Bundle remoteInput = RemoteInput.getResultsFromIntent(intent);
 

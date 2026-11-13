@@ -9,6 +9,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import org.signal.core.util.logging.Log;
+import org.thoughtcrime.securesms.ApplicationContext;
 import org.thoughtcrime.securesms.database.MessageTable;
 import org.thoughtcrime.securesms.database.SignalDatabase;
 import org.thoughtcrime.securesms.database.ThreadTable;
@@ -86,6 +87,12 @@ public class TrimThreadsByDateManager extends TimedEventManager<TrimThreadsByDat
     @Override
     public void onReceive(@NonNull Context context, @NonNull Intent intent) {
       Log.d(TAG, "onReceive()");
+
+      if (ApplicationContext.isDatabaseLocked(context)) {
+        // Startup schedules this manager again after the passphrase unlocks the database.
+        return;
+      }
+
       AppDependencies.getTrimThreadsByDateManager().scheduleIfNecessary();
     }
   }

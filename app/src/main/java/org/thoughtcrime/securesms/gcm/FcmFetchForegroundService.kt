@@ -10,6 +10,7 @@ import androidx.core.app.NotificationCompat
 import org.signal.core.util.ForegroundServiceUtil
 import org.signal.core.util.PendingIntentFlags
 import org.signal.core.util.logging.Log
+import org.thoughtcrime.securesms.ApplicationContext
 import org.thoughtcrime.securesms.MainActivity
 import org.thoughtcrime.securesms.R
 import org.thoughtcrime.securesms.notifications.NotificationChannels
@@ -123,6 +124,16 @@ class FcmFetchForegroundService : Service() {
 
   override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
     Log.d(TAG, "onStartCommand()")
+
+    if (ApplicationContext.isDatabaseLocked(this)) {
+      // A sticky restart after the process was killed on lock. Nothing can be fetched until the passphrase
+      // unlocks the database, and the notification channels need SignalStore.
+      Log.i(TAG, "Database is locked by a passphrase; stopping.")
+      WakeLockUtil.release(wakeLock, WAKELOCK_TAG)
+      stopSelf()
+      return START_NOT_STICKY
+    }
+
     try {
       postForegroundNotification()
     } catch (e: RuntimeException) {

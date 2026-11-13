@@ -7,12 +7,18 @@ import android.content.Context;
 import android.content.Intent;
 
 import org.signal.core.util.PendingIntentFlags;
+import org.thoughtcrime.securesms.ApplicationContext;
 import org.thoughtcrime.securesms.dependencies.AppDependencies;
 
 public class ExpirationListener extends BroadcastReceiver {
 
   @Override
   public void onReceive(Context context, Intent intent) {
+    if (ApplicationContext.isDatabaseLocked(context)) {
+      // Startup checks the expiration schedule after the passphrase unlocks the database.
+      return;
+    }
+
     AppDependencies.getExpiringMessageManager().checkSchedule();
   }
 

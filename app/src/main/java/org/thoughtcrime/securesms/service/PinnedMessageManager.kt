@@ -7,6 +7,7 @@ import android.content.Intent
 import androidx.annotation.WorkerThread
 import org.signal.core.models.recipients.RecipientId
 import org.signal.core.util.logging.Log
+import org.thoughtcrime.securesms.ApplicationContext
 import org.thoughtcrime.securesms.database.SignalDatabase
 import org.thoughtcrime.securesms.database.model.MmsMessageRecord
 import org.thoughtcrime.securesms.dependencies.AppDependencies
@@ -106,6 +107,12 @@ class PinnedMessageManager(
 
     override fun onReceive(context: Context?, intent: Intent?) {
       Log.d(TAG, "onReceive()")
+
+      if (ApplicationContext.isDatabaseLocked(AppDependencies.application)) {
+        // Startup schedules this manager again after the passphrase unlocks the database.
+        return
+      }
+
       AppDependencies.pinnedMessageManager.scheduleIfNecessary()
     }
   }

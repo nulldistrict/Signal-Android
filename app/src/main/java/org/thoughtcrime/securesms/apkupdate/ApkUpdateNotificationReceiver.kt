@@ -9,6 +9,7 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import org.signal.core.util.logging.Log
+import org.thoughtcrime.securesms.ApplicationContext
 
 /**
  * Receiver that is triggered based on various notification actions that can be taken on update-related notifications.
@@ -25,6 +26,11 @@ class ApkUpdateNotificationReceiver : BroadcastReceiver() {
   override fun onReceive(context: Context, intent: Intent?) {
     if (intent == null) {
       Log.w(TAG, "Null intent")
+      return
+    }
+
+    if (ApplicationContext.isDatabaseLocked(context)) {
+      Log.w(TAG, "Database is locked by a passphrase; ignoring notification action.")
       return
     }
 

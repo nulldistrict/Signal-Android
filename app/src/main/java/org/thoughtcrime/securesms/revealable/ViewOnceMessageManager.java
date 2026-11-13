@@ -11,6 +11,7 @@ import androidx.annotation.Nullable;
 import androidx.annotation.WorkerThread;
 
 import org.signal.core.util.logging.Log;
+import org.thoughtcrime.securesms.ApplicationContext;
 import org.thoughtcrime.securesms.database.AttachmentTable;
 import org.thoughtcrime.securesms.database.MessageTable;
 import org.thoughtcrime.securesms.database.SignalDatabase;
@@ -79,6 +80,12 @@ public class ViewOnceMessageManager extends TimedEventManager<ViewOnceExpiration
     @Override
     public void onReceive(Context context, Intent intent) {
       Log.d(TAG, "onReceive()");
+
+      if (ApplicationContext.isDatabaseLocked(context)) {
+        // Startup schedules this manager again after the passphrase unlocks the database.
+        return;
+      }
+
       AppDependencies.getViewOnceMessageManager().scheduleIfNecessary();
     }
   }

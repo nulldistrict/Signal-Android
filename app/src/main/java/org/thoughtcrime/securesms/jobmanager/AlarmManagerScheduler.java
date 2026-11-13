@@ -11,6 +11,7 @@ import androidx.annotation.NonNull;
 
 import org.signal.core.util.PendingIntentFlags;
 import org.signal.core.util.logging.Log;
+import org.thoughtcrime.securesms.ApplicationContext;
 import org.thoughtcrime.securesms.BuildConfig;
 import org.thoughtcrime.securesms.dependencies.AppDependencies;
 
@@ -61,6 +62,12 @@ public class AlarmManagerScheduler implements Scheduler {
     @Override
     public void onReceive(Context context, Intent intent) {
       Log.i(TAG, "Received an alarm to retry a job.");
+
+      if (ApplicationContext.isDatabaseLocked(context)) {
+        Log.i(TAG, "Database is locked by a passphrase; JobManager will run after unlock.");
+        return;
+      }
+
       AppDependencies.getJobManager().wakeUp();
     }
   }

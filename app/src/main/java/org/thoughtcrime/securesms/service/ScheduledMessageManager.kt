@@ -9,6 +9,7 @@ import androidx.annotation.WorkerThread
 import org.signal.core.models.recipients.RecipientId
 import org.signal.core.util.PendingIntentFlags
 import org.signal.core.util.logging.Log
+import org.thoughtcrime.securesms.ApplicationContext
 import org.thoughtcrime.securesms.conversation.ConversationIntents
 import org.thoughtcrime.securesms.database.SignalDatabase
 import org.thoughtcrime.securesms.database.model.MmsMessageRecord
@@ -98,6 +99,12 @@ class ScheduledMessageManager(
 
     override fun onReceive(context: Context?, intent: Intent?) {
       Log.d(TAG, "onReceive()")
+
+      if (ApplicationContext.isDatabaseLocked(AppDependencies.application)) {
+        // Startup schedules this manager again after the passphrase unlocks the database.
+        return
+      }
+
       AppDependencies.scheduledMessageManager.scheduleIfNecessary()
     }
   }

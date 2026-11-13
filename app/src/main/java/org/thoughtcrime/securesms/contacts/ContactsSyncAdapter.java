@@ -10,6 +10,7 @@ import android.os.Bundle;
 
 import org.signal.contacts.SystemContactsRepository;
 import org.signal.core.util.logging.Log;
+import org.thoughtcrime.securesms.ApplicationContext;
 import org.thoughtcrime.securesms.contacts.sync.ContactDiscovery;
 import org.thoughtcrime.securesms.database.SignalDatabase;
 import org.thoughtcrime.securesms.dependencies.AppDependencies;
@@ -41,6 +42,11 @@ public class ContactsSyncAdapter extends AbstractThreadedSyncAdapter {
     Log.i(TAG, "onPerformSync(" + authority +")");
 
     Context context = getContext();
+
+    if (ApplicationContext.isDatabaseLocked(context)) {
+      Log.i(TAG, "Database is locked by a passphrase; skipping contact sync.");
+      return;
+    }
 
     if (SignalStore.account().getAci() == null && SignalStore.account().getE164() == null) {
       Log.i(TAG, "No local account data set, skipping all sync operations.");

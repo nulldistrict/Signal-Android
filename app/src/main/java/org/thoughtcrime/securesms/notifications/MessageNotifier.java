@@ -9,6 +9,7 @@ import androidx.annotation.Nullable;
 import androidx.annotation.WorkerThread;
 
 import org.signal.core.util.concurrent.SignalExecutors;
+import org.thoughtcrime.securesms.ApplicationContext;
 import org.thoughtcrime.securesms.dependencies.AppDependencies;
 import org.thoughtcrime.securesms.notifications.v2.ConversationId;
 import org.thoughtcrime.securesms.recipients.Recipient;
@@ -41,6 +42,10 @@ public interface MessageNotifier {
   class ReminderReceiver extends BroadcastReceiver {
     @Override
     public void onReceive(final Context context, final Intent intent) {
+      if (ApplicationContext.isDatabaseLocked(context)) {
+        return;
+      }
+
       SignalExecutors.BOUNDED.execute(() -> {
         AppDependencies.getMessageNotifier().updateNotification(context);
       });

@@ -10,6 +10,7 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import org.signal.core.util.logging.Log
+import org.thoughtcrime.securesms.ApplicationContext
 import org.thoughtcrime.securesms.keyvalue.SignalStore
 
 /**
@@ -25,6 +26,12 @@ class ApkUpdateDownloadManagerReceiver : BroadcastReceiver() {
 
   override fun onReceive(context: Context, intent: Intent) {
     Log.i(TAG, "onReceive()")
+
+    if (ApplicationContext.isDatabaseLocked(context)) {
+      // The download bookkeeping lives in SignalStore. The next update check retries after unlock.
+      Log.w(TAG, "Database is locked by a passphrase; ignoring download result.")
+      return
+    }
 
     if (DownloadManager.ACTION_DOWNLOAD_COMPLETE != intent.action) {
       Log.i(TAG, "Unexpected action: " + intent.action)

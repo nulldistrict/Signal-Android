@@ -11,6 +11,7 @@ import android.content.Intent
 import android.content.pm.PackageInstaller
 import org.signal.core.util.getParcelableExtraCompat
 import org.signal.core.util.logging.Log
+import org.thoughtcrime.securesms.ApplicationContext
 import org.thoughtcrime.securesms.apkupdate.ApkUpdateNotifications.FailureReason
 import org.thoughtcrime.securesms.keyvalue.SignalStore
 
@@ -33,6 +34,13 @@ class ApkUpdatePackageInstallerReceiver : BroadcastReceiver() {
     val userInitiated = intent?.getBooleanExtra(EXTRA_USER_INITIATED, false) ?: false
 
     Log.w(TAG, "[onReceive] Status: $statusCode, Message: $statusMessage")
+
+    if (ApplicationContext.isDatabaseLocked(context)) {
+      // A successful self-update restarts the app with the database locked. The update check compares
+      // version codes, so skipping this bookkeeping does not cause the same APK to be installed again.
+      Log.w(TAG, "[onReceive] Database is locked by a passphrase; not handling the installer status.")
+      return
+    }
 
     when (statusCode) {
       PackageInstaller.STATUS_SUCCESS -> {

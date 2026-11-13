@@ -27,6 +27,7 @@ import org.signal.core.models.recipients.RecipientId;
 import org.signal.core.util.concurrent.SignalExecutors;
 import org.signal.core.util.logging.Log;
 import org.signal.core.models.database.AttachmentId;
+import org.thoughtcrime.securesms.ApplicationContext;
 import org.thoughtcrime.securesms.attachments.DatabaseAttachment;
 import org.thoughtcrime.securesms.database.DatabaseObserver;
 import org.thoughtcrime.securesms.database.MessageTable;
@@ -268,6 +269,12 @@ public class VoiceNotePlaybackService extends MediaSessionService {
    * @return the built MediaSession, or null if the session cannot be built.
    */
   private @Nullable MediaSession buildMediaSession(boolean isRetry) {
+    if (ApplicationContext.isDatabaseLocked(this)) {
+      // Voice notes live in the locked database (for example, a media-resumption request after a restart).
+      Log.i(TAG, "Database is locked by a passphrase; not creating a media session.");
+      return null;
+    }
+
     try {
       return new MediaSession.Builder(this, player).setCallback(voiceNotePlayerCallback).setId(SESSION_ID).build();
     } catch (IllegalStateException | IllegalArgumentException e) {

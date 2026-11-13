@@ -6,6 +6,7 @@ import android.content.Context
 import android.content.Intent
 import androidx.annotation.WorkerThread
 import org.signal.core.util.logging.Log
+import org.thoughtcrime.securesms.ApplicationContext
 import org.thoughtcrime.securesms.database.SignalDatabase
 import org.thoughtcrime.securesms.dependencies.AppDependencies
 import java.util.concurrent.TimeUnit
@@ -64,6 +65,12 @@ class DeletedCallEventManager(
 
     override fun onReceive(context: Context?, intent: Intent?) {
       Log.d(TAG, "onReceive()")
+
+      if (ApplicationContext.isDatabaseLocked(AppDependencies.application)) {
+        // Startup schedules this manager again after the passphrase unlocks the database.
+        return
+      }
+
       AppDependencies.deletedCallEventManager.scheduleIfNecessary()
     }
   }

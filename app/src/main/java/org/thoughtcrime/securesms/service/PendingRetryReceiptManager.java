@@ -11,6 +11,7 @@ import androidx.annotation.Nullable;
 import androidx.annotation.WorkerThread;
 
 import org.signal.core.util.logging.Log;
+import org.thoughtcrime.securesms.ApplicationContext;
 import org.thoughtcrime.securesms.database.MessageTable;
 import org.thoughtcrime.securesms.database.PendingRetryReceiptCache;
 import org.thoughtcrime.securesms.database.SignalDatabase;
@@ -94,6 +95,12 @@ public final class PendingRetryReceiptManager extends TimedEventManager<PendingR
     @Override
     public void onReceive(Context context, Intent intent) {
       Log.d(TAG, "onReceive()");
+
+      if (ApplicationContext.isDatabaseLocked(context)) {
+        // Startup schedules this manager again after the passphrase unlocks the database.
+        return;
+      }
+
       AppDependencies.getPendingRetryReceiptManager().scheduleIfNecessary();
     }
   }

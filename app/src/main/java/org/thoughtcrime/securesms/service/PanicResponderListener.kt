@@ -4,6 +4,7 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import org.signal.core.util.ServiceUtil
+import org.thoughtcrime.securesms.ApplicationContext
 import org.thoughtcrime.securesms.keyvalue.SignalStore
 
 /**
@@ -14,6 +15,11 @@ import org.thoughtcrime.securesms.keyvalue.SignalStore
  */
 class PanicResponderListener : BroadcastReceiver() {
   override fun onReceive(context: Context, intent: Intent) {
+    if (ApplicationContext.isDatabaseLocked(context)) {
+      // Already locked: the passphrase has not unlocked the database in this process.
+      return
+    }
+
     val passwordEnabled = !SignalStore.settings.passphraseDisabled
     val keyguardSecure = ServiceUtil.getKeyguardManager(context).isKeyguardSecure
     val intentAction = intent.action

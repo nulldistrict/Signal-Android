@@ -12,6 +12,7 @@ import androidx.annotation.NonNull;
 
 import org.signal.core.util.PendingIntentFlags;
 import org.signal.core.util.logging.Log;
+import org.thoughtcrime.securesms.ApplicationContext;
 
 public abstract class PersistentAlarmManagerListener extends BroadcastReceiver {
 
@@ -31,6 +32,12 @@ public abstract class PersistentAlarmManagerListener extends BroadcastReceiver {
   @Override
   public void onReceive(Context context, Intent intent) {
     info(String.format("onReceive(%s)", intent.getAction()));
+
+    if (ApplicationContext.isDatabaseLocked(context)) {
+      // Startup reschedules every listener after the passphrase unlocks the database.
+      info("Database is locked by a passphrase; skipping until unlock.");
+      return;
+    }
 
     long          scheduledTime = getNextScheduledExecutionTime(context);
     AlarmManager  alarmManager  = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);

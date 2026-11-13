@@ -14,6 +14,7 @@ import java.util.stream.Collectors;
 
 import org.signal.core.util.concurrent.SignalExecutors;
 import org.signal.core.util.logging.Log;
+import org.thoughtcrime.securesms.ApplicationContext;
 import org.thoughtcrime.securesms.dependencies.AppDependencies;
 
 import java.util.List;
@@ -68,6 +69,12 @@ public final class JobSchedulerScheduler implements Scheduler {
 
     @Override
     public boolean onStartJob(JobParameters params) {
+      if (ApplicationContext.isDatabaseLocked(this)) {
+        // The job queue lives in the locked database; JobManager re-schedules its jobs after unlock.
+        Log.i(TAG, "Database is locked by a passphrase; not waking JobManager for job: " + params.getJobId());
+        return false;
+      }
+
       JobManager jobManager = AppDependencies.getJobManager();
 
       Log.i(TAG, "Waking due to job: " + params.getJobId());

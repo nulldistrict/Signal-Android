@@ -15,6 +15,7 @@ import androidx.annotation.NonNull;
 import org.signal.core.util.PendingIntentFlags;
 import org.signal.core.util.concurrent.SignalExecutors;
 import org.signal.core.util.logging.Log;
+import org.thoughtcrime.securesms.ApplicationContext;
 import org.thoughtcrime.securesms.dependencies.AppDependencies;
 import org.thoughtcrime.securesms.jobmanager.JobTracker;
 import org.thoughtcrime.securesms.jobs.MessageFetchJob;
@@ -39,6 +40,12 @@ public final class RoutineMessageFetchReceiver extends BroadcastReceiver {
   @SuppressLint("StaticFieldLeak")
   public void onReceive(@NonNull Context context, @NonNull Intent intent) {
     Log.i(TAG, String.format("onReceive(%s)", intent.getAction()));
+
+    if (ApplicationContext.isDatabaseLocked(context)) {
+      // Remote config and the job queue need the database. Startup re-arms this alarm after unlock.
+      Log.i(TAG, "Database is locked by a passphrase; skipping.");
+      return;
+    }
 
     if (Intent.ACTION_BOOT_COMPLETED.equals(intent.getAction())) {
       Log.i(TAG, "Starting Alarm because of boot receiver");
