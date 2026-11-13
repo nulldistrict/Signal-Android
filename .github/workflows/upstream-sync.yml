@@ -1,0 +1,202 @@
+name: Upstream sync
+
+# Merges the current Signal stable release into this fork and starts a
+# pre-release build of the result.
+#
+# Flow:
+#   1. Read Signal's current stable version from updates.signal.org (or use the
+#      `upstream_tag` input) and fetch that tag from signalapp/Signal-Android.
+#   2. Skip if `dev` already contains it, or if `sync/<tag>` already exists.
+#   3. Merge the tag into a new `sync/<tag>` branch cut from `dev`.
+#      - Conflicts are never resolved automatically. The run fails and lists the
+#        conflicting files in the job summary. Resolve them locally on a
+#        `sync/<tag>` branch, push it, then run "Reproducible release" with
+#        ref=sync/<tag>, tag=<tag>-EK and prerelease checked.
+#   4. Push `sync/<tag>` and dispatch "Reproducible release" as a pre-release
+#      tagged `<tag>-EK`. The in-app updater ignores pre-releases.
+#   5. After testing the pre-release on a device, run "Promote release" to make
+#      it the latest stable release and fast-forward `dev`.
+#
+# A clean merge does not prove the fork still works: always test the
+# pre-release before promoting it.
+#
+# Requires the SYNC_PAT secret: a fine-grained personal access token for this
+# repository with "Contents: read and write" and "Workflows: read and write".
+# The default GITHUB_TOKEN cannot push commits that change files under
+# .github/workflows/, which Signal releases regularly do.
+
+on:
+  schedule:
+    - cron: '23 5 * * *'
+  workflow_dispatch:
+    inputs:
+      upstream_tag:
+        description: "Signal tag to merge, e.g. v8.35.2 (default: current stable release)"
+        type: string
+        default: ""
+
+permissions:
+  contents: read
+
+concurrency:
+  group: upstream-sync
+  cancel-in-progress: false
+
+env:
+  UPSTREAM_REPOSITORY: https://github.com/signalapp/Signal-Android.git
+  BASE_BRANCH: dev
+  # LFS only stores screenshot-test reference images, which are not needed to
+  # build or merge.
+  GIT_LFS_SKIP_SMUDGE: "1"
+
+jobs:
+  sync:
+    name: Merge Signal stable release
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
+      actions: write
+
+    steps:
+      - name: Require sync token
+        env:
+          SYNC_PAT: ${{ secrets.SYNC_PAT }}
+        run: |
+          if [ -z "$SYNC_PAT" ]; then
+            echo "::error::The SYNC_PAT secret is not configured. See the comment at the top of upstream-sync.yml."
+            exit 1
+          fi
+
+      - name: Check out base branch
+        uses: actions/checkout@v7
+        with:
+          ref: ${{ env.BASE_BRANCH }}
+          fetch-depth: 0
+          lfs: false
+          token: ${{ secrets.SYNC_PAT }}
+
+      - name: Resolve upstream release
+        id: upstream
+        env:
+          INPUT_TAG: ${{ github.event.inputs.upstream_tag }}
+        run: |
+          set -euo pipefail
+          git config lfs.allowincompletepush true
+
+          if [ -n "$INPUT_TAG" ]; then
+            tag="$INPUT_TAG"
+          else
+            version="$(curl -fsSL https://updates.signal.org/android/latest.json | jq -r .versionName)"
+            tag="v${version}"
+          fi
+
+          if ! [[ "$tag" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "::error::Unexpected upstream tag: $tag"
+            exit 1
+          fi
+
+          branch="sync/${tag}"
+          release_tag="${tag}-EK"
+          echo "tag=$tag" >> "$GITHUB_OUTPUT"
+          echo "branch=$branch" >> "$GITHUB_OUTPUT"
+          echo "release_tag=$release_tag" >> "$GITHUB_OUTPUT"
+
+          git remote add signal "$UPSTREAM_REPOSITORY"
+          if ! git fetch --no-tags signal "+refs/tags/${tag}:refs/tags/${tag}"; then
+            echo "::notice::Signal has not pushed tag ${tag} yet; nothing to do."
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          if git merge-base --is-ancestor "refs/tags/${tag}" HEAD; then
+            echo "::notice::${BASE_BRANCH} already contains Signal ${tag}."
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          if git ls-remote --exit-code --heads origin "$branch" >/dev/null; then
+            echo "::notice::${branch} already exists; finish or delete it to sync again."
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          if git ls-remote --exit-code --tags origin "refs/tags/${release_tag}" >/dev/null; then
+            echo "::notice::Release tag ${release_tag} already exists."
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          echo "skip=false" >> "$GITHUB_OUTPUT"
+
+      - name: Merge upstream release
+        id: merge
+        if: steps.upstream.outputs.skip == 'false'
+        env:
+          TAG: ${{ steps.upstream.outputs.tag }}
+          BRANCH: ${{ steps.upstream.outputs.branch }}
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git switch -c "$BRANCH"
+
+          if git merge --no-ff --no-edit -m "Merge Signal ${TAG}" "refs/tags/${TAG}"; then
+            echo "conflict=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          conflicts="$(git diff --name-only --diff-filter=U)"
+          git merge --abort
+          echo "conflict=true" >> "$GITHUB_OUTPUT"
+
+          {
+            echo "## Signal ${TAG} does not merge cleanly into ${BASE_BRANCH}"
+            echo
+            echo "Conflicts are never resolved automatically. Conflicting files:"
+            echo
+            echo '```'
+            printf '%s\n' "$conflicts"
+            echo '```'
+            echo
+            echo "To finish the update locally:"
+            echo
+            echo '```sh'
+            echo "git fetch signal tag ${TAG}"
+            echo "git switch -c ${BRANCH} ${BASE_BRANCH}"
+            echo "git merge --no-ff ${TAG}   # resolve, build, test, commit"
+            echo "git push fork ${BRANCH}"
+            echo '```'
+            echo
+            echo "Then run **Reproducible release** with ref=${BRANCH}, tag=${TAG}-EK and prerelease checked."
+          } >> "$GITHUB_STEP_SUMMARY"
+
+          echo "::error::Signal ${TAG} conflicts with ${BASE_BRANCH}; see the job summary."
+          exit 1
+
+      - name: Push sync branch
+        if: steps.upstream.outputs.skip == 'false' && steps.merge.outputs.conflict == 'false'
+        env:
+          BRANCH: ${{ steps.upstream.outputs.branch }}
+        run: git push origin "$BRANCH"
+
+      - name: Start pre-release build
+        if: steps.upstream.outputs.skip == 'false' && steps.merge.outputs.conflict == 'false'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          BRANCH: ${{ steps.upstream.outputs.branch }}
+          RELEASE_TAG: ${{ steps.upstream.outputs.release_tag }}
+        run: |
+          set -euo pipefail
+          gh workflow run reproducible-release.yml \
+            --repo "${{ github.repository }}" \
+            --ref "$BASE_BRANCH" \
+            -f ref="$BRANCH" \
+            -f tag="$RELEASE_TAG" \
+            -f prerelease=true
+          {
+            echo "## Signal merged cleanly"
+            echo
+            echo "Pushed \`${BRANCH}\` and started a pre-release build tagged \`${RELEASE_TAG}\`."
+            echo "Test it on a device, then run **Promote release** with tag=${RELEASE_TAG}."
+          } >> "$GITHUB_STEP_SUMMARY"

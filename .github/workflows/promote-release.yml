@@ -1,0 +1,102 @@
+name: Promote release
+
+# Turns a tested pre-release into the latest stable release, which the in-app
+# updater installs, and fast-forwards `dev` to the released commit.
+#
+# `dev` is only ever fast-forwarded, never force-pushed. If `dev` has gained
+# commits that the release does not contain, the workflow stops: merge `dev`
+# into the release branch (or the release into `dev`) first.
+#
+# Requires the SYNC_PAT secret (see upstream-sync.yml): pushing a commit that
+# changes .github/workflows/ needs the "Workflows" permission, which the default
+# GITHUB_TOKEN does not have.
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Pre-release tag to promote, e.g. v8.35.2-EK"
+        type: string
+        required: true
+
+permissions:
+  contents: read
+
+concurrency:
+  group: promote-release
+  cancel-in-progress: false
+
+env:
+  BASE_BRANCH: dev
+  GIT_LFS_SKIP_SMUDGE: "1"
+
+jobs:
+  promote:
+    name: Promote ${{ github.event.inputs.tag }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Require sync token
+        env:
+          SYNC_PAT: ${{ secrets.SYNC_PAT }}
+        run: |
+          if [ -z "$SYNC_PAT" ]; then
+            echo "::error::The SYNC_PAT secret is not configured. See the comment at the top of upstream-sync.yml."
+            exit 1
+          fi
+
+      - name: Check out base branch
+        uses: actions/checkout@v7
+        with:
+          ref: ${{ env.BASE_BRANCH }}
+          fetch-depth: 0
+          lfs: false
+          token: ${{ secrets.SYNC_PAT }}
+
+      - name: Fast-forward base branch
+        env:
+          TAG: ${{ github.event.inputs.tag }}
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          git config lfs.allowincompletepush true
+
+          if ! [[ "$TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+-EK ]]; then
+            echo "::error::Unexpected release tag: $TAG"
+            exit 1
+          fi
+
+          if [ "$(gh release view "$TAG" --repo "${{ github.repository }}" --json isPrerelease --jq .isPrerelease)" != "true" ]; then
+            echo "::error::${TAG} is not a pre-release."
+            exit 1
+          fi
+
+          git fetch --no-tags origin "+refs/tags/${TAG}:refs/tags/${TAG}"
+          commit="$(git rev-list -n 1 "refs/tags/${TAG}")"
+
+          if git merge-base --is-ancestor "$commit" HEAD; then
+            echo "${BASE_BRANCH} already contains ${TAG}."
+          elif git merge-base --is-ancestor HEAD "$commit"; then
+            git push origin "${commit}:refs/heads/${BASE_BRANCH}"
+          else
+            echo "::error::${BASE_BRANCH} has commits that ${TAG} does not contain; merge them first."
+            exit 1
+          fi
+
+      - name: Mark release as latest
+        env:
+          TAG: ${{ github.event.inputs.tag }}
+          GH_TOKEN: ${{ github.token }}
+        run: gh release edit "$TAG" --repo "${{ github.repository }}" --prerelease=false --latest
+
+      - name: Delete sync branch
+        env:
+          TAG: ${{ github.event.inputs.tag }}
+        run: |
+          set -euo pipefail
+          branch="sync/${TAG%%-EK*}"
+          if git ls-remote --exit-code --heads origin "$branch" >/dev/null; then
+            git push origin --delete "$branch"
+          fi

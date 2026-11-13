@@ -11,6 +11,14 @@ name: Reproducible release
 #   ANDROID_KEY_ALIAS         signing key alias
 #   ANDROID_KEY_PASSWORD      signing key password
 #
+# Releases:
+#   - Dispatch with `tag` set to publish. With `prerelease` set, the release is
+#     published as a pre-release, which the in-app updater ignores (it only reads
+#     the latest stable release). Promote it with the "Promote release" workflow.
+#   - Pushing a tag like v8.35.2-EK also publishes a stable release. Only tags
+#     containing "-EK" trigger a release: this repository also carries Signal's
+#     upstream tags, which must never be built or published as fork releases.
+#
 # The signing identity must never change without an explicit migration plan:
 # Android refuses to install an update signed by a different key.
 
@@ -23,12 +31,16 @@ on:
         required: true
         default: dev
       tag:
-        description: "Release tag to create/publish (leave empty to only build)"
+        description: "Release tag to create/publish, e.g. v8.35.2-EK (leave empty to only build)"
         type: string
         default: ""
+      prerelease:
+        description: "Publish as a pre-release (not offered by the in-app updater until promoted)"
+        type: boolean
+        default: false
   push:
     tags:
-      - 'v*'
+      - 'v*-EK*'
 
 permissions:
   contents: read
@@ -53,16 +65,16 @@ jobs:
         index: [0, 1, 2]
 
     steps:
-      - name: Check out workflow
-        uses: actions/checkout@v7
-
+      # LFS only stores screenshot-test reference images, which the release build
+      # does not use. Skipping it also avoids needing upstream LFS objects in this
+      # repository after a Signal release is merged.
       - name: Check out source
         uses: actions/checkout@v7
         with:
           ref: ${{ github.event.inputs.ref || github.ref }}
           path: src
           submodules: true
-          lfs: true
+          lfs: false
 
       - name: Free disk space
         run: |
@@ -109,7 +121,7 @@ jobs:
             --user "$(id -u):$(id -g)" \
             -v "$PWD/src:/project" -w /project \
             -v "$PWD/out:/out" \
-            -v "$PWD/scripts/ci:/scripts:ro" \
+            -v "$PWD/src/scripts/ci:/scripts:ro" \
             -e OUT=/out -e BUILD_VARIANT \
             signal-android /scripts/build-fork.sh
 
@@ -279,10 +291,19 @@ jobs:
         if: ${{ startsWith(github.ref, 'refs/tags/v') || github.event.inputs.tag != '' }}
         env:
           GH_TOKEN: ${{ github.token }}
+          TAG: ${{ github.event.inputs.tag || github.ref_name }}
+          REPO: ${{ github.repository }}
+          PRERELEASE: ${{ github.event.inputs.prerelease == 'true' }}
         run: |
           set -euo pipefail
-          TAG="${{ github.event.inputs.tag || github.ref_name }}"
-          REPO="${{ github.repository }}"
+          # The release must point at the commit that was built, not at the commit the
+          # workflow was dispatched from.
+          TARGET="$(git -C src rev-parse HEAD)"
+          if [ "$PRERELEASE" = "true" ]; then
+            release_flags=(--prerelease --latest=false)
+          else
+            release_flags=(--latest)
+          fi
           if gh release view "$TAG" --repo "$REPO" >/dev/null 2>&1; then
             gh release upload "$TAG" signed/fork-release.apk signed/fork-release.apk.sha256 signed/latest.json signed/BUILD_INFO.txt --clobber --repo "$REPO"
           else
@@ -292,7 +313,8 @@ jobs:
               signed/latest.json \
               signed/BUILD_INFO.txt \
               --repo "$REPO" \
-              --target "${{ github.sha }}" \
+              --target "$TARGET" \
               --title "$TAG" \
-              --generate-notes
+              --generate-notes \
+              "${release_flags[@]}"
           fi
