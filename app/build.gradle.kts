@@ -38,7 +38,7 @@ val canonicalVersionName = "8.34.2"
 // <repository>/releases/latest/download/latest.json, so this must be the repository that
 // the reproducible-release workflow publishes to.
 val forkReleaseRepository = "nulldistrict/Signal-Android"
-val currentHotfixVersion = 0
+val currentHotfixVersion = 1
 val maxHotfixVersions = 100
 
 // We don't want versions to ever end in 0 so that they don't conflict with nightly versions
