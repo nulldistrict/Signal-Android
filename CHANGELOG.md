@@ -8,7 +8,9 @@ Version numbers and release dates must reflect actual releases.
 
 ## [Unreleased]
 
-No changes yet.
+### Fixed
+
+- Startup crash (`NullPointerException` in `SignalStore.misc()`) when startup is deferred for a passphrase: registration/network dependencies were built before `SignalStore` was initialized. They are now initialized in the post-unlock startup chain, after the database and key-value store are available.
 
 ## [8.34.2-EK] - 2026-11-13
 

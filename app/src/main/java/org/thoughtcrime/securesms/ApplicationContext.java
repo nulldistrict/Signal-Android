@@ -217,6 +217,7 @@ public class ApplicationContext extends Application implements AppForegroundObse
                 Logger.setTarget(SqlCipherLogTarget.INSTANCE);
               })
               .addBlocking("signal-store", () -> SignalStore.init(this))
+              .addBlocking("registration-dependencies", this::initializeRegistrationDependencies)
               .addBlocking("logging", () -> {
                 initializeLogging();
                 Log.i(TAG, "onCreate()");
@@ -472,10 +473,14 @@ public class ApplicationContext extends Application implements AppForegroundObse
     }
     AppForegroundObserver.begin();
     ClockSkewDetector.beginObserving(this);
-
-    initializeRegistrationDependencies();
   }
 
+  /**
+   * Registration dependencies build the network stack, which reads {@link SignalStore}. The
+   * store is only available after the database is opened, so this must run from the
+   * post-unlock startup chain rather than from {@link #initializeAppDependencies()}: that runs
+   * before the unlock screen when a passphrase is required.
+   */
   private void initializeRegistrationDependencies() {
     RegistrationDependencies.provide(
       new RegistrationDependencies(
