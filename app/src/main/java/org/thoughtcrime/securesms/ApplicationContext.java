@@ -189,7 +189,6 @@ public class ApplicationContext extends Application implements AppForegroundObse
     initializeRx();
     initializeCrashHandling();
     initializeAppDependencies();
-    DynamicTheme.setDefaultDayNightMode(this);
 
     if (MasterSecretUtil.isPassphraseRequired(this)) {
       Log.i(TAG, "Database is protected by a passphrase; deferring startup until unlock.");
@@ -229,6 +228,7 @@ public class ApplicationContext extends Application implements AppForegroundObse
               .addBlocking("lifecycle-observer", () -> AppForegroundObserver.addListener(this))
               .addBlocking("assistant-screen-security", () -> registerActivityLifecycleCallbacks(new AssistantScreenSecurityObserver()))
               .addBlocking("message-retriever", this::initializeMessageRetrieval)
+              .addBlocking("dynamic-theme", () -> DynamicTheme.setDefaultDayNightMode(this))
               .addBlocking("proxy-init", () -> {
                 if (SignalStore.proxy().isProxyEnabled()) {
                   Log.w(TAG, "Proxy detected. Enabling Conscrypt.setUseEngineSocketByDefault()");

@@ -11,6 +11,7 @@ Version numbers and release dates must reflect actual releases.
 ### Fixed
 
 - Startup crash (`NullPointerException` in `SignalStore.misc()`) when startup is deferred for a passphrase: registration/network dependencies were built before `SignalStore` was initialized. They are now initialized in the post-unlock startup chain, after the database and key-value store are available.
+- Startup crash (`NullPointerException` in `SignalStore.settings()` from `DynamicTheme.setDefaultDayNightMode`) on every launch: the default day/night mode was applied before `SignalStore` was initialized. It is now applied in the post-unlock startup chain, where upstream also applies it. Until unlock the app uses the system day/night mode.
 
 ## [8.34.2-EK] - 2026-11-13
 
