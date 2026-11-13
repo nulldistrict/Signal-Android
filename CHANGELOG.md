@@ -8,6 +8,12 @@ Version numbers and release dates must reflect actual releases.
 
 ## [Unreleased]
 
+No changes yet.
+
+## [8.34.2-EK] - 2026-11-13
+
+First public fork release, based on Signal Android `8.34.2` (versionCode `177501`). Published as a stable GitHub release with the signed universal APK, its SHA-256 checksum, the `latest.json` update manifest and build provenance. Reproducibility was verified across three independent builds before signing.
+
 ### Added
 
 - Project documentation foundation.

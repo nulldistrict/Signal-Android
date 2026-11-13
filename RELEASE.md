@@ -168,6 +168,8 @@ The workflow:
 4. Uploads the signed APK, its SHA-256 checksum and `BUILD_INFO.txt`.
 5. Publishes a GitHub release when a tag was supplied.
 
+Release tags use the form `v<versionName>-EK`, for example `v8.34.2-EK`. The tag name identifies the release and the `latest.json` APK URL; it does not change the APK's `versionName`. The first release (`v8.34.2-EK`) was published from the signed `fork-signed` artifact after the workflow's publish step failed to resolve the repository in its non-git working directory; the workflow now passes `--repo` explicitly.
+
 Verify a locally built unsigned APK against a published release with `reproducible-builds/apkdiff/apkdiff.py`, which ignores signing metadata:
 
 ```bash

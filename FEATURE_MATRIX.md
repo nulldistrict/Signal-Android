@@ -83,8 +83,8 @@ Verified against Molly `892d6264ba` and compared with Signal `515db93fb4`.
 | Multi-device / tablet linking | EXISTS_SIGNAL | — | — |
 | Alternative application icons | EXISTS_SIGNAL | — | — |
 | FOSS / degoogled build variant | OWNER_DECISION | — | Medium |
-| GitHub reproducible builds | IMPLEMENTED (CI verification pending) | Medium–High | Medium |
-| APK self-updater | IMPLEMENTED (CI release pending) | Medium | Medium |
+| GitHub reproducible builds | IMPLEMENTED (verified, v8.34.2-EK released) | Medium–High | Medium |
+| APK self-updater | IMPLEMENTED (v8.34.2-EK released) | Medium | Medium |
 | MobileCoin removal | IMPLEMENTED | Medium | Low |
 
 ### 2.2 Feature Detail
@@ -272,14 +272,15 @@ Verified against Molly `892d6264ba` and compared with Signal `515db93fb4`.
 
 #### APK self-updater
 
-- Status: `IMPLEMENTED` (release manifest publishing pending first CI release)
+- Status: `IMPLEMENTED`; first public release `v8.34.2-EK` publishes the signed APK and `latest.json`.
 - Evidence: Signal already ships the update pipeline (`jobs/ApkUpdateJob.kt`, `apkupdate/*`, `components/settings/app/updates/*`, `MANAGES_APP_UPDATES`, `APK_UPDATE_MANIFEST_URL`); Molly only adds its own F-Droid repo-index flow, which is not used here.
 - Implemented: the `github` distribution flavor enables `MANAGES_APP_UPDATES` and points `APK_UPDATE_MANIFEST_URL` at `https://github.com/<forkReleaseRepository>/releases/latest/download/latest.json`. The manifest advertises the latest stable release only, with version code, version name, APK URL, SHA-256 digest and upload timestamp. The settings "App updates" entry is shown for self-managed builds.
 - Manifest generation: `scripts/ci/write-update-manifest.sh` reads version information with `aapt2` and writes `latest.json`; `.github/workflows/reproducible-release.yml` generates it from the signed APK and attaches it to the GitHub release.
 - Install safety: `ApkUpdateInstaller` verifies the SHA-256 digest before install and now also checks the downloaded APK's signing certificate against the installed app's current signer or rotation history, refusing the install with a clear failure notification on mismatch. If the APK path cannot be resolved, the package installer's own signature enforcement remains the fallback.
 - Configuration: the fork repository slug is the `forkReleaseRepository` constant in `app/build.gradle.kts` (currently `nulldistrict/Signal-Android`) and must match the repository that publishes releases.
 - Verification: `:Signal-Android:compileGithubProdReleaseKotlin`, `:Signal-Android:compileGithubProdReleaseJavaWithJavac`, the updater view-model tests (8 tests) and the updates screen tests (8 tests) passed; `write-update-manifest.sh` produced a valid manifest from a real debug APK.
-- Risk: the update channel is only as trustworthy as the GitHub release and the release signing key. On-device install/upgrade verification and the first CI release are still pending.
+- Verification (release): run `43415747888` built the APK three times, all three unsigned hashes matched, the signed APK's certificate SHA-256 was `4A:13:E6:B6:5B:85:A6:A9:62:04:B5:84:C5:05:54:04:76:61:58:52:CD:E1:E6:E8:78:2B:C1:BB:47:C3:CD:B6`, and `releases/latest/download/latest.json` served the published APK hash.
+- Risk: the update channel is only as trustworthy as the GitHub release and the release signing key. On-device install/update verification is still pending.
 
 #### MobileCoin removal
 
