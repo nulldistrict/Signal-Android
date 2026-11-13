@@ -282,14 +282,16 @@ jobs:
         run: |
           set -euo pipefail
           TAG="${{ github.event.inputs.tag || github.ref_name }}"
-          if gh release view "$TAG" >/dev/null 2>&1; then
-            gh release upload "$TAG" signed/fork-release.apk signed/fork-release.apk.sha256 signed/latest.json signed/BUILD_INFO.txt --clobber
+          REPO="${{ github.repository }}"
+          if gh release view "$TAG" --repo "$REPO" >/dev/null 2>&1; then
+            gh release upload "$TAG" signed/fork-release.apk signed/fork-release.apk.sha256 signed/latest.json signed/BUILD_INFO.txt --clobber --repo "$REPO"
           else
             gh release create "$TAG" \
               signed/fork-release.apk \
               signed/fork-release.apk.sha256 \
               signed/latest.json \
               signed/BUILD_INFO.txt \
+              --repo "$REPO" \
               --target "${{ github.sha }}" \
               --title "$TAG" \
               --generate-notes
