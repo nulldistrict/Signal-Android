@@ -152,16 +152,20 @@ jobs:
             exit 1
           fi
 
-      - name: Record verified hash
+      - name: Collect verified APK
         run: |
-          find artifacts -name '*.apk' -print0 | sort -z | xargs -0 sha256sum | head -1 > artifacts/verified-unsigned.sha256
-          cat artifacts/verified-unsigned.sha256
+          set -euo pipefail
+          apk="$(find artifacts -name '*.apk' -print | sort | head -1)"
+          mkdir -p verified
+          cp "$apk" verified/fork-unsigned.apk
+          (cd verified && sha256sum fork-unsigned.apk > verified-unsigned.sha256)
+          cat verified/verified-unsigned.sha256
 
       - name: Upload verified unsigned APK
         uses: actions/upload-artifact@v4
         with:
           name: fork-verified-unsigned
-          path: artifacts/
+          path: verified/
           if-no-files-found: error
 
   sign:

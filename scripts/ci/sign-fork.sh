@@ -27,6 +27,17 @@ function require_env() {
 require_env APK_IN OUT KEYSTORE KS_PASS KEY_ALIAS KEY_PASS
 mkdir -p "$OUT"
 
+# Older workflow revisions uploaded the verified artifact as a directory tree
+# (fork-unsigned-<index>/fork-unsigned.apk) instead of a flat file. Accept both
+# layouts so a rerun can sign an artifact produced by either revision.
+if [ ! -f "$APK_IN" ]; then
+  APK_IN="$(find "$(dirname "$APK_IN")" -type f -name 'fork-unsigned.apk' | sort | head -1)"
+fi
+if [ -z "$APK_IN" ] || [ ! -f "$APK_IN" ]; then
+  echo "No unsigned APK to sign was found." >&2
+  exit 1
+fi
+
 APKSIGNER="${ANDROID_HOME}/build-tools/${ANDROID_BUILD_TOOLS_VERSION}/apksigner"
 if [ ! -x "$APKSIGNER" ]; then
   APKSIGNER="$(find "${ANDROID_HOME}/build-tools" -name apksigner -type f | sort -V | tail -1)"
