@@ -22,6 +22,7 @@ import org.signal.core.util.PendingIntentFlags;
 import org.signal.core.util.ServiceUtil;
 import org.signal.core.util.concurrent.SignalExecutors;
 import org.signal.core.util.logging.Log;
+import org.thoughtcrime.securesms.ApplicationContext;
 import org.thoughtcrime.securesms.MainActivity;
 import org.thoughtcrime.securesms.R;
 import org.thoughtcrime.securesms.notifications.NotificationChannels;
@@ -47,6 +48,9 @@ public class WipeMemoryService extends IntentService {
   private static final long WAKE_LOCK_TIMEOUT = TimeUnit.SECONDS.toMillis(60);
 
   private static final long START_TIMEOUT = TimeUnit.SECONDS.toMillis(5);
+
+  /** Must match {@link NotificationChannels#LOCKED_STATUS}. */
+  private static final String LOCKED_STATUS_CHANNEL_ID = "locked_status_v2";
 
   private static boolean nativeLoaded;
 
@@ -240,7 +244,12 @@ public class WipeMemoryService extends IntentService {
   private void showForegroundNotification() {
     Intent intent = new Intent(this, MainActivity.class);
     PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, intent, PendingIntentFlags.immutable());
-    notification = new NotificationCompat.Builder(this, NotificationChannels.getInstance().LOCKED_STATUS)
+    // The wipe normally runs in a process restarted after lock, where a passphrase keeps the database closed and
+    // NotificationChannels (backed by SignalStore) is unavailable. Use the stable channel id in that case; the
+    // channel itself already exists from an earlier unlocked run.
+    String channelId = ApplicationContext.isDatabaseLocked(this) ? LOCKED_STATUS_CHANNEL_ID
+                                                                 : NotificationChannels.getInstance().LOCKED_STATUS;
+    notification = new NotificationCompat.Builder(this, channelId)
         .setOngoing(true)
         .setContentTitle(getString(R.string.WipeMemoryService_secure_wipe_in_progress))
         .setContentText(getString(R.string.WipeMemoryService_clearing_unencrypted_data_from_ram))

@@ -88,7 +88,10 @@ public class Argon2Benchmark {
         if (ms < BENCH_MIN_MS_FAST) {
           iterations *= 16;
         } else {
-          int val = (int) (iterations / ms * BENCH_MIN_MS);
+          // Multiply before dividing: with integer division, iterations / ms is 0 whenever the
+          // hash takes longer than `iterations` ms, and Argon2 rejects a zero time cost. The
+          // estimate must also never drop below the configured minimum.
+          int val = (int) Math.max(minIterations, iterations * BENCH_MIN_MS / ms);
           if (iterations == val) {
             break;
           }
@@ -98,7 +101,7 @@ public class Argon2Benchmark {
         if (ms < BENCH_MIN_MS_FAST) {
           memory *= 16;
         } else {
-          long val = memory / ms * BENCH_MIN_MS;
+          long val = memory * BENCH_MIN_MS / ms;
           if (val < 8192) {
             val = 8192;
           }

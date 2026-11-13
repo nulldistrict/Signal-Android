@@ -442,9 +442,7 @@ public class ApplicationDependencyProvider implements AppDependencies.Provider {
                                                                                                   () -> !SignalStore.misc().isClientDeprecated() && SignalStore.account().isRegistered() && !SignalStore.account().isUnauthorizedReceived() && !DeviceTransferBlockingInterceptor.getInstance().isBlockingNetwork() && !Environment.IS_INSTRUMENTATION,
                                                                                                   sleepTimer,
                                                                                                   TimeUnit.SECONDS.toMillis(30));
-    if (AppForegroundObserver.isForegrounded()) {
-      webSocket.registerKeepAliveToken(SignalWebSocket.FOREGROUND_KEEPALIVE);
-    }
+    registerForegroundKeepAliveIfNeeded(webSocket);
 
     healthMonitor.monitor(webSocket);
 
@@ -469,12 +467,29 @@ public class ApplicationDependencyProvider implements AppDependencies.Provider {
                                                                                                       () -> !SignalStore.misc().isClientDeprecated() && !DeviceTransferBlockingInterceptor.getInstance().isBlockingNetwork() && !Environment.IS_INSTRUMENTATION,
                                                                                                       sleepTimer,
                                                                                                       TimeUnit.SECONDS.toMillis(30));
-    if (AppForegroundObserver.isForegrounded()) {
-      webSocket.registerKeepAliveToken(SignalWebSocket.FOREGROUND_KEEPALIVE);
-    }
+    registerForegroundKeepAliveIfNeeded(webSocket);
 
     healthMonitor.monitor(webSocket);
     return webSocket;
+  }
+
+  /**
+   * Registering the keepalive token connects the socket, and connecting needs libsignalNetwork, which needs the network
+   * module that is still being constructed with this socket. Upstream creates the sockets during Application#onCreate,
+   * before the app is visible, so this never happens there. When a passphrase defers startup, the sockets are created
+   * after unlock while the app is in the foreground, so registering synchronously recurses until the stack overflows.
+   * Register once construction has finished instead.
+   */
+  private static void registerForegroundKeepAliveIfNeeded(@NonNull SignalWebSocket webSocket) {
+    if (!AppForegroundObserver.isForegrounded()) {
+      return;
+    }
+
+    SignalExecutors.BOUNDED.execute(() -> {
+      if (AppForegroundObserver.isForegrounded()) {
+        webSocket.registerKeepAliveToken(SignalWebSocket.FOREGROUND_KEEPALIVE);
+      }
+    });
   }
 
   @Override

@@ -298,6 +298,17 @@ public class ApplicationContext extends Application implements AppForegroundObse
     return appInitialized.get();
   }
 
+  /**
+   * True while a passphrase keeps the database closed, i.e. the process was started but the user
+   * has not unlocked yet. Background entry points (receivers, job wakeups, alarms) must not touch
+   * {@link SignalStore}, the database or the job manager while this is true; startup schedules
+   * that work again after unlock.
+   */
+  public static boolean isDatabaseLocked(@NonNull Context context) {
+    Context application = context.getApplicationContext();
+    return application instanceof ApplicationContext && !((ApplicationContext) application).isAppInitialized();
+  }
+
   @Override
   public void onForeground() {
     if (!isAppInitialized()) {

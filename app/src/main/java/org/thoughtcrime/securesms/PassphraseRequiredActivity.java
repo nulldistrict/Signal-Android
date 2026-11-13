@@ -67,7 +67,11 @@ public abstract class PassphraseRequiredActivity extends BaseActivity implements
   @Override
   protected final void onCreate(Bundle savedInstanceState) {
     AppStartup.getInstance().onCriticalRenderEventStart();
-    this.networkAccess = AppDependencies.getSignalServiceNetworkAccess();
+    // The network stack reads SignalStore, which does not exist until a passphrase-locked database
+    // has been unlocked. Routing below sends a locked app to the unlock screen.
+    if (!ApplicationContext.isDatabaseLocked(this)) {
+      this.networkAccess = AppDependencies.getSignalServiceNetworkAccess();
+    }
     onPreCreate();
 
     final boolean locked = KeyCachingService.isLocked(this);

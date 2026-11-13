@@ -131,7 +131,8 @@ public class PassphrasePromptActivity extends PassphraseActivity {
 
     setLockTypeVisibility();
 
-    if (ApplicationContext.getInstance(this).isAppInitialized() &&
+    // The device credential cannot unwrap a passphrase-protected database, so only offer it when it can unlock.
+    if (ApplicationContext.getInstance(this).isAppInitialized() && !MasterSecretUtil.isPassphraseRequired(this) &&
         SignalStore.settings().getScreenLockEnabled() && !authenticated && !hadFailure) {
       ThreadUtil.postToMain(resumeScreenLockRunnable);
     }

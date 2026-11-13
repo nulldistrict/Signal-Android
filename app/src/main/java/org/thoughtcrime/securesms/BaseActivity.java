@@ -57,7 +57,10 @@ public abstract class BaseActivity extends AppCompatActivity {
   @Override
   protected void onStart() {
     logEvent("onStart()");
-    AppDependencies.getShakeToReport().registerActivity(this);
+    // Shake-to-report reads SignalStore, which is unavailable while a passphrase keeps the database closed.
+    if (!ApplicationContext.isDatabaseLocked(this)) {
+      AppDependencies.getShakeToReport().registerActivity(this);
+    }
     super.onStart();
   }
 
