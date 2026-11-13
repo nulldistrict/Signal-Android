@@ -33,12 +33,7 @@ staticIps.stringPropertyNames().forEach { rootProject.extra[it] = staticIps.getP
 
 val canonicalVersionCode = 1775
 val canonicalVersionName = "8.34.2"
-
-// GitHub repository that publishes this fork's releases. The in-app updater reads
-// <repository>/releases/latest/download/latest.json, so this must be the repository that
-// the reproducible-release workflow publishes to.
-val forkReleaseRepository = "nulldistrict/Signal-Android"
-val currentHotfixVersion = 1
+val currentHotfixVersion = 0
 val maxHotfixVersions = 100
 
 // We don't want versions to ever end in 0 so that they don't conflict with nightly versions
@@ -54,6 +49,19 @@ val debugKeystorePropertiesProvider: Provider<Properties> = providers.of(Propert
 val releaseKeystorePropertiesProvider: Provider<Properties> = providers.of(PropertiesFileValueSource::class.java) {
   parameters.file.set(rootProject.layout.projectDirectory.file("keystore.release.properties"))
 }
+
+// Fork settings. They are kept out of the upstream version block above, which Signal rewrites on every
+// release, so that merging a new Signal release does not conflict here.
+//
+// GitHub repository that publishes this fork's releases. The in-app updater reads
+// <repository>/releases/latest/download/latest.json, so this must be the repository that
+// the reproducible-release workflow publishes to.
+val forkReleaseRepository = "nulldistrict/Signal-Android"
+
+// Added on top of upstream's currentHotfixVersion. Bump it for a fork-only release on the same Signal version
+// (the in-app updater only installs a higher versionCode). It may be reset to 0 when a new Signal release is
+// merged, because the new canonicalVersionCode is always higher.
+val forkHotfixVersion = 1
 
 val languagesProvider: Provider<List<String>> = providers.of(LanguageListValueSource::class.java) {
   parameters.resDir.set(layout.projectDirectory.dir("src/main/res"))
@@ -262,10 +270,10 @@ android {
   }
 
   defaultConfig {
-    if (currentHotfixVersion >= maxHotfixVersions) {
+    if (currentHotfixVersion + forkHotfixVersion >= possibleHotfixVersions.size) {
       throw AssertionError("Hotfix version offset is too large!")
     }
-    versionCode = (canonicalVersionCode * maxHotfixVersions) + possibleHotfixVersions[currentHotfixVersion]
+    versionCode = (canonicalVersionCode * maxHotfixVersions) + possibleHotfixVersions[currentHotfixVersion + forkHotfixVersion]
     versionName = canonicalVersionName
 
     if (isInstrumentationTestRun) {
