@@ -73,6 +73,21 @@ jobs:
           docker system prune -af || true
           docker builder prune -af || true
 
+      # The build needs a 12 GB Gradle/Kotlin heap budget plus native memory,
+      # which is close to the 16 GB a GitHub-hosted runner provides. A small
+      # swap file keeps a transient spike from making the kernel kill the
+      # Gradle daemon. Swap does not influence build output.
+      - name: Add swap space
+        run: |
+          set -euo pipefail
+          if ! sudo swapon --show | grep -q '/swapfile'; then
+            sudo fallocate -l 4G /swapfile || sudo dd if=/dev/zero of=/swapfile bs=1M count=4096
+            sudo chmod 600 /swapfile
+            sudo mkswap /swapfile
+            sudo swapon /swapfile
+          fi
+          free -h
+
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v4
 

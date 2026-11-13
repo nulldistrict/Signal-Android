@@ -180,6 +180,8 @@ The signed and unsigned APKs are not byte-identical because signing changes the 
 
 The Docker image is rebuilt from `reproducible-builds/Dockerfile` at the built commit. If upstream changes the image, the same change applies to the fork and the workflow remains aligned with Signal's verified build environment.
 
+The GitHub-hosted `ubuntu-latest` runner has 16 GB of RAM, which is not enough for the upstream `gradle.properties` memory defaults (a 12 GB Gradle daemon plus a 4 GB Kotlin daemon). The workflow therefore adds a 4 GB swap file and `scripts/ci/build-fork.sh` overrides the heap sizes to 8 GB (Gradle) and 3 GB (Kotlin). Heap size does not affect file contents; the R8 determinism flags are preserved in the override, and all three builds run with the same settings.
+
 ## 9. Public Distribution
 
 Before public distribution:

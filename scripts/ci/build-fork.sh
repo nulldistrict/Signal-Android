@@ -29,6 +29,17 @@ mkdir -p "$OUT"
 BUILD_VARIANT="${BUILD_VARIANT:-githubProdRelease}"
 GRADLE_ARGS="${GRADLE_ARGS:---no-configuration-cache}"
 
+# GitHub-hosted ubuntu-latest runners have 16 GB of RAM. The upstream
+# gradle.properties values (-Xmx12g Gradle daemon plus -Xmx4g Kotlin daemon)
+# leave no room for metaspace, native memory and the Docker runtime, so the
+# kernel killed the Gradle daemon during R8. Apply a CI-only memory budget
+# below that limit. Heap size does not affect the produced bytes, but the
+# determinism flags from gradle.properties must be preserved verbatim.
+GRADLE_MEMORY_ARGS=(
+  "-Dorg.gradle.jvmargs=-Xmx8g -Xms256m -XX:MaxMetaspaceSize=1g -Dcom.android.tools.r8.deterministicdebugging=true -XX:+UnlockExperimentalVMOptions -XX:hashCode=3"
+  "-Dkotlin.daemon.jvmargs=-Xmx3g -XX:MaxMetaspaceSize=512m"
+)
+
 # githubProd -> githubProdRelease, etc.
 VARIANT_DIR="${BUILD_VARIANT%Release}"
 
@@ -41,7 +52,7 @@ free -g | head -2
 java -version 2>&1 | head -1
 echo "::endgroup::"
 
-./gradlew --console=plain clean "assemble${BUILD_VARIANT^}" $GRADLE_ARGS
+./gradlew --console=plain clean "assemble${BUILD_VARIANT^}" "${GRADLE_MEMORY_ARGS[@]}" $GRADLE_ARGS
 
 APK_DIR="app/build/outputs/apk/${VARIANT_DIR}/release"
 if [ ! -d "$APK_DIR" ]; then
