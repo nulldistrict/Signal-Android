@@ -4,11 +4,11 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import org.signal.core.util.logging.Log;
+import org.signal.remoteconfig.RemoteConfig;
 import org.thoughtcrime.securesms.jobmanager.Job;
 import org.thoughtcrime.securesms.jobmanager.JobLogger;
 import org.thoughtcrime.securesms.jobmanager.JobManager.Chain;
 import org.thoughtcrime.securesms.jobmanager.impl.BackoffUtil;
-import org.thoughtcrime.securesms.util.RemoteConfig;
 
 public abstract class BaseJob extends Job {
 

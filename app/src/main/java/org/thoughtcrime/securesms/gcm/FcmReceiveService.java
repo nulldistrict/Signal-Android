@@ -10,10 +10,10 @@ import com.google.firebase.messaging.FirebaseMessagingService;
 import com.google.firebase.messaging.RemoteMessage;
 
 import org.signal.core.util.logging.Log;
+import org.signal.storage.keyvalue.PlainTextKeyValueStore;
 import org.thoughtcrime.securesms.dependencies.AppDependencies;
 import org.thoughtcrime.securesms.jobs.FcmRefreshJob;
 import org.thoughtcrime.securesms.jobs.SubmitRateLimitPushChallengeJob;
-import org.thoughtcrime.securesms.keyvalue.PlainTextKeyValueStore;
 import org.thoughtcrime.securesms.keyvalue.SignalStore;
 import org.thoughtcrime.securesms.registration.fcm.PushChallengeRequest;
 import org.thoughtcrime.securesms.service.KeyCachingService;

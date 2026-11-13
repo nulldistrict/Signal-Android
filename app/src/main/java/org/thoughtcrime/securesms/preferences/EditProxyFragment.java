@@ -22,6 +22,7 @@ import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 
 import org.thoughtcrime.securesms.R;
 import org.thoughtcrime.securesms.contactshare.SimpleTextWatcher;
+import org.thoughtcrime.securesms.keyvalue.ProxyValuesExtKt;
 import org.thoughtcrime.securesms.keyvalue.SignalStore;
 import org.thoughtcrime.securesms.util.CommunicationActions;
 import org.signal.core.util.concurrent.LifecycleDisposable;
@@ -29,10 +30,10 @@ import org.thoughtcrime.securesms.util.SignalProxyUtil;
 import org.thoughtcrime.securesms.util.SystemWindowInsetsSetter;
 import org.signal.core.util.Util;
 import org.signal.core.ui.util.ViewUtil;
+import org.signal.network.config.SignalProxy;
 import org.thoughtcrime.securesms.util.views.CircularProgressMaterialButton;
 import org.thoughtcrime.securesms.util.views.LearnMoreTextView;
 import org.whispersystems.signalservice.api.websocket.WebSocketConnectionState;
-import org.signal.network.config.SignalProxy;
 
 public class EditProxyFragment extends Fragment {
 
@@ -85,7 +86,7 @@ public class EditProxyFragment extends Fragment {
       }
     });
 
-    this.proxyText.setText(SignalProxyUtil.formatProxyAddress(SignalStore.proxy().getProxy()));
+    this.proxyText.setText(SignalProxyUtil.formatProxyAddress(ProxyValuesExtKt.getProxy(SignalStore.proxy())));
     this.proxySwitch.setChecked(SignalStore.proxy().isProxyEnabled());
 
     initViewModel();
@@ -143,7 +144,7 @@ public class EditProxyFragment extends Fragment {
   }
 
   private void presentProxyState(@NonNull WebSocketConnectionState proxyState) {
-    if (SignalStore.proxy().getProxy() != null) {
+    if (SignalStore.proxy().getProxyHost() != null) {
       switch (proxyState) {
         case DISCONNECTED:
         case DISCONNECTING:
@@ -171,7 +172,7 @@ public class EditProxyFragment extends Fragment {
     switch (event) {
       case PROXY_SUCCESS:
         proxyStatus.setVisibility(View.VISIBLE);
-        proxyText.setText(SignalProxyUtil.formatProxyAddress(SignalStore.proxy().getProxy()));
+        proxyText.setText(SignalProxyUtil.formatProxyAddress(ProxyValuesExtKt.getProxy(SignalStore.proxy())));
         new MaterialAlertDialogBuilder(requireContext())
            .setTitle(R.string.preferences_success)
            .setMessage(R.string.preferences_you_are_connected_to_the_proxy)
@@ -183,7 +184,7 @@ public class EditProxyFragment extends Fragment {
         break;
       case PROXY_FAILURE:
         proxyStatus.setVisibility(View.INVISIBLE);
-        proxyText.setText(SignalProxyUtil.formatProxyAddress(SignalStore.proxy().getProxy()));
+        proxyText.setText(SignalProxyUtil.formatProxyAddress(ProxyValuesExtKt.getProxy(SignalStore.proxy())));
         ViewUtil.focusAndMoveCursorToEndAndOpenKeyboard(proxyText);
         new MaterialAlertDialogBuilder(requireContext())
            .setTitle(R.string.preferences_failed_to_connect)
@@ -234,7 +235,7 @@ public class EditProxyFragment extends Fragment {
       shareButton.setEnabled(isSignalProxy);
       shareButton.setAlpha(isSignalProxy ? 1f : 0.5f);
 
-      if (SignalStore.proxy().isProxyEnabled() && parsed != null && parsed.equals(SignalStore.proxy().getProxy())) {
+      if (SignalStore.proxy().isProxyEnabled() && parsed != null && parsed.equals(ProxyValuesExtKt.getProxy(SignalStore.proxy()))) {
         proxyStatus.setVisibility(View.VISIBLE);
       } else {
         proxyStatus.setVisibility(View.INVISIBLE);

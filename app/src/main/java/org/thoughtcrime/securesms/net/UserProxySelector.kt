@@ -6,6 +6,7 @@
 package org.thoughtcrime.securesms.net
 
 import org.thoughtcrime.securesms.keyvalue.SignalStore
+import org.thoughtcrime.securesms.keyvalue.proxy
 import org.signal.network.config.SignalProxy
 import java.io.IOException
 import java.net.InetSocketAddress

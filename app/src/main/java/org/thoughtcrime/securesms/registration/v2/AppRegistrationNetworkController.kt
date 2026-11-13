@@ -82,6 +82,8 @@ import org.signal.registration.NetworkController.SetRegistrationLockError
 import org.signal.registration.NetworkController.VerifyBackupKeyError
 import org.signal.registration.ReceiptCredentialResult
 import org.signal.registration.proto.RegistrationProvisionMessage
+import org.signal.remoteconfig.RemoteConfig
+import org.signal.storage.keyvalue.PhoneNumberPrivacyValues
 import org.thoughtcrime.securesms.BuildConfig
 import org.thoughtcrime.securesms.backup.v2.BackupRepository
 import org.thoughtcrime.securesms.backup.v2.RestoreTimestampResult
@@ -109,7 +111,6 @@ import org.thoughtcrime.securesms.registration.ui.restore.pniIdentityKeyPair
 import org.thoughtcrime.securesms.registration.util.RegistrationUtil
 import org.thoughtcrime.securesms.registration.viewmodel.SvrAuthCredentialSet
 import org.thoughtcrime.securesms.util.Environment
-import org.thoughtcrime.securesms.util.RemoteConfig
 import org.whispersystems.signalservice.api.SvrNoDataException
 import org.whispersystems.signalservice.api.link.TransferArchiveResponse
 import org.whispersystems.signalservice.api.provisioning.ProvisioningSocket
@@ -478,9 +479,9 @@ class AppRegistrationNetworkController(
     }
 
     SignalStore.phoneNumberPrivacy.phoneNumberDiscoverabilityMode = if (discoverableByPhoneNumber) {
-      org.thoughtcrime.securesms.keyvalue.PhoneNumberPrivacyValues.PhoneNumberDiscoverabilityMode.DISCOVERABLE
+      PhoneNumberPrivacyValues.PhoneNumberDiscoverabilityMode.DISCOVERABLE
     } else {
-      org.thoughtcrime.securesms.keyvalue.PhoneNumberPrivacyValues.PhoneNumberDiscoverabilityMode.NOT_DISCOVERABLE
+      PhoneNumberPrivacyValues.PhoneNumberDiscoverabilityMode.NOT_DISCOVERABLE
     }
 
     AppDependencies.jobManager
@@ -781,10 +782,9 @@ class AppRegistrationNetworkController(
   }
 
   override suspend fun onLinkedDeviceRegistered() = withContext(Dispatchers.IO) {
-    try {
-      RemoteConfig.refreshSync()
-    } catch (e: IOException) {
-      Log.w(TAG, "[onLinkedDeviceRegistered] Failed to refresh remote config.", e)
+    val remoteConfigResult = RemoteConfig.refresh()
+    if (remoteConfigResult !is RequestResult.Success) {
+      Log.w(TAG, "[onLinkedDeviceRegistered] Failed to refresh remote config. Result: $remoteConfigResult")
     }
 
     for (type in SyncMessage.Request.Type.entries) {

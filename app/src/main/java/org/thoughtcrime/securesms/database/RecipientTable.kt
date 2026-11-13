@@ -52,6 +52,7 @@ import org.signal.libsignal.protocol.InvalidKeyException
 import org.signal.libsignal.zkgroup.groups.GroupMasterKey
 import org.signal.libsignal.zkgroup.profiles.ExpiringProfileKeyCredential
 import org.signal.libsignal.zkgroup.profiles.ProfileKey
+import org.signal.remoteconfig.RemoteConfig
 import org.signal.storageservice.storage.protos.groups.local.DecryptedGroup
 import org.thoughtcrime.securesms.badges.Badges.toDatabaseBadge
 import org.thoughtcrime.securesms.color.MaterialColor
@@ -87,6 +88,7 @@ import org.thoughtcrime.securesms.groups.GroupId.V1
 import org.thoughtcrime.securesms.groups.GroupId.V2
 import org.thoughtcrime.securesms.groups.v2.ProfileKeySet
 import org.thoughtcrime.securesms.groups.v2.processing.GroupsV2StateProcessor
+import org.thoughtcrime.securesms.jobs.GroupV2UpdateSelfProfileKeyJob
 import org.thoughtcrime.securesms.jobs.RequestGroupV2InfoJob
 import org.thoughtcrime.securesms.jobs.RetrieveProfileJob
 import org.thoughtcrime.securesms.keyvalue.SignalStore
@@ -104,7 +106,6 @@ import org.thoughtcrime.securesms.storage.StorageSyncHelper.toOptionalBool
 import org.thoughtcrime.securesms.storage.StorageSyncModels
 import org.thoughtcrime.securesms.util.IdentityUtil
 import org.thoughtcrime.securesms.util.ProfileUtil
-import org.thoughtcrime.securesms.util.RemoteConfig
 import org.thoughtcrime.securesms.util.SignalE164Util
 import org.thoughtcrime.securesms.wallpaper.ChatWallpaper
 import org.thoughtcrime.securesms.wallpaper.ChatWallpaperFactory
@@ -1117,6 +1118,11 @@ open class RecipientTable(context: Context, databaseHelper: SignalDatabase) : Da
 
     if (update.old.proto.blocked && !update.new.proto.blocked) {
       groups.clearGroupIfLeftAndDeleted(recipient.id)
+    }
+
+    if (!update.old.proto.whitelisted && update.new.proto.whitelisted) {
+      Log.i(TAG, "Profile sharing was enabled for $groupId via storage sync. Ensuring our profile key is up to date in the group.")
+      AppDependencies.jobManager.add(GroupV2UpdateSelfProfileKeyJob.withQueueLimits(groupId))
     }
   }
 

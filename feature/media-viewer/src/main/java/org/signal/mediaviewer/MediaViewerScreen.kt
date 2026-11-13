@@ -5,6 +5,7 @@
 
 package org.signal.mediaviewer
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.SizeTransform
 import androidx.compose.animation.core.Spring
@@ -57,7 +58,10 @@ import androidx.lifecycle.compose.LocalLifecycleOwner
 import kotlinx.coroutines.flow.distinctUntilChanged
 import org.signal.core.ui.compose.AllDevicePreviews
 import org.signal.core.ui.compose.Dialogs
+import org.signal.core.ui.compose.DragToDismissState
 import org.signal.core.ui.compose.Previews
+import org.signal.core.ui.compose.dragToDismiss
+import org.signal.core.ui.compose.rememberDragToDismissState
 import org.signal.mediaviewer.components.ExpandingCaption
 import org.signal.mediaviewer.components.MediaViewerBottomBar
 import org.signal.mediaviewer.components.MediaViewerTopBar
@@ -84,6 +88,10 @@ fun MediaViewerScreen(
 ) {
   LaunchedEffect(playbackController) {
     playbackController.runPositionTicker()
+  }
+
+  BackHandler {
+    onEvent(MediaViewerEvent.BackClicked)
   }
 
   val lifecycleOwner = LocalLifecycleOwner.current

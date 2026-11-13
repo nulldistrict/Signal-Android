@@ -18,6 +18,7 @@ import org.signal.core.util.MapUtil;
 import org.signal.core.util.SetUtil;
 import org.signal.core.util.TranslationDetection;
 import org.signal.core.util.logging.Log;
+import org.signal.remoteconfig.RemoteConfig;
 import org.thoughtcrime.securesms.R;
 import org.thoughtcrime.securesms.backup.v2.MessageBackupTier;
 import org.thoughtcrime.securesms.backup.v2.ui.BackupUpsellBottomSheet;
@@ -30,7 +31,8 @@ import org.thoughtcrime.securesms.database.model.MegaphoneRecord;
 import org.thoughtcrime.securesms.database.model.RemoteMegaphoneRecord;
 import org.thoughtcrime.securesms.dependencies.AppDependencies;
 import org.thoughtcrime.securesms.jobmanager.impl.NetworkConstraint;
-import org.thoughtcrime.securesms.keyvalue.PhoneNumberPrivacyValues.PhoneNumberDiscoverabilityMode;
+import org.signal.storage.keyvalue.PhoneNumberPrivacyValues.PhoneNumberDiscoverabilityMode;
+import org.thoughtcrime.securesms.keyvalue.PinValuesUtil;
 import org.thoughtcrime.securesms.keyvalue.SignalStore;
 import org.thoughtcrime.securesms.keyvalue.protos.LeastActiveLinkedDevice;
 import org.thoughtcrime.securesms.lock.SignalPinReminderDialog;
@@ -48,7 +50,6 @@ import org.signal.core.util.ByteUnit;
 import org.thoughtcrime.securesms.util.CommunicationActions;
 import org.thoughtcrime.securesms.util.DateUtils;
 import org.thoughtcrime.securesms.util.Environment;
-import org.thoughtcrime.securesms.util.RemoteConfig;
 import org.signal.core.util.ServiceUtil;
 import org.thoughtcrime.securesms.util.VersionTracker;
 import org.thoughtcrime.securesms.util.dynamiclanguage.DynamicLanguageContextWrapper;
@@ -278,7 +279,7 @@ public final class Megaphones {
             public void onReminderDismissed(boolean includedFailure) {
               Log.i(TAG, "[PinReminder] onReminderDismissed(" + includedFailure + ")");
 
-              SignalStore.pin().onEntrySkip(includedFailure);
+              PinValuesUtil.onEntrySkip(SignalStore.pin(), includedFailure);
               controller.onMegaphoneSnooze(Event.PIN_REMINDER);
               controller.onMegaphoneToastRequested(controller.getMegaphoneActivity().getString(SignalPinReminders.getSkipReminderString(SignalStore.pin().getNextReminderInterval())));
             }
@@ -287,9 +288,9 @@ public final class Megaphones {
             public void onReminderCompleted(@NonNull String pin, boolean includedFailure) {
               Log.i(TAG, "[PinReminder] onReminderCompleted(" + includedFailure + ")");
               if (includedFailure) {
-                SignalStore.pin().onEntrySuccessWithWrongGuess(pin);
+                PinValuesUtil.onEntrySuccessWithWrongGuess(SignalStore.pin(), pin);
               } else {
-                SignalStore.pin().onEntrySuccess(pin);
+                PinValuesUtil.onEntrySuccess(SignalStore.pin(), pin);
               }
 
               controller.onMegaphoneSnooze(Event.PIN_REMINDER);
@@ -593,7 +594,7 @@ public final class Megaphones {
   }
 
   private static boolean shouldShowOnboardingMegaphone(@NonNull Context context) {
-    return SignalStore.account().isPrimaryDevice() && SignalStore.onboarding().hasOnboarding(context);
+    return SignalStore.account().isPrimaryDevice() && SignalStore.onboarding().hasOnboarding();
   }
 
   private static boolean shouldShowNewLinkedDeviceMegaphone() {

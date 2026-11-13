@@ -18,9 +18,9 @@ import org.signal.core.util.concurrent.SignalExecutors;
 import org.signal.core.util.logging.Log;
 import org.signal.core.util.logging.Scrubber;
 import org.signal.debuglogsviewer.DebugLogsViewer;
+import org.signal.remoteconfig.RemoteConfig;
 import org.thoughtcrime.securesms.database.LogDatabase;
 import org.thoughtcrime.securesms.dependencies.AppDependencies;
-import org.thoughtcrime.securesms.util.RemoteConfig;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -80,6 +80,9 @@ public class SubmitDebugLogRepository {
     add(new LogSectionPin());
     if (Build.VERSION.SDK_INT >= 28) {
       add(new LogSectionPower());
+    }
+    if (Build.VERSION.SDK_INT >= 30) {
+      add(new LogSectionProcessExits());
     }
     add(new LogSectionBattery());
     add(new LogSectionNotifications());

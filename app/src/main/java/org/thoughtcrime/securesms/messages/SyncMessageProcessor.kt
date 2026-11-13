@@ -67,6 +67,7 @@ import org.thoughtcrime.securesms.groups.GroupId
 import org.thoughtcrime.securesms.jobs.AttachmentBackfill
 import org.thoughtcrime.securesms.jobs.AttachmentDownloadJob
 import org.thoughtcrime.securesms.jobs.AttachmentUploadJob
+import org.thoughtcrime.securesms.jobs.GroupV2UpdateSelfProfileKeyJob
 import org.thoughtcrime.securesms.jobs.MultiDeviceAttachmentBackfillMissingJob
 import org.thoughtcrime.securesms.jobs.MultiDeviceAttachmentBackfillUpdateJob
 import org.thoughtcrime.securesms.jobs.MultiDeviceBlockedUpdateJob
@@ -1212,6 +1213,10 @@ object SyncMessageProcessor {
         val wasBlocked = recipient.isBlocked
         SignalDatabase.recipients.setProfileSharing(recipient.id, true)
         SignalDatabase.recipients.setBlocked(recipient.id, false, 0)
+        if (recipient.isPushV2Group) {
+          log("Message request for a GV2 group was accepted on another device. Ensuring our profile key is up to date in the group.")
+          AppDependencies.jobManager.add(GroupV2UpdateSelfProfileKeyJob.withoutLimits(recipient.requireGroupId().requireV2()))
+        }
         if (wasBlocked) {
           SignalDatabase.messages.insertMessageOutbox(
             message = OutgoingMessage.unblockedMessage(recipient, System.currentTimeMillis(), TimeUnit.SECONDS.toMillis(recipient.expiresInSeconds.toLong())),
@@ -1437,11 +1442,10 @@ object SyncMessageProcessor {
     if (call != null) {
       val typeMismatch = call.type != type
       val directionMismatch = call.direction != direction
-      val eventDowngrade = call.event == CallTable.Event.ACCEPTED && event != CallTable.Event.ACCEPTED && event != CallTable.Event.DELETE
       val peerMismatch = call.peer != recipientId
 
-      if (typeMismatch || directionMismatch || peerMismatch || eventDowngrade) {
-        warn(envelopeTimestamp, "Call event sync message is not valid for existing call record, ignoring. type: $type direction: $direction  event: $event peerMismatch: $peerMismatch")
+      if (typeMismatch || directionMismatch || peerMismatch) {
+        warn(envelopeTimestamp, "Call event sync message is not valid for existing call record, ignoring. type: $type direction: $direction event: $event peerMismatch: $peerMismatch")
       } else if (event == CallTable.Event.DELETE) {
         SignalDatabase.calls.markCallDeletedFromSyncEvent(call)
       } else {

@@ -169,6 +169,7 @@ import org.signal.emoji.EmojiEventListener
 import org.signal.mediakeyboard.MediaKeyboardAction
 import org.signal.mediakeyboard.MediaKeyboardTab
 import org.signal.mediakeyboard.data.KeyboardSticker
+import org.signal.remoteconfig.RemoteConfig
 import org.signal.ringrtc.CallLinkRootKey
 import org.thoughtcrime.securesms.BlockUnblockDialog
 import org.thoughtcrime.securesms.MainActivity
@@ -196,7 +197,7 @@ import org.thoughtcrime.securesms.components.SendButton
 import org.thoughtcrime.securesms.components.SignalProgressDialog
 import org.thoughtcrime.securesms.components.ViewBinderDelegate
 import org.thoughtcrime.securesms.components.compose.ActionModeTopBarView
-import org.thoughtcrime.securesms.components.emoji.RecentEmojiPageModel
+import org.thoughtcrime.securesms.components.emoji.RecentEmojiStore
 import org.thoughtcrime.securesms.components.location.SignalPlace
 import org.thoughtcrime.securesms.components.mention.MentionAnnotation
 import org.thoughtcrime.securesms.components.menu.ActionItem
@@ -313,7 +314,6 @@ import org.thoughtcrime.securesms.groups.v2.GroupAddMembersResult
 import org.thoughtcrime.securesms.groups.v2.GroupBlockJoinRequestResult
 import org.thoughtcrime.securesms.jobs.AttachmentBackfill
 import org.thoughtcrime.securesms.jobs.ServiceOutageDetectionJob
-import org.thoughtcrime.securesms.keyboard.KeyboardPage
 import org.thoughtcrime.securesms.keyboard.KeyboardUtil
 import org.thoughtcrime.securesms.keyboard.sticker.StickerSearchDialogFragment
 import org.thoughtcrime.securesms.keyvalue.SettingsValues.MediaKeyboardMode
@@ -395,7 +395,6 @@ import org.thoughtcrime.securesms.util.MessageConstraintsUtil.isValidEditMessage
 import org.thoughtcrime.securesms.util.MessageUtil
 import org.thoughtcrime.securesms.util.PlayStoreUtil
 import org.thoughtcrime.securesms.util.Projection
-import org.thoughtcrime.securesms.util.RemoteConfig
 import org.thoughtcrime.securesms.util.SignalLocalMetrics
 import org.thoughtcrime.securesms.util.UriUtil
 import org.thoughtcrime.securesms.util.doAfterNextLayout
@@ -584,7 +583,7 @@ class ConversationFragment :
   private val colorizer = ColorizerV2()
   private val textDraftSaveDebouncer = Debouncer(500)
   private val doubleTapToEditDebouncer = DoubleClickDebouncer(200)
-  private val recentEmojis: RecentEmojiPageModel by lazy { RecentEmojiPageModel(AppDependencies.application, RecentEmojiPageModel.RECENT_STORAGE_KEY) }
+  private val recentEmojis: RecentEmojiStore by lazy { RecentEmojiStore(AppDependencies.application, RecentEmojiStore.RECENT_STORAGE_KEY) }
   private val nicknameEditActivityLauncher = registerForActivityResult(NicknameActivity.Contract()) {}
   private val handler = Handler(Looper.getMainLooper())
 
@@ -616,7 +615,7 @@ class ConversationFragment :
     }
 
   /** The keyboard the toggle showed before edit mode forced it to emoji. */
-  private var previousPage: KeyboardPage? = null
+  private var previousTab: MediaKeyboardTab? = null
   private var reShowScheduleMessagesBar: Boolean = false
   private var composeTextEventsListener: ComposeTextEventsListener? = null
   private var dataObserver: DataObserver? = null
@@ -687,7 +686,7 @@ class ConversationFragment :
 
   private val stickerConfirmation: ChatStickerConfirmationController by lazy(LazyThreadSafetyMode.NONE) {
     ChatStickerConfirmationController(
-      favoritesEnabled = mediaKeyboardRepository.stickers.favoritesEnabled,
+      favoritesEnabled = RemoteConfig.internalUser,
       onSend = { sticker ->
         mediaKeyboardRepository.stickers.onStickerUsed(sticker)
         sendKeyboardSticker(sticker)
@@ -886,20 +885,14 @@ class ConversationFragment :
 
       // Moves the input panel's toggle icon and persists the mode, so the keyboard opens on this tab
       // next time.
-      is MediaKeyboardAction.TabSelected -> onKeyboardChanged(
-        when (action.tab) {
-          MediaKeyboardTab.EMOJI -> KeyboardPage.EMOJI
-          MediaKeyboardTab.STICKER -> KeyboardPage.STICKER
-          MediaKeyboardTab.GIF -> KeyboardPage.GIF
-        }
-      )
+      is MediaKeyboardAction.TabSelected -> onKeyboardChanged(action.tab)
     }
   }
 
   /** Turns a gif picked from the media keyboard into a blob the composer can attach. */
   private lateinit var inlineVideoController: InlineVideoController
 
-  private val giphyMp4ViewModel: GiphyMp4ViewModel by activityViewModels { GiphyMp4ViewModel.Factory(isMms()) }
+  private val giphyMp4ViewModel: GiphyMp4ViewModel by activityViewModels()
 
   private var gifProgressDialog: AlertDialog? = null
 
@@ -997,7 +990,7 @@ class ConversationFragment :
 
     // Read once here rather than in composition: it only matters when the keyboard's view model is
     // first created, and it comes from disk.
-    val initialKeyboardTab = preferredKeyboardPage().toMediaKeyboardTab()
+    val initialKeyboardTab = preferredKeyboardTab()
 
     val composition = ComposeView(requireContext()).apply {
       setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
@@ -1196,6 +1189,8 @@ class ConversationFragment :
     binding.toolbar.addOnLayoutChangeListener { _, _, _, _, bottom, _, _, _, oldBottom ->
       // Bug: ConstraintLayout can provide a negative value for the toolbar causing RV layout problems
       if (bottom < 0) return@addOnLayoutChangeListener
+
+      inputPanel.setReservedTopSpace(bottom)
 
       // Bug: LinearLayoutManger can get stuck and not layout children under Compose's AndroidFragment if updated too quickly.
       val rv = binding.conversationItemRecycler
@@ -1445,10 +1440,6 @@ class ConversationFragment :
     container.hideInput()
   }
 
-  private fun isMms(): Boolean {
-    return false
-  }
-
   private fun onGifSelectSuccess(blobUri: Uri, width: Int, height: Int) {
     setMedia(
       uri = blobUri,
@@ -1467,8 +1458,8 @@ class ConversationFragment :
     inputPanel.mediaKeyboardToggle.onHidden()
   }
 
-  private fun onKeyboardChanged(page: KeyboardPage) {
-    inputPanel.mediaKeyboardToggle.onKeyboardChanged(page)
+  private fun onKeyboardChanged(tab: MediaKeyboardTab) {
+    inputPanel.mediaKeyboardToggle.onKeyboardChanged(tab)
   }
 
   override fun onScheduleSend(scheduledTime: Long) {
@@ -2793,20 +2784,12 @@ class ConversationFragment :
       .addTo(disposables)
   }
 
-  private fun KeyboardPage.toMediaKeyboardTab(): MediaKeyboardTab {
-    return when (this) {
-      KeyboardPage.EMOJI -> MediaKeyboardTab.EMOJI
-      KeyboardPage.STICKER -> MediaKeyboardTab.STICKER
-      KeyboardPage.GIF -> MediaKeyboardTab.GIF
-    }
-  }
-
   /** Which keyboard the toggle should offer, from the mode remembered across runs. */
-  private fun preferredKeyboardPage(): KeyboardPage {
+  private fun preferredKeyboardTab(): MediaKeyboardTab {
     return when (SignalStore.settings.mediaKeyboardMode) {
-      MediaKeyboardMode.EMOJI -> KeyboardPage.EMOJI
-      MediaKeyboardMode.STICKER -> KeyboardPage.STICKER
-      MediaKeyboardMode.GIF -> if (RemoteConfig.gifSearchAvailable) KeyboardPage.GIF else KeyboardPage.STICKER
+      MediaKeyboardMode.EMOJI -> MediaKeyboardTab.EMOJI
+      MediaKeyboardMode.STICKER -> MediaKeyboardTab.STICKER
+      MediaKeyboardMode.GIF -> if (RemoteConfig.gifSearchAvailable) MediaKeyboardTab.GIF else MediaKeyboardTab.STICKER
     }
   }
 
@@ -2814,11 +2797,11 @@ class ConversationFragment :
     val stickerIntro: Boolean = !SignalStore.tooltips.hasSeenStickerIntroTooltip()
 
     inputPanel.showMediaKeyboardToggle(true)
-    inputPanel.setMediaKeyboardToggleMode(preferredKeyboardPage())
+    inputPanel.setMediaKeyboardToggleMode(preferredKeyboardTab())
 
     if (stickerIntro) {
       SignalStore.settings.mediaKeyboardMode = MediaKeyboardMode.STICKER
-      inputPanel.setMediaKeyboardToggleMode(KeyboardPage.STICKER)
+      inputPanel.setMediaKeyboardToggleMode(MediaKeyboardTab.STICKER)
       conversationTooltips.displayStickerIntroductionTooltip(inputPanel.mediaKeyboardToggleAnchorView) {
         EventBus.default.removeStickyEvent<StickerPackInstallEvent>()
       }
@@ -3167,7 +3150,7 @@ class ConversationFragment :
 
     if (menuState.shouldShowReplyAction()) {
       items.add(
-        ActionItem(R.drawable.symbol_reply_24, resources.getString(R.string.conversation_selection__menu_reply)) {
+        ActionItem(CoreUiR.drawable.symbol_reply_24, resources.getString(R.string.conversation_selection__menu_reply)) {
           maybeShowSwipeToReplyTooltip()
           handleReplyToMessage(getSelectedConversationMessage())
           finishActionMode()
@@ -4786,7 +4769,6 @@ class ConversationFragment :
           searchNav.visible = true
           searchNav.setData(0, 0)
           inputPanel.setHideForSearch(true)
-          viewModel.onChatSearchOpened()
           binding.conversationDisabledInput.visible = false
 
           (0 until menu.size()).forEach {
@@ -5551,10 +5533,10 @@ class ConversationFragment :
 
     override fun onEnterEditMode() {
       updateToggleButtonState()
-      previousPage = preferredKeyboardPage()
+      previousTab = preferredKeyboardTab()
       mediaKeyboardTabs = setOf(MediaKeyboardTab.EMOJI)
-      // Also persists the mode, so read [previousPage] before this and restore it on the way out.
-      onKeyboardChanged(KeyboardPage.EMOJI)
+      // Also persists the mode, so read [previousTab] before this and restore it on the way out.
+      onKeyboardChanged(MediaKeyboardTab.EMOJI)
       stickerViewModel.onInputTextUpdated("")
       updateLinkPreviewState()
     }
@@ -5563,9 +5545,9 @@ class ConversationFragment :
       updateToggleButtonState()
       draftViewModel.deleteMessageEditDraft()
       mediaKeyboardTabs = null
-      previousPage?.let {
+      previousTab?.let {
         onKeyboardChanged(it)
-        previousPage = null
+        previousTab = null
       }
       updateLinkPreviewState()
     }
@@ -5719,11 +5701,12 @@ class ConversationFragment :
     }
 
     override fun onDatePickerSelected() {
-      disposables += viewModel.getEarliestMessageSentDate().subscribe { earliestDate ->
+      disposables += viewModel.getDaysWithMessages().subscribe { epochDaysWithMessages ->
         val local = LocalDateTime.now()
           .atMidnight()
           .atUTC()
           .toMillis()
+        val earliestEpochDay = epochDaysWithMessages.minOrNull() ?: local.milliseconds.inWholeDays
         val datePicker =
           MaterialDatePicker.Builder
             .datePicker()
@@ -5731,8 +5714,8 @@ class ConversationFragment :
             .setSelection(local)
             .setCalendarConstraints(
               CalendarConstraints.Builder()
-                .setValidator(viewModel.jumpToDateValidator)
-                .setStart(earliestDate)
+                .setValidator(JumpToDateValidator.from(epochDaysWithMessages))
+                .setStart(earliestEpochDay.days.inWholeMilliseconds)
                 .setEnd(local)
                 .build()
             )

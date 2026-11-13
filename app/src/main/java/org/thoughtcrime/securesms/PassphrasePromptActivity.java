@@ -51,7 +51,7 @@ import org.signal.core.util.ThreadUtil;
 import org.signal.core.ui.biometrics.BiometricDeviceAuthentication;
 import org.signal.core.util.logging.Log;
 import org.thoughtcrime.securesms.components.AnimatingToggle;
-import org.thoughtcrime.securesms.crypto.DatabaseSecretProvider;
+import org.thoughtcrime.securesms.crypto.PassphraseDatabaseSecret;
 import org.thoughtcrime.securesms.crypto.InvalidPassphraseException;
 import org.thoughtcrime.securesms.crypto.MasterSecret;
 import org.thoughtcrime.securesms.crypto.MasterSecretUtil;
@@ -220,7 +220,7 @@ public class PassphrasePromptActivity extends PassphraseActivity {
 
   private void onUnlockSucceeded(@NonNull UnlockResult result) {
     if (result.databaseSecret != null) {
-      DatabaseSecretProvider.setDatabaseSecretForPassphrase(result.databaseSecret);
+      PassphraseDatabaseSecret.provideUnwrappedSecret(result.databaseSecret);
       ApplicationContext.getInstance(this).initializeApplicationAfterUnlock();
       java.util.Arrays.fill(result.databaseSecret, (byte) 0);
     }
@@ -395,7 +395,7 @@ public class PassphrasePromptActivity extends PassphraseActivity {
         MasterSecret masterSecret = MasterSecretUtil.getMasterSecret(context, params[0]);
 
         if (MasterSecretUtil.isPassphraseRequired(context)) {
-          return new UnlockResult(masterSecret, DatabaseSecretProvider.unlockDatabaseSecret(context, masterSecret));
+          return new UnlockResult(masterSecret, PassphraseDatabaseSecret.unlockDatabaseSecret(context, masterSecret));
         }
 
         return new UnlockResult(masterSecret, null);

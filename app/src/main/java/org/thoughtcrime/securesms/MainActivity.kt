@@ -22,6 +22,11 @@ import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.expandHorizontally
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkHorizontally
 import androidx.compose.foundation.background
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Box
@@ -116,6 +121,7 @@ import org.thoughtcrime.securesms.components.compose.ConnectivityWarningBottomSh
 import org.thoughtcrime.securesms.components.compose.DeviceSpecificNotificationBottomSheet
 import org.thoughtcrime.securesms.components.settings.app.AppSettingsActivity
 import org.thoughtcrime.securesms.components.settings.app.AppSettingsActivity.Companion.manageSubscriptions
+import org.thoughtcrime.securesms.components.settings.app.AppSettingsRepository
 import org.thoughtcrime.securesms.components.settings.app.account.signallogin.verify.SignalLoginVerifyActivity
 import org.thoughtcrime.securesms.components.settings.app.account.twofactor.verify.TwoFactorVerifyActivity
 import org.thoughtcrime.securesms.components.settings.app.notifications.manual.NotificationProfileSelectionFragment
@@ -574,12 +580,18 @@ class MainActivity :
     }
 
     Row(modifier = modifier.fillMaxSize()) {
-      if (navigationType == NavigationType.RAIL && mainToolbarState.mode != MainToolbarMode.SEARCH) {
-        MainNavigationRail(
-          state = mainNavigationState,
-          mainFloatingActionButtonsCallback = mainBottomChromeCallback,
-          onDestinationSelected = mainNavigationCallback
-        )
+      if (navigationType == NavigationType.RAIL) {
+        AnimatedVisibility(
+          visible = mainToolbarState.mode != MainToolbarMode.SEARCH,
+          enter = expandHorizontally(expandFrom = Alignment.Start) + fadeIn(),
+          exit = shrinkHorizontally(shrinkTowards = Alignment.Start) + fadeOut()
+        ) {
+          MainNavigationRail(
+            state = mainNavigationState,
+            mainFloatingActionButtonsCallback = mainBottomChromeCallback,
+            onDestinationSelected = mainNavigationCallback
+          )
+        }
       }
 
       Column(
@@ -1058,6 +1070,14 @@ class MainActivity :
 
     override fun onSettingsClick() {
       openSettings.launch(AppSettingsActivity.home(this@MainActivity))
+    }
+
+    override fun onDonateClick() {
+      if (AppSettingsRepository.likelyCanManageDonations()) {
+        openSettings.launch(AppSettingsActivity.manageSubscriptions(this@MainActivity))
+      } else {
+        CommunicationActions.openBrowserLink(this@MainActivity, getString(R.string.donate_url))
+      }
     }
 
     override fun onNotificationProfileClick() {

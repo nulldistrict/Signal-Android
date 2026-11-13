@@ -7,14 +7,15 @@ package org.thoughtcrime.securesms.components.settings.app.account
 
 import kotlinx.coroutines.withContext
 import org.signal.core.models.MasterKey
+import org.signal.core.util.PinHashUtil
 import org.signal.core.util.concurrent.SignalDispatchers
 import org.signal.core.util.logging.Log
+import org.signal.remoteconfig.RemoteConfig
 import org.thoughtcrime.securesms.keyvalue.SignalStore
+import org.thoughtcrime.securesms.keyvalue.keyboardType
 import org.thoughtcrime.securesms.lock.v2.PinKeyboardType
 import org.thoughtcrime.securesms.megaphone.TwoFactorReminderSchedule
 import org.thoughtcrime.securesms.pin.SvrRepository
-import org.thoughtcrime.securesms.util.RemoteConfig
-import org.whispersystems.signalservice.api.kbs.PinHashUtil
 import java.io.IOException
 
 /**
@@ -32,9 +33,11 @@ class AccountSettingsRepository(
 
   fun hasRestoredAep(): Boolean = SignalStore.account.restoredAccountEntropyPool
 
-  fun arePinRemindersEnabled(): Boolean = SignalStore.pin.arePinRemindersEnabled() && SignalStore.svr.hasPin()
+  fun arePinRemindersEnabled(): Boolean = SignalStore.pin.pinRemindersEnabled && SignalStore.svr.hasPin()
 
-  fun setPinRemindersEnabled(enabled: Boolean) = SignalStore.pin.setPinRemindersEnabled(enabled)
+  fun setPinRemindersEnabled(enabled: Boolean) {
+    SignalStore.pin.pinRemindersEnabled = enabled
+  }
 
   fun isRegistrationLockEnabled(): Boolean = SignalStore.svr.isRegistrationLockEnabled
 

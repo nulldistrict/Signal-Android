@@ -43,11 +43,13 @@ import org.signal.core.ui.compose.split.ListDetailEvents
 import org.signal.core.ui.compose.split.ListDetailNavDisplay
 import org.signal.core.ui.compose.split.PaneAnchor
 import org.signal.core.ui.compose.split.detailEntry
+import org.signal.core.ui.compose.split.hasDetail
 import org.signal.core.ui.compose.split.listEntry
 import org.signal.core.ui.compose.split.rememberCurrentDecoratedNavEntries
 import org.signal.core.ui.compose.split.rememberListDetailPaneLayout
 import org.signal.core.ui.compose.systemBarsCompat
 import org.signal.core.ui.compose.theme.SignalTheme
+import org.signal.core.ui.navigation.LocalResultEventBus
 import org.signal.core.ui.rememberIsSplitPane
 
 /**
@@ -61,7 +63,12 @@ import org.signal.core.ui.rememberIsSplitPane
  * @param home the home screen's content, given the section to mark as selected. Always null outside of split-pane,
  *   where the list is never shown beside the section it opened.
  * @param emptyDetailContent shown in the detail pane of a split-pane window while no [AppSettingsRoute] is open.
+ * @param defaultDetailRoute opened whenever the window becomes split-pane with no [AppSettingsRoute] open, including
+ *   when a foldable is unfolded.
  * @param detailEntries registers the content for each [AppSettingsRoute], with `detailEntry`.
+ * @param tryLaunchActivity called for each route navigated to before it is opened. Returns true when the host has
+ *   opened it as an activity of its own instead, which keeps it off the back stack, for screens that are still
+ *   self-contained activities.
  */
 @Composable
 fun AppSettingsNavigation(
@@ -70,14 +77,20 @@ fun AppSettingsNavigation(
   modifier: Modifier = Modifier,
   home: @Composable (selectedRoute: AppSettingsRoute?) -> Unit,
   emptyDetailContent: @Composable () -> Unit = {},
+  defaultDetailRoute: AppSettingsRoute? = null,
+  tryLaunchActivity: (AppSettingsRoute) -> Boolean = { false },
   detailEntries: EntryProviderScope<NavKey>.() -> Unit
 ) {
   val currentOnClose by rememberUpdatedState(onClose)
+  val currentTryLaunchActivity by rememberUpdatedState(tryLaunchActivity)
   val navigator = router.navigator
+  val isSplitPane = LocalResources.current.rememberIsSplitPane()
+  val currentIsSplitPane by rememberUpdatedState(isSplitPane)
 
   val navigate: (AppSettingsNavigationEvent) -> Unit = remember(router) {
     { event ->
-      if (!router.navigate(event)) {
+      val launched = event is AppSettingsNavigationEvent.NavigateToScreen && currentTryLaunchActivity(event.route)
+      if (!launched && !router.navigate(event, currentIsSplitPane)) {
         currentOnClose()
       }
     }
@@ -87,7 +100,11 @@ fun AppSettingsNavigation(
     router.events.collect(navigate)
   }
 
-  val isSplitPane = LocalResources.current.rememberIsSplitPane()
+  LaunchedEffect(isSplitPane, defaultDetailRoute) {
+    if (isSplitPane && defaultDetailRoute != null && !navigator[AppSettingsHomeRoute].hasDetail) {
+      navigator.processEvent(ListDetailEvents.Push(defaultDetailRoute))
+    }
+  }
 
   val entryProvider = remember(router, isSplitPane, home, detailEntries) {
     entryProvider {
@@ -119,12 +136,15 @@ fun AppSettingsNavigation(
       .then(insetsModifier)
   ) {
     // Settings screens are shared with the fragment host, which keeps their current look until it goes away.
-    CompositionLocalProvider(LocalSplitPaneSettingsEnabled provides true) {
+    CompositionLocalProvider(
+      LocalSplitPaneSettingsEnabled provides true,
+      LocalResultEventBus provides router.resultBus
+    ) {
       ListDetailNavDisplay(
         entries = entries,
         isSplitPane = isSplitPane,
         paneAnchor = PaneAnchor.SPLIT,
-        onBack = { navigate(AppSettingsNavigationEvent.NavigateBack) },
+        onBack = { navigate(AppSettingsNavigationEvent.NavigateBack()) },
         onExitDetail = { navigator.processEvent(ListDetailEvents.ExitDetail) },
         layout = rememberListDetailPaneLayout(
           paneAnchor = PaneAnchor.SPLIT,

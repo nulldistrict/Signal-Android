@@ -20,22 +20,31 @@ import kotlinx.coroutines.withContext
 import org.signal.appsettings.routes.AppSettingsNavigation
 import org.signal.appsettings.routes.AppSettingsRoute
 import org.signal.appsettings.routes.AppSettingsRouter
-import org.signal.core.ui.compose.split.ListDetailEvents
+import org.signal.core.ui.compose.WindowOverlayHost
 import org.signal.core.ui.compose.split.detailEntry
 import org.signal.core.ui.compose.theme.SignalTheme
 import org.signal.core.util.getParcelableExtraCompat
+import org.signal.remoteconfig.RemoteConfig
 import org.thoughtcrime.securesms.PassphraseRequiredActivity
+import org.thoughtcrime.securesms.avatar.picker.AvatarPickerResult
+import org.thoughtcrime.securesms.avatar.picker.registerAvatarPickerScreens
+import org.thoughtcrime.securesms.badges.self.registerBadgeScreens
 import org.thoughtcrime.securesms.components.enableSettingsEdgeToEdge
 import org.thoughtcrime.securesms.components.settings.app.appearance.registerAppearanceRoutes
 import org.thoughtcrime.securesms.components.settings.app.chats.registerChatsRoutes
+import org.thoughtcrime.securesms.components.settings.app.labs.registerLabsRoutes
+import org.thoughtcrime.securesms.components.settings.app.notifications.registerNotificationsRoutes
 import org.thoughtcrime.securesms.components.settings.app.privacy.registerPrivacyRoutes
+import org.thoughtcrime.securesms.components.settings.app.storage.registerDataAndStorageRoutes
 import org.thoughtcrime.securesms.components.settings.app.subscription.GooglePayComponent
 import org.thoughtcrime.securesms.components.settings.app.subscription.GooglePayRepository
+import org.thoughtcrime.securesms.components.settings.app.updates.registerAppUpdatesRoutes
+import org.thoughtcrime.securesms.components.settings.app.usernamelinks.registerUsernameLinkScreens
 import org.thoughtcrime.securesms.keyvalue.SignalStore
 import org.thoughtcrime.securesms.main.EmptyDetailScreen
+import org.thoughtcrime.securesms.profiles.manage.editprofile.registerEditProfileScreens
 import org.thoughtcrime.securesms.util.DynamicNoActionBarTheme
 import org.thoughtcrime.securesms.util.DynamicTheme
-import org.thoughtcrime.securesms.util.RemoteConfig
 
 /**
  * Hosts app settings in [AppSettingsNavigation] rather than the fragment nav graph, gated by
@@ -65,27 +74,39 @@ class AppSettingsNavigationActivity : PassphraseRequiredActivity(), GooglePayCom
 
     val startRoute = intent.getParcelableExtraCompat(START_ROUTE, AppSettingsRoute::class.java)
     if (savedInstanceState == null && startRoute != null && startRoute != AppSettingsRoute.Empty) {
-      router.navigator.processEvent(ListDetailEvents.Push(startRoute))
+      router.openDirectly(startRoute)
     }
 
     setContent {
       SignalTheme {
-        AppSettingsNavigation(
-          router = router,
-          onClose = ::finish,
-          home = { selectedRoute -> AppSettingsEntry(parentEventEmitter = router::onEvent, selectedRoute = selectedRoute) },
-          emptyDetailContent = { EmptyDetailScreen() },
-          detailEntries = {
-            registerAppearanceRoutes(router::onEvent)
-            registerChatsRoutes(router::onEvent)
-            registerPrivacyRoutes(router::onEvent)
+        WindowOverlayHost {
+          AppSettingsNavigation(
+            router = router,
+            onClose = ::finish,
+            home = { selectedRoute -> AppSettingsEntry(parentEventEmitter = router::onEvent, selectedRoute = selectedRoute) },
+            emptyDetailContent = { EmptyDetailScreen() },
+            defaultDetailRoute = AppSettingsRoute.AccountRoute.ManageProfile,
+            tryLaunchActivity = ::tryLaunchActivity,
+            detailEntries = {
+              registerAppearanceRoutes(router::onEvent)
+              registerChatsRoutes(router::onEvent)
+              registerNotificationsRoutes(router::onEvent)
+              registerLabsRoutes(router::onEvent)
+              registerAppUpdatesRoutes(router::onEvent)
+              registerPrivacyRoutes(router::onEvent)
+              registerDataAndStorageRoutes(router::onEvent)
+              registerEditProfileScreens(router::onEvent)
+              registerAvatarPickerScreens(router::onEvent, onResult = { router.resultBus.sendResult<AvatarPickerResult>(result = it) })
+              registerBadgeScreens(router::onEvent)
+              registerUsernameLinkScreens(router::onEvent)
 
-            // TODO Temporary escape hatch while most destinations are unregistered here; remove before the flag ships.
-            detailEntry<AppSettingsRoute.InternalRoute.Internal> {
-              LaunchedEffect(Unit) { disableAppSettingsNavigation() }
+              // TODO Temporary escape hatch while most destinations are unregistered here; remove before the flag ships.
+              detailEntry<AppSettingsRoute.InternalRoute.Internal> {
+                LaunchedEffect(Unit) { disableAppSettingsNavigation() }
+              }
             }
-          }
-        )
+          )
+        }
       }
     }
 
@@ -93,11 +114,15 @@ class AppSettingsNavigationActivity : PassphraseRequiredActivity(), GooglePayCom
     performActionOnCreate(savedInstanceState)
   }
 
+  // Fork: upstream launches PaymentsActivity here; MobileCoin payments are removed, so no route needs an activity.
+  @Suppress("UNUSED_PARAMETER")
+  private fun tryLaunchActivity(route: AppSettingsRoute): Boolean = false
+
   private fun disableAppSettingsNavigation() {
     lifecycleScope.launch {
       withContext(Dispatchers.Default) {
         RemoteConfig.overrides -= RemoteConfig.APP_SETTINGS_NAVIGATION_KEY
-        SignalStore.internal.remoteConfigOverrides = RemoteConfig.overrides
+        SignalStore.remoteConfig.overrides = RemoteConfig.overrides
       }
 
       startActivity(AppSettingsActivity.home(this@AppSettingsNavigationActivity))

@@ -42,13 +42,14 @@ import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import org.signal.core.ui.compose.CollectActions
+import org.signal.core.ui.compose.DragToDismissState
 import org.signal.core.ui.compose.theme.SignalTheme
 import org.signal.core.util.logging.Log
-import org.signal.mediaviewer.DragToDismissState
 import org.signal.mediaviewer.MediaViewerAction
 import org.signal.mediaviewer.MediaViewerEvent
 import org.signal.mediaviewer.MediaViewerScreen
 import org.signal.mediaviewer.MediaViewerState
+import org.signal.remoteconfig.RemoteConfig
 import org.thoughtcrime.securesms.PassphraseRequiredActivity
 import org.thoughtcrime.securesms.R
 import org.thoughtcrime.securesms.attachments.AttachmentSaver
@@ -64,7 +65,6 @@ import org.thoughtcrime.securesms.mediapreview.RecycledBitmapGuardDrawable
 import org.thoughtcrime.securesms.mediasend.MediaSendLauncher
 import org.thoughtcrime.securesms.mms.PartAuthority
 import org.thoughtcrime.securesms.sharing.v2.ShareActivity
-import org.thoughtcrime.securesms.util.RemoteConfig
 import org.thoughtcrime.securesms.util.SaveAttachmentUtil
 import org.thoughtcrime.securesms.util.WindowUtil
 import kotlin.math.roundToInt
@@ -295,7 +295,7 @@ class MediaViewerActivity : PassphraseRequiredActivity(), VoiceNoteMediaControll
         }
         transitionImageView.translationX = dismissState.offsetX
         transitionImageView.translationY = dismissState.offsetY
-        onBackPressedDispatcher.onBackPressed()
+        finishAfterTransition()
       }
       MediaViewerAction.FinishAfterDragDismiss -> {
         finish()

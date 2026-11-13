@@ -18,6 +18,14 @@ import org.signal.libsignal.protocol.IdentityKey
 import org.signal.libsignal.protocol.IdentityKeyPair
 import org.signal.libsignal.protocol.ecc.ECPrivateKey
 import org.signal.libsignal.protocol.util.Medium
+import org.signal.storage.keyvalue.KeyValueStore
+import org.signal.storage.keyvalue.LegacySharedPrefs
+import org.signal.storage.keyvalue.SignalStoreValues
+import org.signal.storage.keyvalue.booleanValue
+import org.signal.storage.keyvalue.integerValue
+import org.signal.storage.keyvalue.longValue
+import org.signal.storage.keyvalue.nullableBlobValue
+import org.signal.storage.keyvalue.stringValue
 import org.thoughtcrime.securesms.backup.v2.BackupRepository
 import org.thoughtcrime.securesms.crypto.MasterCipher
 import org.thoughtcrime.securesms.crypto.ProfileKeyUtil
@@ -128,18 +136,19 @@ class AccountValues internal constructor(store: KeyValueStore, context: Context)
 
   public override fun onFirstEverAppLaunch() = Unit
 
-  public override fun getKeysToIncludeInBackup(): List<String> {
-    return listOf(
-      KEY_ACI_IDENTITY_PUBLIC_KEY,
-      KEY_ACI_IDENTITY_PRIVATE_KEY,
-      KEY_PNI_IDENTITY_PUBLIC_KEY,
-      KEY_PNI_IDENTITY_PRIVATE_KEY,
-      KEY_USERNAME,
-      KEY_USERNAME_LINK_ENTROPY,
-      KEY_USERNAME_LINK_SERVER_ID,
-      KEY_ACCOUNT_ENTROPY_POOL
-    )
-  }
+  override val keysToIncludeInBackup: List<String>
+    get() {
+      return listOf(
+        KEY_ACI_IDENTITY_PUBLIC_KEY,
+        KEY_ACI_IDENTITY_PRIVATE_KEY,
+        KEY_PNI_IDENTITY_PUBLIC_KEY,
+        KEY_PNI_IDENTITY_PRIVATE_KEY,
+        KEY_USERNAME,
+        KEY_USERNAME_LINK_ENTROPY,
+        KEY_USERNAME_LINK_SERVER_ID,
+        KEY_ACCOUNT_ENTROPY_POOL
+      )
+    }
 
   val accountEntropyPool: AccountEntropyPool
     get() {
@@ -305,8 +314,8 @@ class AccountValues internal constructor(store: KeyValueStore, context: Context)
     get() {
       require(store.containsKey(KEY_ACI_IDENTITY_PUBLIC_KEY)) { "Not yet set!" }
       return IdentityKeyPair(
-        IdentityKey(getBlob(KEY_ACI_IDENTITY_PUBLIC_KEY, null)),
-        ECPrivateKey(getBlob(KEY_ACI_IDENTITY_PRIVATE_KEY, null))
+        IdentityKey(getNonNullBlob(KEY_ACI_IDENTITY_PUBLIC_KEY)),
+        ECPrivateKey(getNonNullBlob(KEY_ACI_IDENTITY_PRIVATE_KEY))
       )
     }
 
@@ -315,8 +324,8 @@ class AccountValues internal constructor(store: KeyValueStore, context: Context)
     get() {
       require(store.containsKey(KEY_PNI_IDENTITY_PUBLIC_KEY)) { "Not yet set!" }
       return IdentityKeyPair(
-        IdentityKey(getBlob(KEY_PNI_IDENTITY_PUBLIC_KEY, null)),
-        ECPrivateKey(getBlob(KEY_PNI_IDENTITY_PRIVATE_KEY, null))
+        IdentityKey(getNonNullBlob(KEY_PNI_IDENTITY_PUBLIC_KEY)),
+        ECPrivateKey(getNonNullBlob(KEY_PNI_IDENTITY_PRIVATE_KEY))
       )
     }
 

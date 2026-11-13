@@ -5,8 +5,11 @@
 
 package org.thoughtcrime.securesms.components.emoji
 
+import android.graphics.Typeface
 import android.text.InputType
 import android.util.TypedValue
+import android.view.Gravity
+import android.view.View
 import android.view.inputmethod.EditorInfo
 import androidx.compose.foundation.interaction.FocusInteraction
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -21,8 +24,12 @@ import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.toArgb
+import androidx.compose.ui.platform.LocalFontFamilyResolver
+import androidx.compose.ui.text.font.SystemFontFamily
+import androidx.compose.ui.text.font.resolveAsTypeface
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.view.ViewCompat
 import androidx.core.widget.doAfterTextChanged
@@ -67,11 +74,19 @@ object SignalEmojiTextInput : EmojiTextInput {
 
   @Composable
   private fun EditText(params: EmojiTextInputParams, currentParams: () -> EmojiTextInputParams, onFocusChanged: (Boolean) -> Unit, modifier: Modifier) {
+    val fontFamily = params.textStyle.fontFamily
+    val typeface: Typeface? = if (fontFamily != null && fontFamily !is SystemFontFamily) {
+      LocalFontFamilyResolver.current.resolveAsTypeface(fontFamily).value
+    } else {
+      null
+    }
+
     AndroidView(
       factory = { context ->
-        EmojiEditText(context).apply {
+        EmojiEditText(context, params.jumboEmoji).apply {
           background = null
           setPadding(0, 0, 0, 0)
+          params.maxCharacters?.let { EditTextUtil.addGraphemeClusterLimitFilter(this, it) }
 
           doAfterTextChanged { text ->
             val value = text?.toString().orEmpty()
@@ -84,6 +99,8 @@ object SignalEmojiTextInput : EmojiTextInput {
             onFocusChanged(hasFocus)
             if (hasFocus) {
               ViewUtil.focusAndMoveCursorToEndAndOpenKeyboard(this)
+            } else {
+              hideKeyboardUnlessFocusMovedToTextField()
             }
           }
 
@@ -119,10 +136,29 @@ object SignalEmojiTextInput : EmojiTextInput {
           view.setTextSize(TypedValue.COMPLEX_UNIT_SP, params.textStyle.fontSize.value)
         }
         view.setTextColor(params.textStyle.color.toArgb())
+        if (params.textStyle.textAlign == TextAlign.Center) {
+          view.gravity = Gravity.CENTER
+        }
+        if (typeface != null && view.typeface != typeface) {
+          view.typeface = typeface
+        }
         EditTextUtil.setCursorColor(view, params.cursorColor.toArgb())
       },
       modifier = modifier
     )
+  }
+
+  /**
+   * Unlike a Compose text field, a view doesn't close the keyboard it opened when it loses focus, such as when its
+   * screen is navigated away from. Checked a frame later so that moving to the next field keeps the keyboard up.
+   */
+  private fun View.hideKeyboardUnlessFocusMovedToTextField() {
+    val root = rootView
+    root.post {
+      if (root.findFocus()?.onCheckIsTextEditor() != true) {
+        ViewUtil.hideKeyboard(root.context, root)
+      }
+    }
   }
 
   private fun EmojiTextInputParams.inputType(): Int {

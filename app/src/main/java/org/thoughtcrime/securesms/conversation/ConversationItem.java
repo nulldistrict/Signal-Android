@@ -80,6 +80,7 @@ import org.signal.core.util.eventbus.EventBus;
 import org.signal.core.util.eventbus.RestartableSubscription;
 import org.signal.core.util.eventbus.ThreadMode;
 import org.signal.core.util.logging.Log;
+import org.signal.remoteconfig.RemoteConfig;
 import org.signal.ringrtc.CallLinkRootKey;
 import org.thoughtcrime.securesms.BindableConversationItem;
 import org.thoughtcrime.securesms.R;
@@ -152,7 +153,6 @@ import org.thoughtcrime.securesms.util.MessageRecordUtil;
 import org.thoughtcrime.securesms.util.PlaceholderURLSpan;
 import org.thoughtcrime.securesms.util.Projection;
 import org.thoughtcrime.securesms.util.ProjectionList;
-import org.thoughtcrime.securesms.util.RemoteConfig;
 import org.thoughtcrime.securesms.util.SearchUtil;
 import org.signal.core.ui.util.SpanUtil;
 import org.thoughtcrime.securesms.util.UrlClickHandler;
@@ -411,9 +411,10 @@ public final class ConversationItem extends RelativeLayout implements BindableCo
 
     conversationRecipient = conversationRecipient.resolve();
 
-    // Rebinding the same message keeps its ended playback.
+    // Rebinding the same message keeps its ended playback and pending video launch.
     if (messageRecord == null || messageRecord.getId() != conversationMessage.getMessageRecord().getId()) {
       inlinePlaybackEnded = false;
+      playVideoClickListener.cleanup();
     }
 
     this.conversationMessage   = conversationMessage;
@@ -539,6 +540,7 @@ public final class ConversationItem extends RelativeLayout implements BindableCo
   @Override
   protected void onDetachedFromWindow() {
     ConversationSwipeAnimationHelper.update(this, 0f, 1f);
+    playVideoClickListener.cleanup();
     unbind();
     super.onDetachedFromWindow();
   }
@@ -1167,7 +1169,7 @@ public final class ConversationItem extends RelativeLayout implements BindableCo
   }
 
   private boolean hasLinkPreview(MessageRecord messageRecord) {
-    return MessageRecordUtil.hasLinkPreview(messageRecord);
+    return MessageRecordUtil.shouldDisplayLinkPreview(messageRecord);
   }
 
   private boolean hasBigImageLinkPreview(MessageRecord messageRecord) {

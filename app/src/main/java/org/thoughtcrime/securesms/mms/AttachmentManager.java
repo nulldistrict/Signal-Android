@@ -36,7 +36,6 @@ import androidx.fragment.app.Fragment;
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.RequestManager;
 
-import org.signal.core.models.recipients.RecipientId;
 import org.signal.core.ui.permissions.Permissions;
 import org.signal.core.ui.view.Stub;
 import org.signal.core.util.ThreadUtil;
@@ -47,6 +46,7 @@ import org.signal.core.util.concurrent.SettableFuture;
 import org.signal.core.util.logging.Log;
 import org.signal.core.util.permissions.PermissionCompat;
 import org.signal.mediasend.MediaConstraints;
+import org.signal.remoteconfig.RemoteConfig;
 import org.thoughtcrime.securesms.R;
 import org.thoughtcrime.securesms.components.AudioView;
 import org.thoughtcrime.securesms.components.DocumentView;
@@ -56,7 +56,6 @@ import org.thoughtcrime.securesms.components.location.SignalMapView;
 import org.thoughtcrime.securesms.components.location.SignalPlace;
 import org.thoughtcrime.securesms.conversation.MessageSendType;
 import org.thoughtcrime.securesms.dependencies.AppDependencies;
-import org.thoughtcrime.securesms.giph.ui.GiphyActivity;
 import org.thoughtcrime.securesms.maps.PlacePickerActivity;
 import org.thoughtcrime.securesms.mediasend.MediaSendLauncher;
 import org.thoughtcrime.securesms.recipients.Recipient;
@@ -273,15 +272,6 @@ public class AttachmentManager {
                  .onSomeGranted((permissions) -> PlacePickerActivity.startActivityForResultAtCurrentLocation(fragment, requestCode, chatColor))
                  .execute();
     }
-  }
-
-  public static void selectGif(Fragment fragment, int requestCode, RecipientId id, MessageSendType sendType, boolean isForMms, CharSequence textTrimmed) {
-    Intent intent = new Intent(fragment.requireContext(), GiphyActivity.class);
-    intent.putExtra(GiphyActivity.EXTRA_IS_MMS, isForMms);
-    intent.putExtra(GiphyActivity.EXTRA_RECIPIENT_ID, id);
-    intent.putExtra(GiphyActivity.EXTRA_TRANSPORT, sendType);
-    intent.putExtra(GiphyActivity.EXTRA_TEXT, textTrimmed);
-    fragment.startActivityForResult(intent, requestCode);
   }
 
   private @Nullable Uri getSlideUri() {

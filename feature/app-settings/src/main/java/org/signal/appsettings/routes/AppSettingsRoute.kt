@@ -7,7 +7,6 @@ package org.signal.appsettings.routes
 
 import android.os.Parcelable
 import androidx.annotation.StringRes
-import kotlinx.parcelize.IgnoredOnParcel
 import kotlinx.parcelize.Parcelize
 import kotlinx.serialization.Serializable
 import org.signal.core.models.recipients.RecipientId
@@ -21,41 +20,6 @@ import org.signal.donations.InAppPaymentType
 @Serializable
 @Parcelize
 sealed interface AppSettingsRoute : Parcelable, DetailNavKey {
-
-  /**
-   * The sections opened from [AppSettingsHomeRoute] or directly by a start route. Opening one replaces whatever
-   * detail is displayed, rather than stacking on top of it.
-   */
-  @IgnoredOnParcel
-  override val isContentRoot: Boolean
-    get() = when (this) {
-      AccountRoute.Account,
-      AccountRoute.ManageProfile,
-      is AccountRoute.Username,
-      UsernameLinkRoute.UsernameLink,
-      LinkDeviceRoute.LinkDevice,
-      is DonationsRoute.Donations,
-      AppearanceRoute.Appearance,
-      ChatsRoute.Chats,
-      ChatFoldersRoute.ChatFolders,
-      is ChatFoldersRoute.CreateChatFolders,
-      is StoriesRoute.Privacy,
-      NotificationsRoute.Notifications,
-      NotificationsRoute.NotificationProfiles,
-      PrivacyRoute.Privacy,
-      is BackupsRoute.Backups,
-      is BackupsRoute.Local,
-      is BackupsRoute.Remote,
-      DataAndStorageRoute.DataAndStorage,
-      DataAndStorageRoute.Proxy,
-      ChangeNumberRoute.Start,
-      AppUpdates,
-      is HelpRoute.Settings,
-      Invite,
-      LabsRoute.Labs,
-      InternalRoute.Internal -> true
-      else -> false
-    }
 
   /**
    * Empty state, displayed when there is no current route. In this case, the "top" of our
@@ -81,6 +45,18 @@ sealed interface AppSettingsRoute : Parcelable, DetailNavKey {
 
     @Serializable
     data object AvatarPicker : AccountRoute
+
+    /**
+     * [colorCode] is an `Avatars.ColorPair` code. [databaseId] is the saved avatar's row id, or -1 if it isn't saved.
+     */
+    @Serializable
+    data class TextAvatarEditor(val text: String, val colorCode: String, val databaseId: Long = -1L) : AccountRoute {
+      override fun toString(): String = "TextAvatarEditor"
+    }
+
+    /** [colorCode] is an `Avatars.ColorPair` code. [databaseId] is the saved avatar's row id, or -1 if it isn't saved. */
+    @Serializable
+    data class VectorAvatarEditor(val key: String, val colorCode: String, val databaseId: Long = -1L) : AccountRoute
 
     @Serializable
     data object AdvancedPinSettings : AccountRoute
@@ -192,25 +168,7 @@ sealed interface AppSettingsRoute : Parcelable, DetailNavKey {
     data class AddAllowedMembers(val profileId: Long) : NotificationsRoute
 
     @Serializable
-    data class SelectRecipients(val profileId: Long, val currentSelection: Array<RecipientId>? = null) : NotificationsRoute {
-      override fun equals(other: Any?): Boolean {
-        if (this === other) return true
-        if (javaClass != other?.javaClass) return false
-
-        other as SelectRecipients
-
-        if (profileId != other.profileId) return false
-        if (!currentSelection.contentEquals(other.currentSelection)) return false
-
-        return true
-      }
-
-      override fun hashCode(): Int {
-        var result = profileId.hashCode()
-        result = 31 * result + (currentSelection?.contentHashCode() ?: 0)
-        return result
-      }
-    }
+    data class SelectRecipients(val profileId: Long, val currentSelection: List<RecipientId> = emptyList()) : NotificationsRoute
 
     @Serializable
     data class EditSchedule(val profileId: Long, val createMode: Boolean) : NotificationsRoute
@@ -323,6 +281,12 @@ sealed interface AppSettingsRoute : Parcelable, DetailNavKey {
 
     @Serializable
     data object Proxy : DataAndStorageRoute
+
+    @Serializable
+    data object KeepMessages : DataAndStorageRoute
+
+    @Serializable
+    data object ChatLengthLimit : DataAndStorageRoute
   }
 
   @Serializable

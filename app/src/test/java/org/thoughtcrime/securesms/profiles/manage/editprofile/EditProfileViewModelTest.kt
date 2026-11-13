@@ -11,6 +11,7 @@ import assertk.assertions.isEmpty
 import assertk.assertions.isEqualTo
 import assertk.assertions.isFalse
 import assertk.assertions.isNull
+import assertk.assertions.isTrue
 import io.mockk.Runs
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -160,13 +161,14 @@ class EditProfileViewModelTest {
   }
 
   @Test
-  fun `AvatarClicked opens the avatar full screen`() = runTest(testDispatcher) {
+  fun `AvatarClicked shows the avatar full screen until it's dismissed`() = runTest(testDispatcher) {
     val viewModel = createViewModel()
-    val actions = collectActions(viewModel.actions)
 
     viewModel.onEvent(EditProfileEvent.AvatarClicked)
+    assertThat(viewModel.state.value.showAvatarPreview).isTrue()
 
-    assertThat(actions).containsExactly(EditProfileAction.OpenAvatarPreview)
+    viewModel.onEvent(EditProfileEvent.AvatarPreviewDismissed)
+    assertThat(viewModel.state.value.showAvatarPreview).isFalse()
   }
 
   @Test
@@ -349,7 +351,7 @@ class EditProfileViewModelTest {
 
     viewModel.onEvent(EditProfileEvent.NavigateBackClicked)
 
-    assertThat(navigationEvents).containsExactly(AppSettingsNavigationEvent.NavigateBack)
+    assertThat(navigationEvents).containsExactly(AppSettingsNavigationEvent.NavigateBack())
   }
 
   private fun createViewModel(): EditProfileViewModel = EditProfileViewModel(parentEventEmitter = { navigationEvents += it })

@@ -4,8 +4,8 @@ import android.content.Intent
 import kotlinx.coroutines.withContext
 import org.signal.core.util.ServiceUtil
 import org.signal.core.util.concurrent.SignalDispatchers
-import org.thoughtcrime.securesms.crypto.DatabaseSecretProvider
 import org.thoughtcrime.securesms.crypto.MasterSecretUtil
+import org.thoughtcrime.securesms.crypto.PassphraseDatabaseSecret
 import org.thoughtcrime.securesms.database.SignalDatabase
 import org.thoughtcrime.securesms.dependencies.AppDependencies
 import org.thoughtcrime.securesms.jobs.MultiDeviceConfigurationUpdateJob
@@ -86,7 +86,7 @@ object PrivacySettingsRepository {
         "Cannot disable the passphrase without an unlocked master secret"
       }
 
-      DatabaseSecretProvider.disablePassphraseProtection(application, masterSecret)
+      PassphraseDatabaseSecret.disablePassphraseProtection(application, masterSecret)
       MasterSecretUtil.changeMasterSecretPassphrase(application, masterSecret, MasterSecretUtil.UNENCRYPTED_PASSPHRASE)
       SignalStore.settings.passphraseDisabled = true
 

@@ -132,7 +132,7 @@ class AppSettingsViewModelTest {
 
     viewModel.onEvent(AppSettingsEvent.NavigateBackClicked)
 
-    assertThat(navigationEvents).containsExactly(AppSettingsNavigationEvent.NavigateBack)
+    assertThat(navigationEvents).containsExactly(AppSettingsNavigationEvent.NavigateBack())
   }
 
   @Test
@@ -184,7 +184,7 @@ class AppSettingsViewModelTest {
 
     viewModel.onEvent(AppSettingsEvent.DonateClicked)
 
-    assertThat(navigationEvents).containsExactly(AppSettingsNavigationEvent.NavigateToScreen(AppSettingsRoute.DonationsRoute.Donations()))
+    assertThat(navigationEvents).containsExactly(AppSettingsNavigationEvent.NavigateToScreen(AppSettingsRoute.DonationsRoute.Donations(), replacesDetail = true))
     assertThat(actions).isEmpty()
   }
 
@@ -257,7 +257,7 @@ class AppSettingsViewModelTest {
     viewModel.onEvent(AppSettingsEvent.BackupWarningClicked)
 
     verify { AppSettingsRepository.markBackupFailedIndicatorClicked() }
-    assertThat(navigationEvents).containsExactly(AppSettingsNavigationEvent.NavigateToScreen(AppSettingsRoute.BackupsRoute.Remote()))
+    assertThat(navigationEvents).containsExactly(AppSettingsNavigationEvent.NavigateToScreen(AppSettingsRoute.BackupsRoute.Remote(), replacesDetail = true))
   }
 
   @Test
@@ -269,7 +269,7 @@ class AppSettingsViewModelTest {
 
     verify { AppSettingsRepository.markBackupAlreadyRedeemedIndicatorClicked() }
     verify(exactly = 0) { AppSettingsRepository.markBackupFailedIndicatorClicked() }
-    assertThat(navigationEvents).containsExactly(AppSettingsNavigationEvent.NavigateToScreen(AppSettingsRoute.BackupsRoute.Remote()))
+    assertThat(navigationEvents).containsExactly(AppSettingsNavigationEvent.NavigateToScreen(AppSettingsRoute.BackupsRoute.Remote(), replacesDetail = true))
   }
 
   @Test
@@ -281,7 +281,7 @@ class AppSettingsViewModelTest {
 
     verify(exactly = 0) { AppSettingsRepository.markBackupFailedIndicatorClicked() }
     verify(exactly = 0) { AppSettingsRepository.markBackupAlreadyRedeemedIndicatorClicked() }
-    assertThat(navigationEvents).containsExactly(AppSettingsNavigationEvent.NavigateToScreen(AppSettingsRoute.BackupsRoute.Remote()))
+    assertThat(navigationEvents).containsExactly(AppSettingsNavigationEvent.NavigateToScreen(AppSettingsRoute.BackupsRoute.Remote(), replacesDetail = true))
   }
 
   @Test
