@@ -37,7 +37,7 @@ val canonicalVersionName = "8.34.2"
 // GitHub repository that publishes this fork's releases. The in-app updater reads
 // <repository>/releases/latest/download/latest.json, so this must be the repository that
 // the reproducible-release workflow publishes to.
-val forkReleaseRepository = "OWNER/REPO"
+val forkReleaseRepository = "nulldistrict/Signal-Android"
 val currentHotfixVersion = 0
 val maxHotfixVersions = 100
 
