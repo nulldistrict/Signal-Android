@@ -104,10 +104,10 @@ class AppSettingsNavigationTest {
   fun `a route the host opens as an activity stays off the back stack`() {
     setContent(defaultDetailRoute = AppSettingsRoute.ChatsRoute.Chats)
 
-    router.onEvent(AppSettingsNavigationEvent.NavigateToScreen(AppSettingsRoute.Payments, replacesDetail = true))
+    router.onEvent(AppSettingsNavigationEvent.NavigateToScreen(AppSettingsRoute.Invite, replacesDetail = true))
     composeTestRule.waitForIdle()
 
-    assertThat(launched).containsExactly(AppSettingsRoute.Payments)
+    assertThat(launched).containsExactly(AppSettingsRoute.Invite)
     assertThat(router.navigator.detail.value).isEqualTo(AppSettingsRoute.ChatsRoute.Chats)
     assertThat(closed).isEqualTo(0)
   }
@@ -121,7 +121,7 @@ class AppSettingsNavigationTest {
           home = { Text("Home") },
           defaultDetailRoute = defaultDetailRoute,
           tryLaunchActivity = { route ->
-            (route == AppSettingsRoute.Payments).also { if (it) launched += route }
+            (route == AppSettingsRoute.Invite).also { if (it) launched += route }
           },
           detailEntries = {
             detailEntry<AppSettingsRoute.ChatsRoute.Chats> { Text("Chats") }
