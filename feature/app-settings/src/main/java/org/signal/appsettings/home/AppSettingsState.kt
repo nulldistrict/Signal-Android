@@ -20,6 +20,8 @@ data class AppSettingsState(
   val userUnregistered: Boolean = false,
   val clientDeprecated: Boolean = false,
   val showInternalPreferences: Boolean = false,
+  /** Fork: Labs is offered to everyone as an opt-in, while internal preferences stay internal-only. */
+  val showLabs: Boolean = false,
   val showAppUpdates: Boolean = false,
   val backupFailureState: BackupFailureState = BackupFailureState.NONE,
   val snackbar: Snackbar = Snackbar.None

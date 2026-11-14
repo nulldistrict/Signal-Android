@@ -7,6 +7,7 @@ package org.thoughtcrime.securesms.components.settings.app.labs
 
 import org.signal.appsettings.labs.LabsSettingsState
 import org.thoughtcrime.securesms.keyvalue.SignalStore
+import org.thoughtcrime.securesms.keyvalue.optInWithFeaturesOff
 
 /**
  * Reads and writes the labs feature flags behind [LabsSettingsViewModel].
@@ -14,6 +15,8 @@ import org.thoughtcrime.securesms.keyvalue.SignalStore
 object LabsSettingsRepository {
 
   fun getState(): LabsSettingsState {
+    SignalStore.labs.optInWithFeaturesOff() // Fork: see LabsValuesExt.kt
+
     return LabsSettingsState(
       individualChatPlaintextExport = SignalStore.labs.individualChatPlaintextExport,
       storyArchive = SignalStore.labs.storyArchive,

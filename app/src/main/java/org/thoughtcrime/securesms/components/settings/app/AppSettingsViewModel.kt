@@ -39,6 +39,7 @@ class AppSettingsViewModel(
       isPrimaryDevice = AppSettingsRepository.isPrimaryDevice(),
       allowUserToGoToDonationManagementScreen = AppSettingsRepository.likelyCanManageDonations(),
       showInternalPreferences = AppSettingsRepository.showInternalPreferences(),
+      showLabs = true, // Fork: Labs opt-in, see LabsValuesExt.kt
       showAppUpdates = AppSettingsRepository.showAppUpdates()
     )
   )

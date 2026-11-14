@@ -333,7 +333,7 @@ fun AppSettingsScreen(
           )
         }
 
-        if (state.showInternalPreferences) {
+        if (state.showInternalPreferences || state.showLabs) {
           item {
             Dividers.Default()
           }
@@ -348,7 +348,9 @@ fun AppSettingsScreen(
                 .testTag(AppSettingsTestTags.ROW_LABS)
             )
           }
+        }
 
+        if (state.showInternalPreferences) {
           item {
             Rows.TextRow(
               text = stringResource(R.string.AppSettingsScreen__internal_preferences),

@@ -183,6 +183,15 @@ class AppSettingsScreenTest {
   }
 
   @Test
+  fun `labs can be shown without internal preferences`() {
+    setContent(createState(showLabs = true))
+
+    scrollTo(AppSettingsTestTags.ROW_LABS)
+    composeTestRule.onNodeWithTag(AppSettingsTestTags.ROW_LABS).assertIsDisplayed()
+    composeTestRule.onNodeWithTag(AppSettingsTestTags.ROW_INTERNAL).assertDoesNotExist()
+  }
+
+  @Test
   fun `a snackbar in state is shown and then reported as dismissed`() {
     setContent(createState(snackbar = AppSettingsState.Snackbar.CopiedDonorSubscriberId))
 
@@ -269,6 +278,7 @@ class AppSettingsScreenTest {
     userUnregistered: Boolean = false,
     showAppUpdates: Boolean = false,
     showInternalPreferences: Boolean = false,
+    showLabs: Boolean = false,
     backupFailureState: BackupFailureState = BackupFailureState.NONE,
     snackbar: AppSettingsState.Snackbar = AppSettingsState.Snackbar.None
   ): AppSettingsState {
@@ -278,6 +288,7 @@ class AppSettingsScreenTest {
       userUnregistered = userUnregistered,
       showAppUpdates = showAppUpdates,
       showInternalPreferences = showInternalPreferences,
+      showLabs = showLabs,
       backupFailureState = backupFailureState,
       snackbar = snackbar
     )

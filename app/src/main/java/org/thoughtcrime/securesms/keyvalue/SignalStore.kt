@@ -64,7 +64,7 @@ class SignalStore(context: Application, private val store: KeyValueStore) {
   val apkUpdateValues = ApkUpdateValues(store, context)
   val backupValues = BackupValues(store, context)
   val callQualityValues = CallQualityValues(store)
-  val labsValues = LabsValues(store) { RemoteConfig.internalUser }
+  val labsValues = LabsValues(store) { RemoteConfig.internalUser || isLabsOptedIn(store) } // Fork: see LabsValuesExt.kt
 
   companion object {
 
