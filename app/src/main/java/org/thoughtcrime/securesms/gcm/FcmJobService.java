@@ -11,9 +11,9 @@ import androidx.annotation.RequiresApi;
 
 import org.signal.core.util.concurrent.SignalExecutors;
 import org.signal.core.util.logging.Log;
+import org.thoughtcrime.securesms.ApplicationContext;
 import org.thoughtcrime.securesms.dependencies.AppDependencies;
 import org.thoughtcrime.securesms.messages.WebSocketDrainer;
-import org.thoughtcrime.securesms.service.KeyCachingService;
 import org.signal.core.util.AppForegroundObserver;
 import org.signal.core.util.ServiceUtil;
 
@@ -41,7 +41,7 @@ public class FcmJobService extends JobService {
   public boolean onStartJob(JobParameters params) {
     Log.d(TAG, "onStartJob()");
 
-    if (AppForegroundObserver.isForegrounded() || KeyCachingService.isLocked(this)) {
+    if (AppForegroundObserver.isForegrounded() || ApplicationContext.isDatabaseLocked(this)) {
       Log.i(TAG, "App is foregrounded or locked. No need to run.");
       return false;
     }

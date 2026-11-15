@@ -74,6 +74,7 @@ public class KeyCachingService extends Service {
   public  static final String CLEAR_KEY_EVENT          = BuildConfig.APPLICATION_ID + ".service.action.CLEAR_KEY_EVENT";
   public  static final String LOCK_TOGGLED_EVENT       = BuildConfig.APPLICATION_ID + ".service.action.LOCK_ENABLED_EVENT";
   private static final String PASSPHRASE_EXPIRED_EVENT = BuildConfig.APPLICATION_ID + ".service.action.PASSPHRASE_EXPIRED_EVENT";
+  private static final String SCREEN_LOCK_EVENT        = BuildConfig.APPLICATION_ID + ".service.action.SCREEN_LOCK_EVENT";
   public  static final String CLEAR_KEY_ACTION         = BuildConfig.APPLICATION_ID + ".service.action.CLEAR_KEY";
   public  static final String DISABLE_ACTION           = BuildConfig.APPLICATION_ID + ".service.action.DISABLE";
 
@@ -81,7 +82,25 @@ public class KeyCachingService extends Service {
 
   private static MasterSecret masterSecret;
 
+  /**
+   * Fork: two-tier lock. While only the screen lock is engaged, the UI is locked ({@link #isLocked} is true and
+   * notifications hide their contents) but the database stays open and messages keep arriving. The master secret
+   * is held here so that the screen lock (biometric or device credential) can restore it. A full lock (manual
+   * lock or passphrase timeout) clears it, wipes memory and requires the passphrase again.
+   */
+  private static MasterSecret screenLockedSecret;
+
   public KeyCachingService() {}
+
+  /** Fork: true while only the screen lock is engaged and the database is still open. */
+  public static synchronized boolean isScreenLockedOnly() {
+    return screenLockedSecret != null;
+  }
+
+  /** Fork: the master secret held during a screen lock, to be restored after biometric or device credential unlock. */
+  public static synchronized @Nullable MasterSecret getScreenLockedSecret() {
+    return screenLockedSecret;
+  }
 
   public static synchronized boolean isLocked(Context context) {
     if (!ApplicationContext.getInstance(context).isAppInitialized()) {
@@ -120,7 +139,8 @@ public class KeyCachingService extends Service {
     }
 
     if (SignalStore.settings().getScreenLockEnabled() || !SignalStore.settings().getPassphraseDisabled()) {
-      ServiceUtil.getAlarmManager(context).cancel(buildExpirationPendingIntent(context));
+      ServiceUtil.getAlarmManager(context).cancel(buildExpirationPendingIntent(context, PASSPHRASE_EXPIRED_EVENT));
+      ServiceUtil.getAlarmManager(context).cancel(buildExpirationPendingIntent(context, SCREEN_LOCK_EVENT));
     }
   }
 
@@ -135,7 +155,8 @@ public class KeyCachingService extends Service {
   @SuppressLint("StaticFieldLeak")
   public void setMasterSecret(final MasterSecret masterSecret) {
     synchronized (KeyCachingService.class) {
-      KeyCachingService.masterSecret = masterSecret;
+      KeyCachingService.masterSecret       = masterSecret;
+      KeyCachingService.screenLockedSecret = null;
 
       foregroundService();
       broadcastNewSecret();
@@ -158,6 +179,7 @@ public class KeyCachingService extends Service {
       switch (intent.getAction()) {
         case CLEAR_KEY_ACTION:         handleClearKey(); scheduleSecureWipe(); break;
         case PASSPHRASE_EXPIRED_EVENT: handleClearKey(); scheduleSecureWipe(); break;
+        case SCREEN_LOCK_EVENT:        handleScreenLock();      break;
         case DISABLE_ACTION:           handleDisableService();  break;
         case LOCK_TOGGLED_EVENT:       handleLockToggled();     break;
       }
@@ -207,8 +229,36 @@ public class KeyCachingService extends Service {
   @SuppressLint("StaticFieldLeak")
   private void handleClearKey() {
     Log.i(TAG, "handleClearKey()");
-    KeyCachingService.masterSecret = null;
+    synchronized (KeyCachingService.class) {
+      KeyCachingService.masterSecret       = null;
+      KeyCachingService.screenLockedSecret = null;
+    }
     stopForeground(true);
+
+    Intent intent = new Intent(CLEAR_KEY_EVENT);
+    intent.setPackage(getApplicationContext().getPackageName());
+
+    sendBroadcast(intent, KEY_PERMISSION);
+
+    SignalExecutors.BOUNDED.execute(() -> {
+      AppDependencies.getMessageNotifier().updateNotification(KeyCachingService.this);
+    });
+  }
+
+  /**
+   * Fork: locks the UI only. The database stays open, the service stays in the foreground and no memory wipe runs,
+   * so messages and (content-free) notifications keep arriving until the user unlocks with the screen lock.
+   */
+  private void handleScreenLock() {
+    synchronized (KeyCachingService.class) {
+      if (KeyCachingService.masterSecret == null || !SignalStore.settings().getScreenLockEnabled()) {
+        return;
+      }
+
+      Log.i(TAG, "handleScreenLock()");
+      KeyCachingService.screenLockedSecret = KeyCachingService.masterSecret;
+      KeyCachingService.masterSecret       = null;
+    }
 
     Intent intent = new Intent(CLEAR_KEY_EVENT);
     intent.setPackage(getApplicationContext().getPackageName());
@@ -256,37 +306,47 @@ public class KeyCachingService extends Service {
     }
   }
 
+  /**
+   * Fork: two-tier lock. The screen lock timeout only locks the UI ({@link #SCREEN_LOCK_EVENT}); the passphrase
+   * timeout fully locks the app ({@link #PASSPHRASE_EXPIRED_EVENT}). Both run independently while the app is in the
+   * background, and the passphrase timeout keeps running while the screen is locked.
+   */
   private static void startTimeoutIfAppropriate(@NonNull Context context) {
     boolean appVisible       = AppForegroundObserver.isForegrounded();
-    boolean secretSet        = KeyCachingService.masterSecret != null;
+    boolean screenLocked     = isScreenLockedOnly();
+    boolean secretSet        = KeyCachingService.masterSecret != null || screenLocked;
 
     boolean timeoutEnabled   = SignalStore.settings().getPassphraseTimeoutEnabled();
     boolean passLockActive   = timeoutEnabled && !SignalStore.settings().getPassphraseDisabled();
 
-    boolean screenLockActive = SignalStore.settings().getScreenLockEnabled();
+    boolean screenLockActive = SignalStore.settings().getScreenLockEnabled() && !screenLocked;
 
-    if (!appVisible && secretSet && (passLockActive || screenLockActive)) {
-      long passphraseTimeoutMinutes = SignalStore.settings().getPassphraseTimeout();
-      long screenLockTimeoutSeconds = SignalStore.settings().getScreenLockTimeout();
+    if (appVisible || !secretSet) {
+      return;
+    }
 
-      long timeoutMillis;
+    if (screenLockActive) {
+      scheduleExpiration(context, SCREEN_LOCK_EVENT, TimeUnit.SECONDS.toMillis(SignalStore.settings().getScreenLockTimeout()));
+    }
 
-      if (!SignalStore.settings().getPassphraseDisabled()) timeoutMillis = TimeUnit.MINUTES.toMillis(passphraseTimeoutMinutes);
-      else                                                 timeoutMillis = TimeUnit.SECONDS.toMillis(screenLockTimeoutSeconds);
+    if (passLockActive) {
+      scheduleExpiration(context, PASSPHRASE_EXPIRED_EVENT, TimeUnit.MINUTES.toMillis(SignalStore.settings().getPassphraseTimeout()));
+    }
+  }
 
-      if (timeoutMillis <= 0) {
-        Log.i(TAG, "Starting immediate screen lock");
-        Intent intent = new Intent(PASSPHRASE_EXPIRED_EVENT, null, context, KeyCachingService.class);
-        context.startService(intent);
-      } else {
-        Log.i(TAG, "Starting timeout: " + timeoutMillis);
+  private static void scheduleExpiration(@NonNull Context context, @NonNull String action, long timeoutMillis) {
+    if (timeoutMillis <= 0) {
+      Log.i(TAG, "Starting immediate lock: " + action);
+      Intent intent = new Intent(action, null, context, KeyCachingService.class);
+      context.startService(intent);
+    } else {
+      Log.i(TAG, "Starting timeout for " + action + ": " + timeoutMillis);
 
-        AlarmManager  alarmManager     = ServiceUtil.getAlarmManager(context);
-        PendingIntent expirationIntent = buildExpirationPendingIntent(context);
+      AlarmManager  alarmManager     = ServiceUtil.getAlarmManager(context);
+      PendingIntent expirationIntent = buildExpirationPendingIntent(context, action);
 
-        alarmManager.cancel(expirationIntent);
-        alarmManager.set(AlarmManager.ELAPSED_REALTIME, SystemClock.elapsedRealtime() + timeoutMillis, expirationIntent);
-      }
+      alarmManager.cancel(expirationIntent);
+      alarmManager.set(AlarmManager.ELAPSED_REALTIME, SystemClock.elapsedRealtime() + timeoutMillis, expirationIntent);
     }
   }
 
@@ -343,8 +403,8 @@ public class KeyCachingService extends Service {
     return PendingIntent.getActivity(getApplicationContext(), 0, MainActivity.clearTop(this), getPendingIntentFlags());
   }
 
-  private static PendingIntent buildExpirationPendingIntent(@NonNull Context context) {
-    Intent expirationIntent = new Intent(PASSPHRASE_EXPIRED_EVENT, null, context, KeyCachingService.class);
+  private static PendingIntent buildExpirationPendingIntent(@NonNull Context context, @NonNull String action) {
+    Intent expirationIntent = new Intent(action, null, context, KeyCachingService.class);
     return PendingIntent.getService(context, 0, expirationIntent, getPendingIntentFlags());
   }
 
