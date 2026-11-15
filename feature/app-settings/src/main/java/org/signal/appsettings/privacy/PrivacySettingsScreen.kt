@@ -198,17 +198,17 @@ fun PrivacySettingsScreen(
 
       obsoletePassphraseRows(state = state, onEvent = onEvent)
 
-      if (!state.isObsoletePassphraseEnabled) {
-        item {
-          Rows.TextRow(
-            text = stringResource(R.string.preferences_app_protection__screen_lock),
-            label = screenLockSummary(state),
-            enabled = state.isDeviceSecure,
-            onClick = { onEvent(PrivacySettingsEvent.ScreenLockClicked) },
-            onDisabledClick = { onEvent(PrivacySettingsEvent.DisabledScreenLockClicked) },
-            modifier = Modifier.testTag(PrivacySettingsTestTags.ROW_SCREEN_LOCK)
-          )
-        }
+      // Fork: the screen lock is offered next to the passphrase. With both on, the screen lock times out first and
+      // only locks the UI; the passphrase timeout fully locks the app (see KeyCachingService).
+      item {
+        Rows.TextRow(
+          text = stringResource(R.string.preferences_app_protection__screen_lock),
+          label = screenLockSummary(state),
+          enabled = state.isDeviceSecure,
+          onClick = { onEvent(PrivacySettingsEvent.ScreenLockClicked) },
+          onDisabledClick = { onEvent(PrivacySettingsEvent.DisabledScreenLockClicked) },
+          modifier = Modifier.testTag(PrivacySettingsTestTags.ROW_SCREEN_LOCK)
+        )
       }
 
       item {
