@@ -11,12 +11,12 @@ import com.google.firebase.messaging.RemoteMessage;
 
 import org.signal.core.util.logging.Log;
 import org.signal.storage.keyvalue.PlainTextKeyValueStore;
+import org.thoughtcrime.securesms.ApplicationContext;
 import org.thoughtcrime.securesms.dependencies.AppDependencies;
 import org.thoughtcrime.securesms.jobs.FcmRefreshJob;
 import org.thoughtcrime.securesms.jobs.SubmitRateLimitPushChallengeJob;
 import org.thoughtcrime.securesms.keyvalue.SignalStore;
 import org.thoughtcrime.securesms.registration.fcm.PushChallengeRequest;
-import org.thoughtcrime.securesms.service.KeyCachingService;
 import org.thoughtcrime.securesms.util.NetworkUtil;
 import org.thoughtcrime.securesms.util.SignalLocalMetrics;
 
@@ -28,7 +28,7 @@ public class FcmReceiveService extends FirebaseMessagingService {
 
   @Override
   public void onMessageReceived(RemoteMessage remoteMessage) {
-    if (KeyCachingService.isLocked(this)) {
+    if (ApplicationContext.isDatabaseLocked(this)) {
       if (remoteMessage.getPriority() == RemoteMessage.PRIORITY_HIGH) {
         Log.d(TAG, "New urgent message received while app is locked.");
         FcmFetchManager.postMayHaveMessagesNotification(this);
@@ -64,7 +64,7 @@ public class FcmReceiveService extends FirebaseMessagingService {
 
   @Override
   public void onDeletedMessages() {
-    if (KeyCachingService.isLocked(this)) {
+    if (ApplicationContext.isDatabaseLocked(this)) {
       Log.d(TAG, "onDeletedMessages() while locked. Deferring fetch until unlock.");
       return;
     }
@@ -77,7 +77,7 @@ public class FcmReceiveService extends FirebaseMessagingService {
   public void onNewToken(String token) {
     Log.i(TAG, "onNewToken()");
 
-    if (KeyCachingService.isLocked(this)) {
+    if (ApplicationContext.isDatabaseLocked(this)) {
       Log.i(TAG, "Got a new FCM token while locked. Deferring upload until unlock.");
       PlainTextKeyValueStore.setShouldRefreshFcmToken(true);
       return;

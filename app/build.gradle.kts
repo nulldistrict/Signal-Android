@@ -61,7 +61,7 @@ val forkReleaseRepository = "nulldistrict/Signal-Android"
 // Added on top of upstream's currentHotfixVersion. Bump it for a fork-only release on the same Signal version
 // (the in-app updater only installs a higher versionCode). It may be reset to 0 when a new Signal release is
 // merged, because the new canonicalVersionCode is always higher.
-val forkHotfixVersion = 2
+val forkHotfixVersion = 3
 
 val languagesProvider: Provider<List<String>> = providers.of(LanguageListValueSource::class.java) {
   parameters.resDir.set(layout.projectDirectory.dir("src/main/res"))

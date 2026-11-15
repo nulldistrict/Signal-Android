@@ -159,10 +159,11 @@ class PrivacySettingsScreenTest {
   }
 
   @Test
-  fun `passphrase rows replace screen lock while the legacy passphrase is enabled`() {
+  fun `passphrase rows are shown next to screen lock while the passphrase is enabled`() {
     setContent(PrivacySettingsState(isObsoletePassphraseEnabled = true))
 
-    composeTestRule.onNodeWithTag(PrivacySettingsTestTags.ROW_SCREEN_LOCK).assertDoesNotExist()
+    scrollTo(PrivacySettingsTestTags.ROW_SCREEN_LOCK)
+    composeTestRule.onNodeWithTag(PrivacySettingsTestTags.ROW_SCREEN_LOCK).assertExists()
 
     scrollTo(PrivacySettingsTestTags.ROW_ENABLE_PASSPHRASE)
     composeTestRule.onNodeWithTag(PrivacySettingsTestTags.ROW_ENABLE_PASSPHRASE).performClick()

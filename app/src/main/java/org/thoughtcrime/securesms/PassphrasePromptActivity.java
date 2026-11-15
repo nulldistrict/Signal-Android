@@ -57,6 +57,7 @@ import org.thoughtcrime.securesms.crypto.MasterSecret;
 import org.thoughtcrime.securesms.crypto.MasterSecretUtil;
 import org.thoughtcrime.securesms.keyvalue.SignalStore;
 import org.thoughtcrime.securesms.logsubmit.SubmitDebugLogActivity;
+import org.thoughtcrime.securesms.service.KeyCachingService;
 import org.thoughtcrime.securesms.util.CommunicationActions;
 import org.thoughtcrime.securesms.util.DynamicIntroTheme;
 import org.thoughtcrime.securesms.util.DynamicLanguage;
@@ -131,9 +132,7 @@ public class PassphrasePromptActivity extends PassphraseActivity {
 
     setLockTypeVisibility();
 
-    // The device credential cannot unwrap a passphrase-protected database, so only offer it when it can unlock.
-    if (ApplicationContext.getInstance(this).isAppInitialized() && !MasterSecretUtil.isPassphraseRequired(this) &&
-        SignalStore.settings().getScreenLockEnabled() && !authenticated && !hadFailure) {
+    if (canUnlockWithScreenLock() && !authenticated && !hadFailure) {
       ThreadUtil.postToMain(resumeScreenLockRunnable);
     }
 
@@ -202,7 +201,26 @@ public class PassphrasePromptActivity extends PassphraseActivity {
     new UnlockTask().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, passphrase);
   }
 
+  /**
+   * Fork: the screen lock (biometric or device credential) can unlock when the database is open and either no
+   * passphrase protects it, or only the screen lock is engaged and the master secret is still held in memory. It can
+   * never unlock a passphrase-protected database that is fully locked.
+   */
+  private boolean canUnlockWithScreenLock() {
+    return ApplicationContext.getInstance(this).isAppInitialized() &&
+           SignalStore.settings().getScreenLockEnabled() &&
+           (!MasterSecretUtil.isPassphraseRequired(this) || KeyCachingService.isScreenLockedOnly());
+  }
+
   private void handleAuthenticated() {
+    MasterSecret screenLockedSecret = KeyCachingService.getScreenLockedSecret();
+
+    if (screenLockedSecret != null) {
+      authenticated = true;
+      setMasterSecret(screenLockedSecret);
+      return;
+    }
+
     if (MasterSecretUtil.isPassphraseRequired(this)) {
       // A passphrase protects the database; the device credential alone cannot unlock it.
       return;
@@ -278,15 +296,7 @@ public class PassphrasePromptActivity extends PassphraseActivity {
   }
 
   private void setLockTypeVisibility() {
-    if (MasterSecretUtil.isPassphraseRequired(this) ||
-        !ApplicationContext.getInstance(this).isAppInitialized()) {
-      passphraseAuthContainer.setVisibility(View.VISIBLE);
-      unlockView.setVisibility(View.GONE);
-      lockScreenButton.setVisibility(View.GONE);
-      return;
-    }
-
-    if (SignalStore.settings().getScreenLockEnabled()) {
+    if (canUnlockWithScreenLock()) {
       passphraseAuthContainer.setVisibility(View.GONE);
       unlockView.setVisibility(View.VISIBLE);
       lockScreenButton.setVisibility(View.VISIBLE);
