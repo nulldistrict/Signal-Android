@@ -330,7 +330,12 @@ private fun LazyListScope.obsoletePassphraseRows(
 @Composable
 private fun screenLockSummary(state: PrivacySettingsState): String {
   return if (state.isScreenLockOn) {
-    ExpirationUtil.getExpirationDisplayValue(LocalContext.current, state.effectiveScreenLockTimeout.inWholeSeconds.toInt())
+    // Fork: a zero timeout locks immediately (KeyCachingService), so show that instead of upstream's one minute.
+    if (state.screenLockTimeout == Duration.ZERO) {
+      stringResource(R.string.ScreenLockSettingsFragment__immediately)
+    } else {
+      ExpirationUtil.getExpirationDisplayValue(LocalContext.current, state.screenLockTimeout.inWholeSeconds.toInt())
+    }
   } else {
     stringResource(R.string.ScreenLockSettingsFragment__off)
   }

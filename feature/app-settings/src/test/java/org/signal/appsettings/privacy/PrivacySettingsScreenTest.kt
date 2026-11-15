@@ -25,6 +25,7 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
+import kotlin.time.Duration
 import kotlin.time.Duration.Companion.days
 import kotlin.time.Duration.Companion.minutes
 
@@ -148,6 +149,14 @@ class PrivacySettingsScreenTest {
 
     scrollTo(PrivacySettingsTestTags.ROW_SCREEN_LOCK)
     composeTestRule.onNodeWithText("5 minutes").assertIsDisplayed()
+  }
+
+  @Test
+  fun `screen lock summary shows immediately for a zero timeout`() {
+    setContent(PrivacySettingsState(screenLock = true, screenLockTimeout = Duration.ZERO))
+
+    scrollTo(PrivacySettingsTestTags.ROW_SCREEN_LOCK)
+    composeTestRule.onNodeWithTag(PrivacySettingsTestTags.ROW_SCREEN_LOCK).assertTextContains("Immediately")
   }
 
   @Test
