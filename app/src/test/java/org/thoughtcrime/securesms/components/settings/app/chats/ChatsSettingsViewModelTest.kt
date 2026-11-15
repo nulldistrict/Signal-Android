@@ -73,6 +73,13 @@ class ChatsSettingsViewModelTest {
     every { ChatsSettingsRepository.isClientDeprecated() } returns false
     every { ChatsSettingsRepository.isPlaintextExportEnabled() } returns true
     every { ChatsSettingsRepository.observePlaintextExportProgress() } returns plaintextExportProgress
+    // Fork: approved Signal-JW chat settings, at their defaults.
+    every { ChatsSettingsRepository.isSendLinkPreviewImagesEnabled() } returns true
+    every { ChatsSettingsRepository.isKeepViewOnceMessages() } returns false
+    every { ChatsSettingsRepository.isIgnoreRemoteDelete() } returns false
+    every { ChatsSettingsRepository.isIgnoreAdminDelete() } returns false
+    every { ChatsSettingsRepository.isDeleteMediaOnly() } returns false
+    every { ChatsSettingsRepository.getWhoCanAddYouToGroups() } returns "nonblocked"
     every { ChatsSettingsRepository.setLinkPreviewsEnabled(any()) } just Runs
     every { ChatsSettingsRepository.setAutoplayStickersAndGifsEnabled(any()) } just Runs
     every { ChatsSettingsRepository.setPreferSystemContactPhotos(any()) } just Runs
