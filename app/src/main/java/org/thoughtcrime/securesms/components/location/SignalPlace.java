@@ -64,29 +64,35 @@ public class SignalPlace {
       description += (address + "\n");
     }
 
+    // Fork: a blank line separates the address from the labelled map links.
+    if (!description.isEmpty()) {
+      description += "\n";
+    }
+
     description += getMapLinks(SignalStore.misc().getLocationLinkProvider(), latitude, longitude);
 
     return description;
   }
 
   /**
-   * Fork: map links for a location, for the provider chosen in chat settings: google, osm, apple or all (one per line).
+   * Fork: labelled map links for a location, for the provider chosen in chat settings: google, osm, apple, or all of
+   * them separated by blank lines.
    */
   @VisibleForTesting
   static @NonNull String getMapLinks(@NonNull String provider, double latitude, double longitude) {
     String coordinates = latitude + "," + longitude;
 
-    String google = Uri.parse(URL)
-                       .buildUpon()
-                       .appendQueryParameter("q", coordinates)
-                       .build().toString();
-    String osm    = "https://www.openstreetmap.org/?mlat=" + latitude + "&mlon=" + longitude + "#map=16/" + latitude + "/" + longitude;
-    String apple  = "https://maps.apple.com/?ll=" + coordinates + "&q=" + coordinates;
+    String google = "Google Maps: " + Uri.parse(URL)
+                                         .buildUpon()
+                                         .appendQueryParameter("q", coordinates)
+                                         .build().toString();
+    String osm    = "OpenStreetMap: https://www.openstreetmap.org/?mlat=" + latitude + "&mlon=" + longitude + "#map=16/" + latitude + "/" + longitude;
+    String apple  = "Apple Maps: https://maps.apple.com/?ll=" + coordinates + "&q=" + coordinates;
 
     switch (provider) {
       case "osm":   return osm;
       case "apple": return apple;
-      case "all":   return google + "\n" + osm + "\n" + apple;
+      case "all":   return google + "\n\n" + osm + "\n\n" + apple;
       default:      return google;
     }
   }

@@ -16,12 +16,12 @@ import org.robolectric.annotation.Config
 @Config(manifest = Config.NONE, application = Application::class)
 class SignalPlaceTest {
 
-  private val google = "https://maps.google.com/maps?q=41.0082%2C28.9784"
-  private val osm = "https://www.openstreetmap.org/?mlat=41.0082&mlon=28.9784#map=16/41.0082/28.9784"
-  private val apple = "https://maps.apple.com/?ll=41.0082,28.9784&q=41.0082,28.9784"
+  private val google = "Google Maps: https://maps.google.com/maps?q=41.0082%2C28.9784"
+  private val osm = "OpenStreetMap: https://www.openstreetmap.org/?mlat=41.0082&mlon=28.9784#map=16/41.0082/28.9784"
+  private val apple = "Apple Maps: https://maps.apple.com/?ll=41.0082,28.9784&q=41.0082,28.9784"
 
   @Test
-  fun `google is the default and matches upstream's link`() {
+  fun `google is the default`() {
     assertThat(SignalPlace.getMapLinks("google", 41.0082, 28.9784)).isEqualTo(google)
     assertThat(SignalPlace.getMapLinks("unknown", 41.0082, 28.9784)).isEqualTo(google)
   }
@@ -37,7 +37,7 @@ class SignalPlaceTest {
   }
 
   @Test
-  fun `all puts each link on its own line`() {
-    assertThat(SignalPlace.getMapLinks("all", 41.0082, 28.9784)).isEqualTo("$google\n$osm\n$apple")
+  fun `all separates the labelled links with blank lines`() {
+    assertThat(SignalPlace.getMapLinks("all", 41.0082, 28.9784)).isEqualTo("$google\n\n$osm\n\n$apple")
   }
 }
