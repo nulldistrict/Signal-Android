@@ -13,7 +13,8 @@
     <string name="backup_support_url" translatable="false">https://support.signal.org/hc/articles/360007059752</string>
     <string name="remote_backup_support_url" translatable="false">https://support.signal.org/hc/articles/9708267671322</string>
     <string name="transfer_support_url" translatable="false">https://support.signal.org/hc/articles/360007059752</string>
-    <string name="support_center_url" translatable="false">https://support.signal.org/</string>
+    <!-- Fork: the fork's own support contact page instead of Signal's support center -->
+    <string name="support_center_url" translatable="false">https://nulldistrict.github.io/contact/</string>
     <string name="terms_and_privacy_policy_url" translatable="false">https://signal.org/legal</string>
     <string name="google_pay_url" translatable="false">https://pay.google.com</string>
     <string name="donation_decline_code_error_url" translatable="false">https://support.signal.org/hc/articles/4408365318426#errors</string>
