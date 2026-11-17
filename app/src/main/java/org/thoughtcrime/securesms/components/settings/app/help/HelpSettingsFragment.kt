@@ -30,7 +30,8 @@ class HelpSettingsFragment : ComposeFragment() {
 
   private val viewModel: HelpSettingsViewModel by viewModel {
     HelpSettingsViewModel(
-      versionName = BuildConfig.VERSION_NAME,
+      // Fork: show the fork release (e.g. 8.35.3-EK) and the build's version code, which tells hotfix builds apart.
+      versionName = "${BuildConfig.VERSION_NAME}-EK (${BuildConfig.VERSION_CODE})",
       initialLogEnabled = SignalStore.settings.isLoggingEnabled,
       onLogEnabledChanged = { enabled ->
         SignalStore.settings.isLoggingEnabled = enabled

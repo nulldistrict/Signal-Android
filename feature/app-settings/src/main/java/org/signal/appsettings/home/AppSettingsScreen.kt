@@ -176,35 +176,38 @@ fun AppSettingsScreen(
           }
         }
 
-        item {
-          Rows.TextRow(
-            text = {
-              Text(
-                text = stringResource(R.string.AppSettingsScreen__donate_to_signal),
-                modifier = Modifier.weight(1f)
-              )
-
-              if (state.hasExpiredGiftBadge) {
-                Icon(
-                  painter = painterResource(CoreUiR.drawable.symbol_info_fill_24),
-                  tint = colorResource(CoreUiR.color.signal_accent_primary),
-                  contentDescription = null
+        // Fork: no "Donate to Signal" row; the fork does not route users to Signal's donations.
+        if (state.showDonate) {
+          item {
+            Rows.TextRow(
+              text = {
+                Text(
+                  text = stringResource(R.string.AppSettingsScreen__donate_to_signal),
+                  modifier = Modifier.weight(1f)
                 )
-              }
-            },
-            icon = {
-              Icon(
-                painter = SignalIcons.Heart.painter,
-                contentDescription = null,
-                tint = MaterialTheme.colorScheme.onSurface
-              )
-            },
-            onClick = { onEvent(AppSettingsEvent.DonateClicked) },
-            onLongClick = { onEvent(AppSettingsEvent.DonateLongClicked) },
-            modifier = Modifier
-              .selectionHighlight(selectedRoute is AppSettingsRoute.DonationsRoute)
-              .testTag(AppSettingsTestTags.ROW_DONATE)
-          )
+
+                if (state.hasExpiredGiftBadge) {
+                  Icon(
+                    painter = painterResource(CoreUiR.drawable.symbol_info_fill_24),
+                    tint = colorResource(CoreUiR.color.signal_accent_primary),
+                    contentDescription = null
+                  )
+                }
+              },
+              icon = {
+                Icon(
+                  painter = SignalIcons.Heart.painter,
+                  contentDescription = null,
+                  tint = MaterialTheme.colorScheme.onSurface
+                )
+              },
+              onClick = { onEvent(AppSettingsEvent.DonateClicked) },
+              onLongClick = { onEvent(AppSettingsEvent.DonateLongClicked) },
+              modifier = Modifier
+                .selectionHighlight(selectedRoute is AppSettingsRoute.DonationsRoute)
+                .testTag(AppSettingsTestTags.ROW_DONATE)
+            )
+          }
         }
 
         item {
@@ -322,15 +325,18 @@ fun AppSettingsScreen(
           )
         }
 
-        item {
-          Rows.TextRow(
-            text = stringResource(R.string.AppSettingsFragment__invite_your_friends),
-            icon = SignalIcons.Invite.painter,
-            onClick = { onEvent(AppSettingsEvent.InviteClicked) },
-            modifier = Modifier
-              .selectionHighlight(selectedRoute == AppSettingsRoute.Invite)
-              .testTag(AppSettingsTestTags.ROW_INVITE)
-          )
+        // Fork: no "Invite your friends" row.
+        if (state.showInvite) {
+          item {
+            Rows.TextRow(
+              text = stringResource(R.string.AppSettingsFragment__invite_your_friends),
+              icon = SignalIcons.Invite.painter,
+              onClick = { onEvent(AppSettingsEvent.InviteClicked) },
+              modifier = Modifier
+                .selectionHighlight(selectedRoute == AppSettingsRoute.Invite)
+                .testTag(AppSettingsTestTags.ROW_INVITE)
+            )
+          }
         }
 
         if (state.showInternalPreferences || state.showLabs) {

@@ -22,6 +22,9 @@ data class AppSettingsState(
   val showInternalPreferences: Boolean = false,
   /** Fork: Labs is offered to everyone as an opt-in, while internal preferences stay internal-only. */
   val showLabs: Boolean = false,
+  /** Fork: the fork hides the donate and invite rows (see AppSettingsViewModel). */
+  val showDonate: Boolean = true,
+  val showInvite: Boolean = true,
   val showAppUpdates: Boolean = false,
   val backupFailureState: BackupFailureState = BackupFailureState.NONE,
   val snackbar: Snackbar = Snackbar.None

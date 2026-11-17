@@ -40,6 +40,8 @@ class AppSettingsViewModel(
       allowUserToGoToDonationManagementScreen = AppSettingsRepository.likelyCanManageDonations(),
       showInternalPreferences = AppSettingsRepository.showInternalPreferences(),
       showLabs = true, // Fork: Labs opt-in, see LabsValuesExt.kt
+      showDonate = false, // Fork: no "Donate to Signal" row
+      showInvite = false, // Fork: no "Invite your friends" row
       showAppUpdates = AppSettingsRepository.showAppUpdates()
     )
   )

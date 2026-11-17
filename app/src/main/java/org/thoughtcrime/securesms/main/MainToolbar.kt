@@ -578,8 +578,15 @@ private fun HeadsUpIndicator(state: MainToolbarState, modifier: Modifier = Modif
   }
 }
 
+private const val FORK_HIDES_DONATE = true
+
 @Composable
 private fun DonateDropdownItem(callback: MainToolbarCallback, onOptionSelected: () -> Unit) {
+  // Fork: no "Donate" entry in the main menu.
+  if (FORK_HIDES_DONATE) {
+    return
+  }
+
   DropdownMenus.Item(
     leadingIconResId = R.drawable.symbol_heart_24,
     text = {
