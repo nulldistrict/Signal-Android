@@ -33,6 +33,7 @@ class HelpSettingsFragment : ComposeFragment() {
       // Fork: show the fork release (e.g. 8.35.3-EK) and the build's version code, which tells hotfix builds apart.
       versionName = "${BuildConfig.VERSION_NAME}-EK (${BuildConfig.VERSION_CODE})",
       initialLogEnabled = SignalStore.settings.isLoggingEnabled,
+      showContactUs = false, // Fork: no "Contact us" row; the support center link opens the fork's contact page
       onLogEnabledChanged = { enabled ->
         SignalStore.settings.isLoggingEnabled = enabled
         Log.setLogging(enabled)

@@ -25,6 +25,7 @@ import org.signal.core.util.logging.Log
 class HelpSettingsViewModel(
   versionName: String,
   initialLogEnabled: Boolean = true,
+  showContactUs: Boolean = true,
   private val onLogEnabledChanged: (Boolean) -> Unit = {}
 ) : EventDrivenViewModel<HelpSettingsEvent>(TAG) {
 
@@ -32,7 +33,7 @@ class HelpSettingsViewModel(
     private val TAG = Log.tag(HelpSettingsViewModel::class)
   }
 
-  private val _state = MutableStateFlow(HelpSettingsState(versionName = versionName, logEnabled = initialLogEnabled))
+  private val _state = MutableStateFlow(HelpSettingsState(versionName = versionName, logEnabled = initialLogEnabled, showContactUs = showContactUs))
   private val _actions = Channel<HelpSettingsAction>(Channel.BUFFERED)
 
   val state: StateFlow<HelpSettingsState> = _state.asStateFlow()

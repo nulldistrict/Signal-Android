@@ -74,12 +74,14 @@ fun HelpSettingsScreen(
         )
       }
 
-      item {
-        Rows.TextRow(
-          text = stringResource(R.string.HelpSettingsFragment__contact_us),
-          onClick = { onEvent(HelpSettingsEvent.ContactUsClicked) },
-          modifier = Modifier.testTag(HelpSettingsTestTags.ROW_CONTACT_US)
-        )
+      if (state.showContactUs) {
+        item {
+          Rows.TextRow(
+            text = stringResource(R.string.HelpSettingsFragment__contact_us),
+            onClick = { onEvent(HelpSettingsEvent.ContactUsClicked) },
+            modifier = Modifier.testTag(HelpSettingsTestTags.ROW_CONTACT_US)
+          )
+        }
       }
 
       item {
