@@ -15,6 +15,8 @@ data class HelpSettingsState(
   val versionName: String = "",
   /** Whether debug logging is currently enabled. */
   val logEnabled: Boolean = true,
+  /** Fork: whether the "Contact us" row is shown. The fork has no support team to email, so it hides the row. */
+  val showContactUs: Boolean = true,
   /** The currently shown dialog, if any. */
   val dialog: Dialog = Dialog.None
 ) {

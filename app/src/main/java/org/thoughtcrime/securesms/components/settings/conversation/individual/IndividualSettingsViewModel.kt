@@ -59,6 +59,7 @@ class IndividualSettingsViewModel(
     IndividualSettingsState(
       isDeprecatedOrUnregistered = repository.isDeprecatedOrUnregistered(),
       starredMessagesEnabled = repository.isStarredMessagesEnabled(),
+      keepViewOnce = repository.isKeepViewOnceFrom(recipientId),
       displayInternalRecipientDetails = repository.isInternalRecipientDetailsEnabled()
     )
   )
@@ -179,6 +180,10 @@ class IndividualSettingsViewModel(
       }
       IndividualSettingsEvent.StarredMessagesClicked -> {
         _actions.send(ConversationSettingsAction.OpenStarredMessages(state.threadId))
+      }
+      is IndividualSettingsEvent.KeepViewOnceToggled -> {
+        repository.setKeepViewOnceFrom(recipientId, event.enabled)
+        _state.update { it.copy(keepViewOnce = event.enabled) }
       }
       IndividualSettingsEvent.ContactDetailsClicked -> {
         _actions.send(ConversationSettingsAction.ViewContact(repository.getSystemContactUri(state.recipient)))

@@ -73,6 +73,9 @@ sealed interface IndividualSettingsEvent {
   /** The user tapped the starred messages row. */
   data object StarredMessagesClicked : IndividualSettingsEvent
 
+  /** Fork: the user toggled keeping view-once media from this contact. */
+  data class KeepViewOnceToggled(val enabled: Boolean) : IndividualSettingsEvent
+
   /** The user tapped the row that opens the recipient's entry in the system contacts. */
   data object ContactDetailsClicked : IndividualSettingsEvent
 

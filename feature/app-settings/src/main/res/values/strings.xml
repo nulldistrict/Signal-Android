@@ -387,6 +387,13 @@
     <string name="ChatsSettingsScreen__who_can_add_onlycontacts">Only people you\'ve shared your profile with</string>
     <string name="ChatsSettingsScreen__who_can_add_onlysystemcontacts">Only your system contacts</string>
     <string name="ChatsSettingsScreen__who_can_add_nobody">Nobody</string>
+    <!-- Fork: map link sent with a shared location -->
+    <string name="ChatsSettingsScreen__location_link">Map link for shared locations</string>
+    <string name="ChatsSettingsScreen__location_link_description">Which map service the link in a location you send opens.</string>
+    <string name="ChatsSettingsScreen__location_link_google">Google Maps</string>
+    <string name="ChatsSettingsScreen__location_link_osm">OpenStreetMap</string>
+    <string name="ChatsSettingsScreen__location_link_apple">Apple Maps</string>
+    <string name="ChatsSettingsScreen__location_link_all">All of them</string>
     <!-- Preference menu item description for a toggle switch for preserving the archived state of muted chats. -->
     <string name="preferences__muted_chats_that_are_archived_will_remain_archived">Muted chats that are archived will remain archived when a new message arrives.</string>
     <!-- Preference menu item title for a toggle switch for preserving the archived state of muted chats. -->

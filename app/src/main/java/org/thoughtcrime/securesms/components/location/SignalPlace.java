@@ -5,6 +5,7 @@ import android.text.TextUtils;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.annotation.VisibleForTesting;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -12,6 +13,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.android.gms.maps.model.LatLng;
 
 import org.signal.core.util.logging.Log;
+import org.thoughtcrime.securesms.keyvalue.SignalStore;
 import org.thoughtcrime.securesms.maps.AddressData;
 import org.signal.core.util.JsonUtils;
 
@@ -62,12 +64,37 @@ public class SignalPlace {
       description += (address + "\n");
     }
 
-    description += Uri.parse(URL)
-                      .buildUpon()
-                      .appendQueryParameter("q", String.format("%s,%s", latitude, longitude))
-                      .build().toString();
+    // Fork: a blank line separates the address from the labelled map links.
+    if (!description.isEmpty()) {
+      description += "\n";
+    }
+
+    description += getMapLinks(SignalStore.misc().getLocationLinkProvider(), latitude, longitude);
 
     return description;
+  }
+
+  /**
+   * Fork: labelled map links for a location, for the provider chosen in chat settings: google, osm, apple, or all of
+   * them separated by blank lines.
+   */
+  @VisibleForTesting
+  static @NonNull String getMapLinks(@NonNull String provider, double latitude, double longitude) {
+    String coordinates = latitude + "," + longitude;
+
+    String google = "Google Maps: " + Uri.parse(URL)
+                                         .buildUpon()
+                                         .appendQueryParameter("q", coordinates)
+                                         .build().toString();
+    String osm    = "OpenStreetMap: https://www.openstreetmap.org/?mlat=" + latitude + "&mlon=" + longitude + "#map=16/" + latitude + "/" + longitude;
+    String apple  = "Apple Maps: https://maps.apple.com/?ll=" + coordinates + "&q=" + coordinates;
+
+    switch (provider) {
+      case "osm":   return osm;
+      case "apple": return apple;
+      case "all":   return google + "\n\n" + osm + "\n\n" + apple;
+      default:      return google;
+    }
   }
 
   public @Nullable String serialize() {

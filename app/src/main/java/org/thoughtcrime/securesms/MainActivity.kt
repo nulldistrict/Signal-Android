@@ -178,6 +178,7 @@ import org.thoughtcrime.securesms.service.BackupMediaRestoreService
 import org.thoughtcrime.securesms.service.KeyCachingService
 import org.thoughtcrime.securesms.starred.StarredMessagesActivity
 import org.thoughtcrime.securesms.stories.Stories
+import org.thoughtcrime.securesms.stories.archive.StoryArchiveActivity
 import org.thoughtcrime.securesms.util.AppStartup
 import org.thoughtcrime.securesms.util.CachedInflater
 import org.thoughtcrime.securesms.util.CommunicationActions
@@ -1109,7 +1110,9 @@ class MainActivity :
     }
 
     override fun onStoryArchiveClick() {
-      mainNavigationViewModel.onEvent(MainNavigationEvents.GoToDetail(MainDetailRoute.Stories.Archive))
+      // Fork: opening the archive as a detail route crashed with "Key Stories was used multiple times" on phones.
+      // Open upstream's standalone archive activity instead, like the starred messages screen.
+      startActivity(StoryArchiveActivity.createIntent(this@MainActivity))
     }
 
     override fun onCloseSearchClick() {

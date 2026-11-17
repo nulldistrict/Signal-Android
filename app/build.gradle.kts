@@ -108,6 +108,7 @@ val selectableVariants = listOf(
   "websiteProdSpinner",
   "websiteProdRelease",
   "githubProdSpinner",
+  "githubProdDebug", // Fork: local test builds of the shipped distribution
   "githubProdRelease"
 )
 
@@ -707,6 +708,13 @@ kotlin {
   }
 }
 
+// Fork: the Google Maps SDK is replaced by the osmdroid stand-in in com.google.android.gms.maps (see the osmdroid
+// dependency below). Google Pay (play-services-wallet) still pulls in play-services-maps, whose classes would clash with
+// the stand-in, so keep it out of every configuration.
+configurations.configureEach {
+  exclude(group = "com.google.android.gms", module = "play-services-maps")
+}
+
 dependencies {
   lintChecks(project(":lintchecks"))
   ktlintRuleset(libs.ktlint.twitter.compose)
@@ -796,7 +804,9 @@ dependencies {
     exclude(group = "com.google.firebase", module = "firebase-analytics")
     exclude(group = "com.google.firebase", module = "firebase-measurement-connector")
   }
-  implementation(libs.google.play.services.maps)
+  // Fork: OpenStreetMap (osmdroid) behind a Google Maps API stand-in, ported from Molly. Signal's Maps key only works
+  // with Signal's signing key, so Google Maps showed a blank map in fork builds.
+  implementation(libs.osmdroid.android)
   implementation(libs.google.play.services.auth)
   implementation(libs.google.signin)
   implementation(libs.androidx.media)

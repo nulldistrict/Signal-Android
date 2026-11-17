@@ -48,6 +48,13 @@ class HelpSettingsScreenTest {
   fun `clicking contact us emits ContactUsClicked`() = assertClickEmits(HelpSettingsTestTags.ROW_CONTACT_US, HelpSettingsEvent.ContactUsClicked)
 
   @Test
+  fun `contact us is hidden when the host turns it off`() {
+    setContent(HelpSettingsState(versionName = "8.33.0", showContactUs = false))
+
+    composeTestRule.onNodeWithTag(HelpSettingsTestTags.ROW_CONTACT_US).assertDoesNotExist()
+  }
+
+  @Test
   fun `clicking debug log emits DebugLogClicked`() = assertClickEmits(HelpSettingsTestTags.ROW_DEBUG_LOG, HelpSettingsEvent.DebugLogClicked)
 
   @Test

@@ -221,6 +221,13 @@ public class CommunicationActions {
   }
 
   public static void openEmail(@NonNull Context context, @NonNull String address, @Nullable String subject, @Nullable String body) {
+    // Fork: support requests go to the fork's contact page, never to Signal's support team, and no debug details are
+    // attached. Other email addresses (e.g. from shared contacts) open as usual.
+    if (address.equals(SupportEmailUtil.getSupportEmailAddress(context))) {
+      openBrowserLink(context, context.getString(R.string.support_center_url));
+      return;
+    }
+
     context.startActivity(Intent.createChooser(buildEmailIntent(address, subject, body), context.getString(R.string.CommunicationActions_send_email)));
   }
 

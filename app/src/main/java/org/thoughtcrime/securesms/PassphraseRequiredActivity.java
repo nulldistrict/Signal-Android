@@ -77,11 +77,14 @@ public abstract class PassphraseRequiredActivity extends BaseActivity implements
     final boolean locked = KeyCachingService.isLocked(this);
     routeApplicationState(locked);
 
-    super.onCreate(savedInstanceState);
-
     if (!isFinishing()) {
+      super.onCreate(savedInstanceState);
       initializeClearKeyReceiver();
       onCreate(savedInstanceState, true);
+    } else {
+      // Molly: when routing away (e.g. to the unlock screen), do not restore saved fragments. After process death
+      // they would be recreated and touch the database before it is unlocked.
+      super.onCreate(null);
     }
 
     AppStartup.getInstance().onCriticalRenderEventEnd();

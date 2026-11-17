@@ -2,6 +2,7 @@ package org.thoughtcrime.securesms.keyvalue
 
 import android.content.Context
 import org.signal.appsettings.usernamelinks.UsernameQrCodeColorScheme
+import org.signal.core.models.recipients.RecipientId
 import org.signal.core.util.logging.Log
 import org.signal.storage.keyvalue.KeyValueStore
 import org.signal.storage.keyvalue.LegacySharedPrefs
@@ -75,10 +76,12 @@ class MiscellaneousValues internal constructor(store: KeyValueStore, context: Co
   private const val SEND_LINK_PREVIEW_IMAGES = "misc.send_link_preview_images"
   private const val GOOGLE_MAP_TYPE = "misc.google_map_type"
   private const val KEEP_VIEW_ONCE_MESSAGES = "misc.keep_view_once_messages"
+  private const val KEEP_VIEW_ONCE_RECIPIENTS = "misc.keep_view_once_recipients"
   private const val IGNORE_REMOTE_DELETE = "misc.ignore_remote_delete"
   private const val IGNORE_ADMIN_DELETE = "misc.ignore_admin_delete"
   private const val DELETE_MEDIA_ONLY = "misc.delete_media_only"
   private const val WHO_CAN_ADD_YOU_TO_GROUPS = "misc.who_can_add_you_to_groups"
+  private const val LOCATION_LINK_PROVIDER = "misc.location_link_provider"
     private const val DIRECTORY_REFRESH_TIME = "misc.directory_refresh_time"
     private const val HAS_SUCCESSFULLY_RETRIEVED_DIRECTORY = "misc.has_successfully_retrieved_directory"
     private const val LAST_FULL_CONTACT_SYNC_TIME = "misc.last_full_contact_sync_time"
@@ -497,6 +500,26 @@ class MiscellaneousValues internal constructor(store: KeyValueStore, context: Co
    */
   var keepViewOnceMessages: Boolean by booleanValue(KEEP_VIEW_ONCE_MESSAGES, false)
 
+  /** Fork: comma-separated ids of the senders whose view-once media is kept even when [keepViewOnceMessages] is off. */
+  private var keepViewOnceRecipientIds: String by stringValue(KEEP_VIEW_ONCE_RECIPIENTS, "")
+
+  /** Fork: whether view-once media from [recipientId] is kept, from the global setting or the per-contact one. */
+  fun shouldKeepViewOnceFrom(recipientId: RecipientId): Boolean {
+    return keepViewOnceMessages || isKeepViewOnceFrom(recipientId)
+  }
+
+  /** Fork: the per-contact setting alone, as shown in that contact's conversation settings. */
+  fun isKeepViewOnceFrom(recipientId: RecipientId): Boolean {
+    return recipientId.toLong().toString() in keepViewOnceRecipientIds.split(',')
+  }
+
+  fun setKeepViewOnceFrom(recipientId: RecipientId, keep: Boolean) {
+    val ids = keepViewOnceRecipientIds.split(',').filter { it.isNotBlank() }.toMutableSet()
+    val id = recipientId.toLong().toString()
+    if (keep) ids += id else ids -= id
+    keepViewOnceRecipientIds = ids.sorted().joinToString(",")
+  }
+
   /**
    * When set, "delete for everyone" requests are ignored and the targeted message is kept.
    * Disabled by default so the sender's deletion is honored.
@@ -520,4 +543,9 @@ class MiscellaneousValues internal constructor(store: KeyValueStore, context: Co
    * Defaults to the upstream blocked-contact behavior.
    */
   var whoCanAddYouToGroups: String by stringValue(WHO_CAN_ADD_YOU_TO_GROUPS, "nonblocked")
+
+  /**
+   * Fork: which map link a sent location carries: google, osm, apple or all. Defaults to upstream's Google Maps link.
+   */
+  var locationLinkProvider: String by stringValue(LOCATION_LINK_PROVIDER, "google")
 }

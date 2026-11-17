@@ -159,6 +159,13 @@ public class PassphrasePromptActivity extends PassphraseActivity {
 
     inflater.inflate(R.menu.passphrase_prompt, menu);
 
+    // Fork: the debug log screen reads SignalStore and the encrypted log database, which are unavailable until a
+    // passphrase-locked database has been unlocked.
+    MenuItem submitDebugLogs = menu.findItem(R.id.menu_submit_debug_logs);
+    if (submitDebugLogs != null) {
+      submitDebugLogs.setVisible(!ApplicationContext.isDatabaseLocked(this));
+    }
+
     super.onCreateOptionsMenu(menu);
     return true;
   }

@@ -33,6 +33,7 @@ public final class MenuState {
   private final boolean unpinMessage;
   private final boolean starMessage;
   private final boolean unstarMessage;
+  private final boolean markViewed;
   private final boolean viewStickerPack;
 
   private MenuState(@NonNull Builder builder) {
@@ -51,6 +52,7 @@ public final class MenuState {
     unpinMessage    = builder.unpinMessage;
     starMessage     = builder.starMessage;
     unstarMessage   = builder.unstarMessage;
+    markViewed      = builder.markViewed;
     viewStickerPack = builder.viewStickerPack;
   }
 
@@ -112,6 +114,11 @@ public final class MenuState {
 
   public boolean shouldShowUnstarMessage() {
     return unstarMessage;
+  }
+
+  /** Fork: kept view-once media that can be marked as viewed by hand (see KeptViewOnce). */
+  public boolean shouldShowMarkViewed() {
+    return markViewed;
   }
 
   public boolean shouldShowViewStickerPackAction() {
@@ -236,6 +243,7 @@ public final class MenuState {
              .shouldShowUnpinMessage(false)
              .shouldShowStarMessage(false)
              .shouldShowUnstarMessage(false)
+             .shouldShowMarkViewed(false)
              .shouldShowViewStickerPack(false);
     } else {
       MultiselectPart multiSelectRecord = selectedParts.iterator().next();
@@ -255,7 +263,8 @@ public final class MenuState {
              .shouldShowForwardAction(shouldShowForwardAction)
              .shouldShowDetailsAction(!actionMessage && !conversationRecipient.isReleaseNotes())
              .shouldShowReplyAction(canReplyToMessage(conversationRecipient, actionMessage, messageRecord, shouldShowMessageRequest, isNonAdminInAnnouncementGroup))
-             .shouldShowViewStickerPack(!remoteDelete && MessageRecordUtil.hasSticker(messageRecord));
+             .shouldShowViewStickerPack(!remoteDelete && MessageRecordUtil.hasSticker(messageRecord))
+             .shouldShowMarkViewed(KeptViewOnce.canMarkViewed(messageRecord));
 
       builder.shouldShowEdit(!actionMessage &&
                              hasText &&
@@ -324,6 +333,7 @@ public final class MenuState {
     private boolean unpinMessage;
     private boolean starMessage;
     private boolean unstarMessage;
+    private boolean markViewed;
     private boolean viewStickerPack;
 
     @NonNull Builder shouldShowForwardAction(boolean forward) {
@@ -398,6 +408,11 @@ public final class MenuState {
 
     @NonNull Builder shouldShowUnstarMessage(boolean unstarMessage) {
       this.unstarMessage = unstarMessage;
+      return this;
+    }
+
+    @NonNull Builder shouldShowMarkViewed(boolean markViewed) {
+      this.markViewed = markViewed;
       return this;
     }
 

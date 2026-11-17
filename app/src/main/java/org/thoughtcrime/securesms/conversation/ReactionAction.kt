@@ -23,5 +23,6 @@ enum class ReactionAction {
   UNPIN_MESSAGE,
   STAR_MESSAGE,
   UNSTAR_MESSAGE,
+  MARK_VIEWED,
   VIEW_STICKER_PACK
 }

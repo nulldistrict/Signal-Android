@@ -61,6 +61,12 @@ object ChatsSettingsTestTags {
   const val OPTION_WHO_CAN_ADD_ONLYCONTACTS = "option-who-can-add-onlycontacts"
   const val OPTION_WHO_CAN_ADD_ONLYSYSTEMCONTACTS = "option-who-can-add-onlysystemcontacts"
   const val OPTION_WHO_CAN_ADD_NOBODY = "option-who-can-add-nobody"
+  const val ROW_LOCATION_LINK_PROVIDER = "row-location-link-provider"
+  const val DIALOG_LOCATION_LINK_PROVIDER = "dialog-location-link-provider"
+  const val OPTION_LOCATION_LINK_GOOGLE = "option-location-link-google"
+  const val OPTION_LOCATION_LINK_OSM = "option-location-link-osm"
+  const val OPTION_LOCATION_LINK_APPLE = "option-location-link-apple"
+  const val OPTION_LOCATION_LINK_ALL = "option-location-link-all"
   const val ROW_AUTOPLAY_STICKERS_AND_GIFS = "row-autoplay-stickers-and-gifs"
   const val ROW_USE_ADDRESS_BOOK = "row-use-address-book"
   const val ROW_KEEP_MUTED_CHATS_ARCHIVED = "row-keep-muted-chats-archived"
@@ -84,6 +90,7 @@ fun ChatsSettingsScreen(
   }
 
   var showWhoCanAddYouToGroupsDialog by remember { mutableStateOf(false) }
+  var showLocationLinkProviderDialog by remember { mutableStateOf(false) }
   val coroutineScope = rememberCoroutineScope()
   val snackbarHostState = remember { SnackbarHostState() }
   val authenticationFailedMessage = stringResource(R.string.ChatsSettingsFragment__authentication_failed)
@@ -209,6 +216,15 @@ fun ChatsSettingsScreen(
       }
 
       item {
+        Rows.TextRow(
+          modifier = Modifier.testTag(ChatsSettingsTestTags.ROW_LOCATION_LINK_PROVIDER),
+          text = stringResource(R.string.ChatsSettingsScreen__location_link),
+          label = stringResource(locationLinkProviderLabel(state.locationLinkProvider)),
+          onClick = { showLocationLinkProviderDialog = true }
+        )
+      }
+
+      item {
         Rows.ToggleRow(
           modifier = Modifier.testTag(ChatsSettingsTestTags.ROW_KEEP_MUTED_CHATS_ARCHIVED),
           text = stringResource(R.string.preferences__pref_keep_muted_chats_archived),
@@ -329,6 +345,73 @@ fun ChatsSettingsScreen(
       onDismiss = { showWhoCanAddYouToGroupsDialog = false }
     )
   }
+
+  if (showLocationLinkProviderDialog) {
+    LocationLinkProviderDialog(
+      selected = state.locationLinkProvider,
+      onSelect = {
+        onEvent(ChatsSettingsEvents.LocationLinkProviderChanged(it))
+        showLocationLinkProviderDialog = false
+      },
+      onDismiss = { showLocationLinkProviderDialog = false }
+    )
+  }
+}
+
+private fun locationLinkProviderLabel(value: String): Int {
+  return when (value) {
+    "osm" -> R.string.ChatsSettingsScreen__location_link_osm
+    "apple" -> R.string.ChatsSettingsScreen__location_link_apple
+    "all" -> R.string.ChatsSettingsScreen__location_link_all
+    else -> R.string.ChatsSettingsScreen__location_link_google
+  }
+}
+
+@Composable
+private fun LocationLinkProviderDialog(
+  selected: String,
+  onSelect: (String) -> Unit,
+  onDismiss: () -> Unit
+) {
+  AlertDialog(
+    onDismissRequest = onDismiss,
+    modifier = Modifier.testTag(ChatsSettingsTestTags.DIALOG_LOCATION_LINK_PROVIDER),
+    title = { Text(text = stringResource(R.string.ChatsSettingsScreen__location_link)) },
+    text = {
+      Column {
+        Text(text = stringResource(R.string.ChatsSettingsScreen__location_link_description))
+        LocationLinkOption("google", ChatsSettingsTestTags.OPTION_LOCATION_LINK_GOOGLE, selected, onSelect)
+        LocationLinkOption("osm", ChatsSettingsTestTags.OPTION_LOCATION_LINK_OSM, selected, onSelect)
+        LocationLinkOption("apple", ChatsSettingsTestTags.OPTION_LOCATION_LINK_APPLE, selected, onSelect)
+        LocationLinkOption("all", ChatsSettingsTestTags.OPTION_LOCATION_LINK_ALL, selected, onSelect)
+      }
+    },
+    confirmButton = {
+      TextButton(onClick = onDismiss) {
+        Text(text = stringResource(android.R.string.cancel))
+      }
+    }
+  )
+}
+
+@Composable
+private fun LocationLinkOption(
+  value: String,
+  testTag: String,
+  selected: String,
+  onSelect: (String) -> Unit
+) {
+  Row(
+    modifier = Modifier
+      .fillMaxWidth()
+      .clickable { onSelect(value) }
+      .padding(vertical = 8.dp)
+      .testTag(testTag),
+    verticalAlignment = Alignment.CenterVertically
+  ) {
+    RadioButton(selected = selected == value, onClick = { onSelect(value) })
+    Text(text = stringResource(locationLinkProviderLabel(value)))
+  }
 }
 
 private fun whoCanAddYouToGroupsLabel(value: String): Int {
@@ -416,5 +499,6 @@ internal val chatsSettingsPreviewState = ChatsSettingsState(
   ignoreRemoteDelete = false,
   ignoreAdminDelete = false,
   deleteMediaOnly = false,
-  whoCanAddYouToGroups = "nonblocked"
+  whoCanAddYouToGroups = "nonblocked",
+  locationLinkProvider = "google"
 )
