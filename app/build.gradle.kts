@@ -796,7 +796,9 @@ dependencies {
     exclude(group = "com.google.firebase", module = "firebase-analytics")
     exclude(group = "com.google.firebase", module = "firebase-measurement-connector")
   }
-  implementation(libs.google.play.services.maps)
+  // Fork: OpenStreetMap (osmdroid) behind a Google Maps API stand-in, ported from Molly. Signal's Maps key only works
+  // with Signal's signing key, so Google Maps showed a blank map in fork builds.
+  implementation(libs.osmdroid.android)
   implementation(libs.google.play.services.auth)
   implementation(libs.google.signin)
   implementation(libs.androidx.media)
