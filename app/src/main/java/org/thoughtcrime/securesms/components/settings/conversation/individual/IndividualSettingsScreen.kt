@@ -158,6 +158,18 @@ fun IndividualSettingsScreen(
       }
     }
 
+    // Fork: per-contact Signal-JW "keep view-once media".
+    if (!state.recipient.isSelf && !state.recipient.isReleaseNotes) {
+      item {
+        Rows.ToggleRow(
+          checked = state.keepViewOnce,
+          text = stringResource(R.string.ConversationSettingsFragment__keep_view_once_media),
+          label = stringResource(R.string.ConversationSettingsFragment__keep_view_once_media_summary),
+          onCheckChanged = { onEvent(IndividualSettingsEvent.KeepViewOnceToggled(it)) }
+        )
+      }
+    }
+
     when (state.contactLinkState) {
       ContactLinkState.OPEN -> item {
         Rows.TextRow(

@@ -70,6 +70,7 @@ class IndividualSettingsViewModelTest {
 
     every { repository.isDeprecatedOrUnregistered() } returns false
     every { repository.isStarredMessagesEnabled() } returns false
+    every { repository.isKeepViewOnceFrom(any()) } returns false
     every { repository.isInternalRecipientDetailsEnabled() } returns false
     every { repository.isStoriesFeatureEnabled() } returns false
     every { repository.isBlockable(any()) } returns true

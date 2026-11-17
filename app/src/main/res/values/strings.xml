@@ -4045,6 +4045,10 @@
     <string name="conversation_selection__menu_star" translatable="false">Star (Labs)</string>
     <!-- Button to remove the star from a message; Action item -->
     <string name="conversation_selection__menu_unstar" translatable="false">Unstar (Labs)</string>
+    <!-- Fork: sends the sender a viewed receipt for kept view-once media -->
+    <string name="conversation_selection__menu_mark_viewed">Mark as viewed</string>
+    <string name="ConversationSettingsFragment__keep_view_once_media">Keep view-once media</string>
+    <string name="ConversationSettingsFragment__keep_view_once_media_summary">Save view-once photos and videos from this contact as normal media. They are not told; long-press a message to send them \"viewed\".</string>
     <!-- Button to forward a message to another person or group chat; Action item with hyphenation. Translation can use soft hyphen - Unicode U+00AD  -->
     <string name="conversation_selection__menu_forward">Forward</string>
     <!-- Button to reply to a message; Action item with hyphenation. Translation can use soft hyphen - Unicode U+00AD -->

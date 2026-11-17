@@ -104,6 +104,10 @@ object ReactionMenu {
       add(R.drawable.symbol_star_outline_24, R.string.conversation_selection__menu_unstar, ReactionAction.UNSTAR_MESSAGE)
     }
 
+    if (menuState.shouldShowMarkViewed()) {
+      add(CoreUiR.drawable.symbol_eyes_24, R.string.conversation_selection__menu_mark_viewed, ReactionAction.MARK_VIEWED)
+    }
+
     add(CoreUiR.drawable.symbol_trash_24, R.string.conversation_selection__menu_delete, ReactionAction.DELETE)
 
     return Menu(items = items, canReact = menuState.shouldShowReactions())

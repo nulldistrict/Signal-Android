@@ -829,6 +829,7 @@ object DataMessageProcessor {
     notifyTypingStoppedFromIncomingMessage(senderRecipient, threadRecipient.id, metadata.sourceDeviceId)
 
     val insertResult: InsertResult?
+    val keptViewOnce: Boolean
 
     SignalDatabase.messages.beginTransaction()
     try {
@@ -843,6 +844,10 @@ object DataMessageProcessor {
 
       handlePossibleExpirationUpdate(envelope, metadata, senderRecipient, threadRecipient, groupId, message.expireTimerDuration, message.expireTimerVersion, receivedTime)
 
+      // Fork: view-once media is kept as a normal message when the global or the sender's setting asks for it, and
+      // marked in its extras so the user can still send the sender a viewed receipt.
+      keptViewOnce = message.isViewOnce == true && SignalStore.misc.shouldKeepViewOnceFrom(senderRecipient.id)
+
       val mediaMessage = IncomingMessage(
         type = MessageType.NORMAL,
         from = senderRecipient.id,
@@ -850,7 +855,7 @@ object DataMessageProcessor {
         serverTimeMillis = envelope.serverTimestamp!!,
         receivedTimeMillis = receivedTime,
         expiresIn = message.expireTimerDuration.inWholeMilliseconds,
-        isViewOnce = if (SignalStore.misc.keepViewOnceMessages) false else message.isViewOnce == true,
+        isViewOnce = message.isViewOnce == true && !keptViewOnce,
         isUnidentified = metadata.sealedSender,
         body = message.body?.ifEmpty { null },
         groupId = groupId,
@@ -860,7 +865,8 @@ object DataMessageProcessor {
         linkPreviews = linkPreviews,
         mentions = mentions,
         serverGuid = UuidUtil.getStringUUID(envelope.serverGuid, envelope.serverGuidBinary),
-        messageRanges = messageRanges
+        messageRanges = messageRanges,
+        messageExtras = if (keptViewOnce) MessageExtras(keptViewOnce = true) else null
       )
 
       insertResult = SignalDatabase.messages.insertMessageInbox(retrieved = mediaMessage, candidateThreadId = -1, skipThreadUpdate = batchCache.batchThreadUpdates).orNull()
@@ -904,7 +910,7 @@ object DataMessageProcessor {
         AppDependencies.messageNotifier.updateNotification(context, ConversationId.forConversation(insertResult.threadId))
         TrimThreadJob.enqueueAsync(insertResult.threadId)
 
-        if (message.isViewOnce == true && !SignalStore.misc.keepViewOnceMessages) {
+        if (message.isViewOnce == true && !keptViewOnce) {
           AppDependencies.viewOnceMessageManager.scheduleIfNecessary()
         }
       }

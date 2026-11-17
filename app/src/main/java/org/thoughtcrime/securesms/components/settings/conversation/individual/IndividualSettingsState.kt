@@ -22,6 +22,8 @@ data class IndividualSettingsState(
   val isDeprecatedOrUnregistered: Boolean = false,
   val displayInternalRecipientDetails: Boolean = false,
   val starredMessagesEnabled: Boolean = false,
+  /** Fork: whether view-once media from this contact is kept (per-contact Signal-JW keep view-once). */
+  val keepViewOnce: Boolean = false,
   val disappearingMessagesLifespan: Int = 0,
   val canModifyBlockedState: Boolean = false,
   val identityRecord: IdentityRecord? = null,

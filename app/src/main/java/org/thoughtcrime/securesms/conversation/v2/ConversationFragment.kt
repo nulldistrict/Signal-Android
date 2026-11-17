@@ -235,6 +235,7 @@ import org.thoughtcrime.securesms.conversation.ConversationMessage
 import org.thoughtcrime.securesms.conversation.ConversationOptionsMenu
 import org.thoughtcrime.securesms.conversation.ConversationSearchViewModel
 import org.thoughtcrime.securesms.conversation.ConversationUpdateTick
+import org.thoughtcrime.securesms.conversation.KeptViewOnce
 import org.thoughtcrime.securesms.conversation.MarkReadHelper
 import org.thoughtcrime.securesms.conversation.MenuState
 import org.thoughtcrime.securesms.conversation.MessageSendType
@@ -3220,6 +3221,15 @@ class ConversationFragment :
       )
     }
 
+    if (menuState.shouldShowMarkViewed()) {
+      items.add(
+        ActionItem(CoreUiR.drawable.symbol_eyes_24, resources.getString(R.string.conversation_selection__menu_mark_viewed)) {
+          selectedParts.forEach { KeptViewOnce.markViewed(it.conversationMessage.messageRecord.id) }
+          finishActionMode()
+        }
+      )
+    }
+
     if (menuState.shouldShowDeleteAction()) {
       items.add(
         ActionItem(CoreUiR.drawable.symbol_trash_24, resources.getString(R.string.conversation_selection__menu_delete)) {
@@ -5013,6 +5023,7 @@ class ConversationFragment :
         ReactionAction.UNPIN_MESSAGE -> handleUnpinMessage(conversationMessage.messageRecord.id)
         ReactionAction.STAR_MESSAGE -> handleStarMessages(setOf(conversationMessage.messageRecord.id))
         ReactionAction.UNSTAR_MESSAGE -> handleUnstarMessages(setOf(conversationMessage.messageRecord.id))
+        ReactionAction.MARK_VIEWED -> KeptViewOnce.markViewed(conversationMessage.messageRecord.id)
         ReactionAction.VIEW_STICKER_PACK -> handleViewStickerPack(conversationMessage)
       }
     }

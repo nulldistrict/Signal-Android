@@ -85,6 +85,13 @@ class ConversationSettingsRepository(
   fun isStarredMessagesEnabled(): Boolean {
     return SignalStore.labs.starredMessages
   }
+  /** Fork: per-contact Signal-JW "keep view-once media". */
+  fun isKeepViewOnceFrom(recipientId: RecipientId): Boolean = SignalStore.misc.isKeepViewOnceFrom(recipientId)
+
+  fun setKeepViewOnceFrom(recipientId: RecipientId, keep: Boolean) {
+    SignalStore.misc.setKeepViewOnceFrom(recipientId, keep)
+  }
+
 
   fun isAddToStoryAvailable(): Boolean {
     return !SignalStore.story.isFeatureDisabled
