@@ -708,6 +708,13 @@ kotlin {
   }
 }
 
+// Fork: the Google Maps SDK is replaced by the osmdroid stand-in in com.google.android.gms.maps (see the osmdroid
+// dependency below). Google Pay (play-services-wallet) still pulls in play-services-maps, whose classes would clash with
+// the stand-in, so keep it out of every configuration.
+configurations.configureEach {
+  exclude(group = "com.google.android.gms", module = "play-services-maps")
+}
+
 dependencies {
   lintChecks(project(":lintchecks"))
   ktlintRuleset(libs.ktlint.twitter.compose)
