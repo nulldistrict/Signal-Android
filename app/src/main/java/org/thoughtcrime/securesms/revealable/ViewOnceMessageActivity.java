@@ -19,17 +19,22 @@ import androidx.lifecycle.ViewModelProvider;
 
 import com.bumptech.glide.Glide;
 
+import io.reactivex.rxjava3.disposables.CompositeDisposable;
+
 import org.signal.core.util.logging.Log;
 import org.signal.glide.decryptableuri.DecryptableUri;
 import org.signal.video.VideoPlayer;
 import org.thoughtcrime.securesms.PassphraseRequiredActivity;
 import org.thoughtcrime.securesms.R;
+import org.thoughtcrime.securesms.attachments.AttachmentSaver;
 import org.thoughtcrime.securesms.dependencies.AppDependencies;
 import org.thoughtcrime.securesms.mms.PartAuthority;
 import org.thoughtcrime.securesms.util.MediaUtil;
+import org.thoughtcrime.securesms.util.SaveAttachmentUtil;
 import org.thoughtcrime.securesms.util.SystemWindowInsetsSetter;
 import org.thoughtcrime.securesms.util.WindowUtil;
 
+import java.util.Collections;
 import java.util.concurrent.TimeUnit;
 
 public class ViewOnceMessageActivity extends PassphraseRequiredActivity implements VideoPlayer.PlayerStateCallback {
@@ -42,9 +47,12 @@ public class ViewOnceMessageActivity extends PassphraseRequiredActivity implemen
   private ImageView                image;
   private VideoPlayer              video;
   private View                     closeButton;
+  private View                     saveButton;
   private TextView                 duration;
   private ViewOnceMessageViewModel viewModel;
   private Uri                      uri;
+
+  private final CompositeDisposable disposables = new CompositeDisposable();
 
   private final Handler  handler                = new Handler(Looper.getMainLooper());
   private final Runnable durationUpdateRunnable = () -> {
@@ -81,12 +89,16 @@ public class ViewOnceMessageActivity extends PassphraseRequiredActivity implemen
     this.video       = findViewById(R.id.view_once_video);
     this.duration    = findViewById(R.id.view_once_duration);
     this.closeButton = findViewById(R.id.view_once_close_button);
+    this.saveButton  = findViewById(R.id.view_once_save_button);
     this.uri         = getIntent().getParcelableExtra(KEY_URI);
 
     SystemWindowInsetsSetter.attach(closeButton, this, WindowInsetsCompat.Type.statusBars(), SystemWindowInsetsSetter.ApplyMode.MARGIN);
     SystemWindowInsetsSetter.attach(duration, this, WindowInsetsCompat.Type.statusBars(), SystemWindowInsetsSetter.ApplyMode.MARGIN);
 
     closeButton.setOnClickListener(v -> finish());
+
+    SystemWindowInsetsSetter.attach(saveButton, this, WindowInsetsCompat.Type.navigationBars(), SystemWindowInsetsSetter.ApplyMode.MARGIN);
+    saveButton.setOnClickListener(v -> saveMedia());
 
     initViewModel(getIntent().getLongExtra(KEY_MESSAGE_ID, -1), uri);
   }
@@ -98,6 +110,28 @@ public class ViewOnceMessageActivity extends PassphraseRequiredActivity implemen
     video.cleanup();
     AppDependencies.getBlobs().delete(this, uri);
     finish();
+  }
+
+  @Override
+  protected void onDestroy() {
+    super.onDestroy();
+    disposables.clear();
+  }
+
+  /**
+   * Fork: saves the media being shown with the regular save flow (warning, permission, progress). The underlying
+   * attachment is already deleted when the viewer opens, so the temporary copy shown here is what gets saved.
+   */
+  private void saveMedia() {
+    String contentType = PartAuthority.getAttachmentContentType(this, uri);
+    if (contentType == null) {
+      Log.w(TAG, "Unknown content type for the view-once media; not saving.");
+      return;
+    }
+
+    AttachmentSaver saver = new AttachmentSaver(new AttachmentSaver.ActivityHost(this));
+    disposables.add(saver.saveAttachmentsRx(Collections.singleton(new SaveAttachmentUtil.SaveAttachment(uri, contentType, System.currentTimeMillis(), null)))
+                         .subscribe(() -> {}, t -> Log.w(TAG, "Failed to save view-once media.", t)));
   }
 
   @Override

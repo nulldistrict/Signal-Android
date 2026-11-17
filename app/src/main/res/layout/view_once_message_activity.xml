@@ -36,6 +36,20 @@
             app:srcCompat="@drawable/symbol_x_24"
             app:tint="@color/core_white"/>
 
+        <!-- Fork: always offer to save view-once media while it is shown. -->
+        <androidx.appcompat.widget.AppCompatImageView
+            android:id="@+id/view_once_save_button"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="bottom|end"
+            android:layout_marginEnd="15dp"
+            android:layout_marginBottom="15dp"
+            android:background="?selectableItemBackgroundBorderless"
+            android:contentDescription="@string/conversation_selection__menu_save"
+            android:padding="8dp"
+            app:srcCompat="@drawable/symbol_save_android_24"
+            app:tint="@color/core_white"/>
+
     </FrameLayout>
 
     <TextView
