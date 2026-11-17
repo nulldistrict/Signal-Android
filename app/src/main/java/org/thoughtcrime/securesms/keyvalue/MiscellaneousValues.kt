@@ -81,6 +81,7 @@ class MiscellaneousValues internal constructor(store: KeyValueStore, context: Co
   private const val IGNORE_ADMIN_DELETE = "misc.ignore_admin_delete"
   private const val DELETE_MEDIA_ONLY = "misc.delete_media_only"
   private const val WHO_CAN_ADD_YOU_TO_GROUPS = "misc.who_can_add_you_to_groups"
+  private const val LOCATION_LINK_PROVIDER = "misc.location_link_provider"
     private const val DIRECTORY_REFRESH_TIME = "misc.directory_refresh_time"
     private const val HAS_SUCCESSFULLY_RETRIEVED_DIRECTORY = "misc.has_successfully_retrieved_directory"
     private const val LAST_FULL_CONTACT_SYNC_TIME = "misc.last_full_contact_sync_time"
@@ -542,4 +543,9 @@ class MiscellaneousValues internal constructor(store: KeyValueStore, context: Co
    * Defaults to the upstream blocked-contact behavior.
    */
   var whoCanAddYouToGroups: String by stringValue(WHO_CAN_ADD_YOU_TO_GROUPS, "nonblocked")
+
+  /**
+   * Fork: which map link a sent location carries: google, osm, apple or all. Defaults to upstream's Google Maps link.
+   */
+  var locationLinkProvider: String by stringValue(LOCATION_LINK_PROVIDER, "google")
 }

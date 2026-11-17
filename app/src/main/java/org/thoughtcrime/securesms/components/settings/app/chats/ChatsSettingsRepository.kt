@@ -72,6 +72,12 @@ object ChatsSettingsRepository {
     SignalStore.misc.whoCanAddYouToGroups = value
   }
 
+  fun getLocationLinkProvider(): String = SignalStore.misc.locationLinkProvider
+
+  fun setLocationLinkProvider(value: String) {
+    SignalStore.misc.locationLinkProvider = value
+  }
+
   fun isPreferSystemContactPhotos(): Boolean = SignalStore.settings.isPreferSystemContactPhotos
 
   fun setPreferSystemContactPhotos(enabled: Boolean) {

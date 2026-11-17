@@ -80,6 +80,7 @@ class ChatsSettingsViewModelTest {
     every { ChatsSettingsRepository.isIgnoreAdminDelete() } returns false
     every { ChatsSettingsRepository.isDeleteMediaOnly() } returns false
     every { ChatsSettingsRepository.getWhoCanAddYouToGroups() } returns "nonblocked"
+    every { ChatsSettingsRepository.getLocationLinkProvider() } returns "google"
     every { ChatsSettingsRepository.setLinkPreviewsEnabled(any()) } just Runs
     every { ChatsSettingsRepository.setAutoplayStickersAndGifsEnabled(any()) } just Runs
     every { ChatsSettingsRepository.setPreferSystemContactPhotos(any()) } just Runs

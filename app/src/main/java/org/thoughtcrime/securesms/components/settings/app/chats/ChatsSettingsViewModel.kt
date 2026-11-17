@@ -53,7 +53,8 @@ class ChatsSettingsViewModel(
       ignoreRemoteDelete = ChatsSettingsRepository.isIgnoreRemoteDelete(),
       ignoreAdminDelete = ChatsSettingsRepository.isIgnoreAdminDelete(),
       deleteMediaOnly = ChatsSettingsRepository.isDeleteMediaOnly(),
-      whoCanAddYouToGroups = ChatsSettingsRepository.getWhoCanAddYouToGroups()
+      whoCanAddYouToGroups = ChatsSettingsRepository.getWhoCanAddYouToGroups(),
+      locationLinkProvider = ChatsSettingsRepository.getLocationLinkProvider()
     )
   )
 
@@ -76,6 +77,7 @@ class ChatsSettingsViewModel(
       is ChatsSettingsEvents.IgnoreAdminDeleteChanged -> setIgnoreAdminDelete(event.enabled)
       is ChatsSettingsEvents.DeleteMediaOnlyChanged -> setDeleteMediaOnly(event.enabled)
       is ChatsSettingsEvents.WhoCanAddYouToGroupsChanged -> setWhoCanAddYouToGroups(event.value)
+      is ChatsSettingsEvents.LocationLinkProviderChanged -> setLocationLinkProvider(event.value)
       is ChatsSettingsEvents.UseAddressBookChanged -> setUseAddressBook(event.enabled)
       is ChatsSettingsEvents.KeepMutedChatsArchivedChanged -> setKeepMutedChatsArchived(event.enabled)
       is ChatsSettingsEvents.UseSystemEmojiChanged -> setUseSystemEmoji(event.enabled)
@@ -153,6 +155,11 @@ class ChatsSettingsViewModel(
   private fun setWhoCanAddYouToGroups(value: String) {
     _state.update { it.copy(whoCanAddYouToGroups = value) }
     ChatsSettingsRepository.setWhoCanAddYouToGroups(value)
+  }
+
+  private fun setLocationLinkProvider(value: String) {
+    _state.update { it.copy(locationLinkProvider = value) }
+    ChatsSettingsRepository.setLocationLinkProvider(value)
   }
 
   private fun setUseAddressBook(enabled: Boolean) {
