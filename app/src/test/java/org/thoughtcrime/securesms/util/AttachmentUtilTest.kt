@@ -61,6 +61,8 @@ class AttachmentUtilTest {
     every { SignalStore.settings.wifiMediaDownloadAllowed } returns emptySet()
     every { SignalStore.settings.roamingMediaDownloadAllowed } returns emptySet()
     every { SignalStore.settings.mobileMediaDownloadAllowed } returns emptySet()
+    // Fork: the Signal-JW "delete media only" chat setting, at its default.
+    every { SignalStore.misc.deleteMediaOnly } returns false
 
     every { messageTable.getMessageRecord(any()) } returns messageRecord
     every { messageRecord.fromRecipient } returns fromRecipient
