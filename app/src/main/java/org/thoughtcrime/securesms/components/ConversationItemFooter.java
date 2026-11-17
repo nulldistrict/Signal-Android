@@ -348,6 +348,11 @@ public class ConversationItemFooter extends ConstraintLayout {
           dateLabelContentDesc = dateLabel;
         }
       }
+      // Fork: kept view-once media looks like normal media, so say what it was.
+      if (messageRecord.getMessageExtras() != null && messageRecord.getMessageExtras().keptViewOnce) {
+        dateLabel            = getContext().getString(R.string.ConversationItem_kept_view_once_footer, dateLabel);
+        dateLabelContentDesc = getContext().getString(R.string.ConversationItem_kept_view_once_footer, dateLabelContentDesc);
+      }
       dateView.setText(dateLabel);
       dateView.setContentDescription(dateLabelContentDesc);
     }
