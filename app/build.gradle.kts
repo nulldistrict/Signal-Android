@@ -108,6 +108,7 @@ val selectableVariants = listOf(
   "websiteProdSpinner",
   "websiteProdRelease",
   "githubProdSpinner",
+  "githubProdDebug", // Fork: local test builds of the shipped distribution
   "githubProdRelease"
 )
 
