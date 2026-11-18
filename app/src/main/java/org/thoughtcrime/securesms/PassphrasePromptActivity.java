@@ -60,7 +60,6 @@ import org.thoughtcrime.securesms.logsubmit.SubmitDebugLogActivity;
 import org.thoughtcrime.securesms.service.KeyCachingService;
 import org.thoughtcrime.securesms.util.CommunicationActions;
 import org.thoughtcrime.securesms.util.DynamicIntroTheme;
-import org.thoughtcrime.securesms.util.DynamicLanguage;
 import org.thoughtcrime.securesms.util.SupportEmailUtil;
 import org.thoughtcrime.securesms.util.views.LearnMoreTextView;
 
@@ -78,8 +77,7 @@ public class PassphrasePromptActivity extends PassphraseActivity {
   private static final String BUNDLE_ALREADY_SHOWN      = "bundle_already_shown";
   public  static final String FROM_FOREGROUND           = "from_foreground";
 
-  private DynamicIntroTheme dynamicTheme    = new DynamicIntroTheme();
-  private DynamicLanguage   dynamicLanguage = new DynamicLanguage();
+  private DynamicIntroTheme dynamicTheme = new DynamicIntroTheme();
 
   private View                passphraseAuthContainer;
   private LottieAnimationView unlockView;
@@ -108,7 +106,6 @@ public class PassphrasePromptActivity extends PassphraseActivity {
   public void onCreate(Bundle savedInstanceState) {
     Log.i(TAG, "onCreate()");
     dynamicTheme.onCreate(this);
-    dynamicLanguage.onCreate(this);
     super.onCreate(savedInstanceState);
 
     setContentView(R.layout.prompt_passphrase_activity);
@@ -128,7 +125,6 @@ public class PassphrasePromptActivity extends PassphraseActivity {
   public void onResume() {
     super.onResume();
     dynamicTheme.onResume(this);
-    dynamicLanguage.onResume(this);
 
     setLockTypeVisibility();
 

@@ -108,7 +108,7 @@ internal class ListDetailScene(
               LocalDetailPaneRootContentKey provides detailEntries.firstOrNull()?.contentKey
             ) {
               if (detailEntries.isNotEmpty()) {
-                DetailPaneNavDisplay(detailEntries)
+                DetailPaneNavDisplay(listKey = listEntry.contentKey, entries = detailEntries)
               } else {
                 LocalEmptyDetailContent.current()
               }

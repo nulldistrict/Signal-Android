@@ -31,7 +31,10 @@ import org.junit.Rule
 import org.junit.Test
 import org.signal.appsettings.deleteaccount.DeleteAccountAction
 import org.signal.appsettings.deleteaccount.DeleteAccountEvent
+import org.signal.appsettings.deleteaccount.DeleteAccountState
 import org.signal.appsettings.deleteaccount.DeleteAccountState.Dialog
+import org.signal.appsettings.routes.AppSettingsNavigationEvent
+import org.signal.appsettings.routes.AppSettingsRoute
 import org.thoughtcrime.securesms.testing.CoroutineDispatcherRule
 
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -43,6 +46,7 @@ class DeleteAccountViewModelTest {
   val dispatcherRule = CoroutineDispatcherRule(testDispatcher)
 
   private val repository = mockk<DeleteAccountRepository>(relaxUnitFun = true)
+  private val navigationEvents = mutableListOf<AppSettingsNavigationEvent>()
 
   @Before
   fun setUp() {
@@ -101,7 +105,7 @@ class DeleteAccountViewModelTest {
 
     viewModel.onEvent(DeleteAccountEvent.DeleteAccountClicked)
 
-    assertThat(actions).contains(DeleteAccountAction.ShowNoCountryCode)
+    assertThat(viewModel.state.value.snackbar).isEqualTo(DeleteAccountState.Snackbar.NoCountryCode)
     assertThat(viewModel.state.value.dialog).isEqualTo(Dialog.None)
   }
 
@@ -113,7 +117,7 @@ class DeleteAccountViewModelTest {
 
     viewModel.onEvent(DeleteAccountEvent.DeleteAccountClicked)
 
-    assertThat(actions).contains(DeleteAccountAction.ShowNoNationalNumber)
+    assertThat(viewModel.state.value.snackbar).isEqualTo(DeleteAccountState.Snackbar.NoNationalNumber)
     assertThat(viewModel.state.value.dialog).isEqualTo(Dialog.None)
   }
 
@@ -266,7 +270,7 @@ class DeleteAccountViewModelTest {
 
     viewModel.onEvent(DeleteAccountEvent.CountryPickerClicked)
 
-    assertThat(actions).contains(DeleteAccountAction.NavigateToCountryPicker)
+    assertThat(navigationEvents).containsExactly(AppSettingsNavigationEvent.NavigateToScreen(AppSettingsRoute.AccountRoute.DeleteAccountCountryCode))
   }
 
   @Test
@@ -276,7 +280,7 @@ class DeleteAccountViewModelTest {
 
     viewModel.onEvent(DeleteAccountEvent.NavigateBackClicked)
 
-    assertThat(actions).contains(DeleteAccountAction.NavigateBack)
+    assertThat(navigationEvents).containsExactly(AppSettingsNavigationEvent.NavigateBack())
   }
 
   @Test
@@ -289,7 +293,7 @@ class DeleteAccountViewModelTest {
     assertThat(viewModel.state.value.dialog).isEqualTo(Dialog.None)
   }
 
-  private fun createViewModel(): DeleteAccountViewModel = DeleteAccountViewModel(repository)
+  private fun createViewModel(): DeleteAccountViewModel = DeleteAccountViewModel(parentEventEmitter = { navigationEvents += it }, repository = repository)
 
   private fun enterNumber(): DeleteAccountViewModel {
     return createViewModel().apply {

@@ -13,6 +13,10 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import org.signal.appsettings.help.HelpSettingsState.Dialog
+import org.signal.appsettings.routes.AppSettingsNavigationEvent
+import org.signal.appsettings.routes.AppSettingsRoute
+import org.signal.appsettings.routes.navigateBack
+import org.signal.appsettings.routes.navigateTo
 import org.signal.core.ui.compose.EventDrivenViewModel
 import org.signal.core.util.logging.Log
 
@@ -24,6 +28,8 @@ import org.signal.core.util.logging.Log
  */
 class HelpSettingsViewModel(
   versionName: String,
+  private val parentEventEmitter: (AppSettingsNavigationEvent) -> Unit,
+  // Fork: Molly's optional debug logging and the hidden "Contact us" row.
   initialLogEnabled: Boolean = true,
   showContactUs: Boolean = true,
   private val onLogEnabledChanged: (Boolean) -> Unit = {}
@@ -41,10 +47,15 @@ class HelpSettingsViewModel(
 
   override suspend fun processEvent(event: HelpSettingsEvent) {
     when (event) {
-      HelpSettingsEvent.NavigateBackClicked -> _actions.send(HelpSettingsAction.NavigateBack)
+      HelpSettingsEvent.NavigateBackClicked -> parentEventEmitter.navigateBack()
       HelpSettingsEvent.SupportCenterClicked -> _actions.send(HelpSettingsAction.OpenSupportCenter)
-      HelpSettingsEvent.ContactUsClicked -> _actions.send(HelpSettingsAction.NavigateToContactUs)
-      HelpSettingsEvent.VersionLongClicked -> _actions.send(HelpSettingsAction.CopyVersionToClipboard(_state.value.versionName))
+      HelpSettingsEvent.ContactUsClicked -> parentEventEmitter.navigateTo(AppSettingsRoute.HelpRoute.Help())
+      HelpSettingsEvent.VersionLongClicked -> {
+        _actions.send(HelpSettingsAction.CopyVersionToClipboard(_state.value.versionName))
+        _state.update { it.copy(snackbar = HelpSettingsState.Snackbar.VersionCopied) }
+      }
+      HelpSettingsEvent.DebugLogClicked -> parentEventEmitter.navigateTo(AppSettingsRoute.HelpRoute.DebugLog)
+      HelpSettingsEvent.LicensesClicked -> parentEventEmitter.navigateTo(AppSettingsRoute.HelpRoute.Licenses)
       is HelpSettingsEvent.LoggingToggled -> {
         if (event.enabled) {
           setLoggingEnabled(true)
@@ -58,9 +69,8 @@ class HelpSettingsViewModel(
         setLoggingEnabled(false)
       }
       HelpSettingsEvent.DialogDismissed -> _state.update { it.copy(dialog = Dialog.None) }
-      HelpSettingsEvent.DebugLogClicked -> _actions.send(HelpSettingsAction.NavigateToDebugLog)
-      HelpSettingsEvent.LicensesClicked -> _actions.send(HelpSettingsAction.NavigateToLicenses)
       HelpSettingsEvent.TermsAndPrivacyPolicyClicked -> _actions.send(HelpSettingsAction.OpenTermsAndPrivacyPolicy)
+      HelpSettingsEvent.SnackbarDismissed -> _state.update { it.copy(snackbar = HelpSettingsState.Snackbar.None) }
     }
   }
 

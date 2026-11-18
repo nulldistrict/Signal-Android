@@ -65,6 +65,13 @@
             app:popEnterAnim="@anim/fragment_close_enter"
             app:popExitAnim="@anim/fragment_close_exit" />
         <action
+            android:id="@+id/action_appSettingsFragment_to_paymentsActivity"
+            app:destination="@id/paymentsActivity"
+            app:enterAnim="@anim/fragment_open_enter"
+            app:exitAnim="@anim/fragment_open_exit"
+            app:popEnterAnim="@anim/fragment_close_enter"
+            app:popExitAnim="@anim/fragment_close_exit" />
+        <action
             android:id="@+id/action_appSettingsFragment_to_appearanceSettingsFragment"
             app:destination="@id/appearanceSettingsFragment"
             app:enterAnim="@anim/fragment_open_enter"
@@ -384,8 +391,12 @@
         android:name="org.thoughtcrime.securesms.linkdevice.LinkDeviceFragment"
         android:label="link_device_fragment">
         <action
-            android:id="@+id/action_linkDeviceFragment_to_linkDeviceIntroBottomSheet"
-            app:destination="@id/linkDeviceIntroBottomSheet" />
+            android:id="@+id/action_linkDeviceFragment_to_addLinkDeviceFragment"
+            app:destination="@id/addLinkDeviceFragment"
+            app:enterAnim="@anim/fragment_open_enter"
+            app:exitAnim="@anim/fragment_open_exit"
+            app:popEnterAnim="@anim/fragment_close_enter"
+            app:popExitAnim="@anim/fragment_close_exit" />
         <action
             android:id="@+id/action_linkDeviceFragment_to_editDeviceNameFragment"
             app:destination="@id/editDeviceNameFragment"
@@ -393,25 +404,7 @@
             app:exitAnim="@anim/fragment_open_exit"
             app:popEnterAnim="@anim/fragment_close_enter"
             app:popExitAnim="@anim/fragment_close_exit" />
-        <action
-            android:id="@+id/action_linkDeviceFragment_to_linkDeviceFinishedSheet"
-            app:destination="@id/linkDeviceFinishedSheet" />
-        <action
-            android:id="@+id/action_linkDeviceFragment_to_linkDeviceLearnMoreBottomSheet"
-            app:destination="@id/linkDeviceLearnMoreBottomSheet" />
-        <action
-            android:id="@+id/action_linkDeviceFragment_to_linkDeviceEducationSheet"
-            app:destination="@id/linkDeviceEducationSheet" />
     </fragment>
-    <dialog
-        android:id="@+id/linkDeviceFinishedSheet"
-        android:name="org.thoughtcrime.securesms.linkdevice.LinkDeviceFinishedSheet" />
-    <dialog
-        android:id="@+id/linkDeviceLearnMoreBottomSheet"
-        android:name="org.thoughtcrime.securesms.linkdevice.LinkDeviceLearnMoreBottomSheetFragment" />
-    <dialog
-        android:id="@+id/linkDeviceEducationSheet"
-        android:name="org.thoughtcrime.securesms.linkdevice.LinkDeviceAuthEducationSheet" />
 
     <fragment
         android:id="@+id/editDeviceNameFragment"
@@ -420,30 +413,13 @@
     <fragment
         android:id="@+id/addLinkDeviceFragment"
         android:name="org.thoughtcrime.securesms.linkdevice.AddLinkDeviceFragment"
-        android:label="link_device_add_fragment">
-        <action
-            android:id="@+id/action_addLinkDeviceFragment_to_linkDeviceIntroBottomSheet"
-            app:destination="@id/linkDeviceIntroBottomSheet" />
-        <action
-            android:id="@+id/action_addLinkDeviceFragment_to_linkDeviceSyncBottomSheet"
-            app:destination="@id/linkDeviceSyncBottomSheet" />
-    </fragment>
-    <dialog
-        android:id="@+id/linkDeviceIntroBottomSheet"
-        android:name="org.thoughtcrime.securesms.linkdevice.LinkDeviceIntroBottomSheet">
-        <action
-            android:id="@+id/action_linkDeviceIntroBottomSheet_to_addLinkDeviceFragment"
-            app:destination="@id/addLinkDeviceFragment"
-            app:popUpTo="@id/linkDeviceIntroBottomSheet"
-            app:popUpToInclusive="true"
-            app:enterAnim="@anim/fragment_open_enter"
-            app:exitAnim="@anim/fragment_open_exit"
-            app:popEnterAnim="@anim/fragment_close_enter"
-            app:popExitAnim="@anim/fragment_close_exit" />
-    </dialog>
-    <dialog
-        android:id="@+id/linkDeviceSyncBottomSheet"
-        android:name="org.thoughtcrime.securesms.linkdevice.LinkDeviceSyncBottomSheet" />
+        android:label="link_device_add_fragment" />
+
+    <!-- Payments -->
+    <activity
+        android:id="@+id/paymentsActivity"
+        android:name="org.thoughtcrime.securesms.payments.preferences.PaymentsActivity"
+        android:label="payments_activity" />
 
     <!-- region Appearance settings and Subpages -->
     <fragment
@@ -501,13 +477,6 @@
         android:name="org.thoughtcrime.securesms.components.settings.app.chats.ChatsSettingsFragment"
         android:label="chats_settings_fragment"
         tools:layout="@layout/dsl_settings_fragment">
-        <action
-            android:id="@+id/action_chatsSettingsFragment_to_editReactionsFragment"
-            app:destination="@id/editReactionsFragment"
-            app:enterAnim="@anim/fragment_open_enter"
-            app:exitAnim="@anim/fragment_open_exit"
-            app:popEnterAnim="@anim/fragment_close_enter"
-            app:popExitAnim="@anim/fragment_close_exit" />
         <action
             android:id="@+id/action_chatsSettingsFragment_to_chatFoldersFragment"
             app:destination="@id/chatFoldersFragment"
@@ -567,12 +536,6 @@
     </fragment>
 
     <fragment
-        android:id="@+id/editReactionsFragment"
-        android:name="org.thoughtcrime.securesms.reactions.edit.EditReactionsFragment"
-        android:label="edit_reactions_fragment"
-        tools:layout="@layout/edit_reactions_fragment" />
-
-    <fragment
         android:id="@+id/chatFoldersFragment"
         android:name="org.thoughtcrime.securesms.components.settings.app.chats.folders.ChatFoldersFragment"
         android:label="chat_folders_fragment">
@@ -583,14 +546,7 @@
             app:exitAnim="@anim/fragment_open_exit"
             app:popEnterAnim="@anim/fragment_close_enter"
             app:popExitAnim="@anim/fragment_close_exit" />
-        <action
-            android:id="@+id/action_chatFoldersFragment_to_chatFoldersEducationSheet"
-            app:destination="@id/chatFoldersEducationSheet" />
     </fragment>
-
-    <dialog
-        android:id="@+id/chatFoldersEducationSheet"
-        android:name="org.thoughtcrime.securesms.components.settings.app.chats.folders.ChatFoldersEducationSheet" />
 
     <fragment
         android:id="@+id/createFoldersFragment"
@@ -617,10 +573,6 @@
                 android:name="include_chats"
                 app:argType="boolean" />
         </action>
-
-        <action
-            android:id="@+id/action_createFoldersFragment_to_chatFoldersEducationSheet"
-            app:destination="@id/chatFoldersEducationSheet" />
     </fragment>
 
     <fragment
@@ -767,7 +719,7 @@
 
     <fragment
         android:id="@+id/inviteFragment"
-        android:name="org.signal.appsettings.invite.InviteFragment"
+        android:name="org.thoughtcrime.securesms.components.settings.app.invite.InviteFragment"
         android:label="invite_fragment" />
 
     <!-- region Direct-To-Page actions -->
@@ -1183,9 +1135,6 @@
             app:exitAnim="@anim/fragment_open_exit"
             app:popEnterAnim="@anim/fragment_close_enter"
             app:popExitAnim="@anim/fragment_close_exit" />
-        <action
-            android:id="@+id/action_manageDonationsFragment_to_subscribeLearnMoreBottomSheetDialog"
-            app:destination="@id/subscribeLearnMoreBottomSheetDialog" />
         <argument
             android:name="direct_to_checkout_type"
             android:defaultValue="UNKNOWN"
@@ -1214,12 +1163,6 @@
             android:name="id"
             app:argType="long" />
     </fragment>
-
-    <dialog
-        android:id="@+id/subscribeLearnMoreBottomSheetDialog"
-        android:name="org.thoughtcrime.securesms.components.settings.app.subscription.subscribe.SubscribeLearnMoreBottomSheetDialogFragment"
-        android:label="subscribe_learn_more_bottom_sheet_dialog"
-        tools:layout="@layout/subscribe_learn_more_bottom_sheet_dialog_fragment" />
 
     <include app:graph="@navigation/manage_badges" />
 
@@ -1457,11 +1400,6 @@
             app:exitAnim="@anim/fragment_open_exit"
             app:popEnterAnim="@anim/fragment_close_enter"
             app:popExitAnim="@anim/fragment_close_exit" />
-
-        <argument
-            android:name="backup_later_selected"
-            app:argType="boolean"
-            android:defaultValue="false" />
 
         <argument
             android:name="forQuickRestore"

@@ -157,6 +157,16 @@ class LinkDeviceViewModel : ViewModel() {
     _state.update { it.copy(oneTimeEvent = OneTimeEvent.SnackbarDeviceLimitReached) }
   }
 
+  fun markQrEducationSheetSeen() {
+    SignalStore.uiHints.markHasSeenLinkDeviceQrEducationSheet()
+    _state.update {
+      it.copy(
+        seenQrEducationSheet = true
+      )
+    }
+  }
+
+  /** Fork: switches the add-device screen between QR scanning and manual URL entry (Molly). */
   fun requestLinkWithoutQrCode(value: Boolean) {
     _state.update {
       it.copy(linkWithoutQrCode = value)

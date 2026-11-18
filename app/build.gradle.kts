@@ -31,9 +31,9 @@ plugins {
 val staticIps = Properties().apply { file("static-ips.properties").reader().use { load(it) } }
 staticIps.stringPropertyNames().forEach { rootProject.extra[it] = staticIps.getProperty(it) }
 
-val canonicalVersionCode = 1778
-val canonicalVersionName = "8.35.4"
-val currentHotfixVersion = 2
+val canonicalVersionCode = 1782
+val canonicalVersionName = "8.36.3"
+val currentHotfixVersion = 0
 val maxHotfixVersions = 100
 
 // We don't want versions to ever end in 0 so that they don't conflict with nightly versions
@@ -130,6 +130,10 @@ tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile::class.java).conf
   }
   if (isTestTask && name.contains("AndroidTest")) {
     source("$projectDir/src/benchmarkShared/java")
+  }
+  val usesReleaseStubs = android.buildTypes.names.any { it != "debug" && it != "release" && name.endsWith("${it.replaceFirstChar(Char::uppercase)}Kotlin") }
+  if (!isTestTask && usesReleaseStubs) {
+    source("$projectDir/src/release/java")
   }
 }
 
@@ -520,7 +524,7 @@ android {
       buildConfigField("String", "SIGNAL_CDN3_URL", "\"https://cdn3-staging.signal.org\"")
       buildConfigField("String", "SIGNAL_CDSI_URL", "\"https://cdsi.staging.signal.org\"")
       buildConfigField("String", "SIGNAL_SVR2_URL", "\"https://svr2.staging.signal.org\"")
-      buildConfigField("String", "SVR2_MRENCLAVE_LEGACY", "\"3c699f4975aaa3d172c0aad042f94f031b2b03e10b9c19a45116a01693d83302\"")
+      buildConfigField("String", "SVR2_MRENCLAVE_LEGACY", "\"\"")
       buildConfigField("String", "SVR2_MRENCLAVE", "\"0ff2d7d4efbe7cfc24ac069a16fba898928dbe6c40d500c8b6da55733c727d6e\"")
       buildConfigField("String[]", "UNIDENTIFIED_SENDER_TRUST_ROOTS", "new String[]{\"BbqY1DzohE4NUZoVF+L18oUPrK3kILllLEJh2UnPSsEx\", \"BYhU6tPjqP46KGZEzRs1OL4U39V5dlPJ/X09ha4rErkm\"}")
       buildConfigField("String", "ZKGROUP_SERVER_PUBLIC_PARAMS", "\"ABSY21VckQcbSXVNCGRYJcfWHiAMZmpTtTELcDmxgdFbtp/bWsSxZdMKzfCp8rvIs8ocCU3B37fT3r4Mi5qAemeGeR2X+/YmOGR5ofui7tD5mDQfstAI9i+4WpMtIe8KC3wU5w3Inq3uNWVmoGtpKndsNfwJrCg0Hd9zmObhypUnSkfYn2ooMOOnBpfdanRtrvetZUayDMSC5iSRcXKpdlukrpzzsCIvEwjwQlJYVPOQPj4V0F4UXXBdHSLK05uoPBCQG8G9rYIGedYsClJXnbrgGYG3eMTG5hnx4X4ntARBgELuMWWUEEfSK0mjXg+/2lPmWcTZWR9nkqgQQP0tbzuiPm74H2wMO4u1Wafe+UwyIlIT9L7KLS19Aw8r4sPrXZSSsOZ6s7M1+rTJN0bI5CKY2PX29y5Ok3jSWufIKcgKOnWoP67d5b2du2ZVJjpjfibNIHbT/cegy/sBLoFwtHogVYUewANUAXIaMPyCLRArsKhfJ5wBtTminG/PAvuBdJ70Z/bXVPf8TVsR292zQ65xwvWTejROW6AZX6aqucUjlENAErBme1YHmOSpU6tr6doJ66dPzVAWIanmO/5mgjNEDeK7DDqQdB1xd03HT2Qs2TxY3kCK8aAb/0iM0HQiXjxZ9HIgYhbtvGEnDKW5ILSUydqH/KBhW4Pb0jZWnqN/YgbWDKeJxnDbYcUob5ZY5Lt5ZCMKuaGUvCJRrCtuugSMaqjowCGRempsDdJEt+cMaalhZ6gczklJB/IbdwENW9KeVFPoFNFzhxWUIS5ML9riVYhAtE6JE5jX0xiHNVIIPthb458cfA8daR0nYfYAUKogQArm0iBezOO+mPk5vCNWI+wwkyFCqNDXz/qxl1gAntuCJtSfq9OC3NkdhQlgYQ==\"")
@@ -550,7 +554,7 @@ android {
   val debugDir = "$projectDir/src/debug/java"
 
   android.buildTypes.configureEach {
-    val path = if (name == "release") releaseDir else debugDir
+    val path = if (name == "debug") debugDir else releaseDir
     sourceSets.named(name) {
       java.directories += path
     }
@@ -736,6 +740,7 @@ dependencies {
   implementation(project(":lib:glide"))
   implementation(project(":lib:image-editor"))
   implementation(project(":lib:libsignal-service"))
+  implementation(project(":lib:locale"))
   implementation(project(":lib:network"))
   implementation(project(":lib:paging"))
   implementation(project(":lib:password-manager"))
@@ -752,6 +757,7 @@ dependencies {
   implementation(project(":feature:camera"))
   implementation(project(":feature:chat-settings"))
   implementation(project(":feature:media-keyboard"))
+  implementation(project(":feature:media-overview"))
   implementation(project(":feature:registration"))
 
   implementation(libs.androidx.fragment.ktx)

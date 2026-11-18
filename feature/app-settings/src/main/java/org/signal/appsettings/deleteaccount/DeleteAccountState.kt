@@ -26,10 +26,23 @@ data class DeleteAccountState(
   val formattedNumber: String = "",
   /** The user's username, or null when they don't have one. Only shown on [DeleteAccountWithoutNumberScreen]. */
   val username: String? = null,
-  val dialog: Dialog = Dialog.None
+  val dialog: Dialog = Dialog.None,
+  /** The snackbar to show, or [Snackbar.None]. */
+  val snackbar: Snackbar = Snackbar.None
 ) {
 
-  override fun toString(): String = "DeleteAccountState(hasPhoneNumber=$hasPhoneNumber, regionCode=$regionCode, countryDisplayName=$countryDisplayName, countryCode=$countryCode, nationalNumber=${nationalNumber.censor()}, formattedNumber=${formattedNumber.censor()}, username=${username?.censor()}, dialog=$dialog)"
+  override fun toString(): String = "DeleteAccountState(hasPhoneNumber=$hasPhoneNumber, regionCode=$regionCode, countryDisplayName=$countryDisplayName, countryCode=$countryCode, nationalNumber=${nationalNumber.censor()}, formattedNumber=${formattedNumber.censor()}, username=${username?.censor()}, dialog=$dialog, snackbar=$snackbar)"
+
+  /** Whichever snackbar the screen is showing, if any. */
+  sealed interface Snackbar {
+    data object None : Snackbar
+
+    /** The number can't be checked because no country code was entered. */
+    data object NoCountryCode : Snackbar
+
+    /** The number can't be checked because no phone number was entered. */
+    data object NoNationalNumber : Snackbar
+  }
 
   /** Whichever dialog the screen is showing, if any. Only one is ever up at a time. */
   sealed interface Dialog {
