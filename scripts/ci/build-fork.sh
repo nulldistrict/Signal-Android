@@ -9,6 +9,7 @@
 #   $OUT:            directory to collect outputs into
 #   $BUILD_VARIANT:  Gradle variant to assemble (default: githubProdRelease)
 #   $GRADLE_ARGS:    extra Gradle arguments (default: --no-configuration-cache)
+#   $FCM_API_KEY:    API key of the fork's Firebase project (repository secret)
 
 set -euo pipefail
 shopt -s inherit_errexit
@@ -24,6 +25,8 @@ function require_env() {
 }
 
 require_env OUT
+# Fork: the Firebase API key is injected at build time; a release without it could not receive push messages.
+require_env FCM_API_KEY
 mkdir -p "$OUT"
 
 BUILD_VARIANT="${BUILD_VARIANT:-githubProdRelease}"

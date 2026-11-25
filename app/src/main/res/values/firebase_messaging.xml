@@ -1,12 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <!-- Fork: own Firebase project for Firebase Installations (Signal's key rejects a differently signed APK).
-         The sender ID stays Signal's so that Signal's server can push to the token. Same approach as Molly. -->
+         The sender ID stays Signal's so that Signal's server can push to the token. Same approach as Molly.
+         The API key is not kept in the repository: app/build.gradle.kts injects it from fcmApiKey / FCM_API_KEY. -->
     <string name="google_app_id" translatable="false">1:83106822808:android:8e5955091392e9e1a86eed</string>
     <string name="gcm_defaultSenderId" translatable="false">312334754206</string>
     <string name="default_web_client_id" translatable="false">312334754206-dg1p1mtekis8ivja3ica50vonmrlunh4.apps.googleusercontent.com</string>
     <string name="firebase_database_url" translatable="false">https://api-project-312334754206.firebaseio.com</string>
-    <string name="google_api_key" translatable="false">AIzaSyA2rWnHM5XzdFJ4gmPxBsXa-3DYO4h-iiE</string>
-    <string name="google_crash_reporting_api_key" translatable="false">AIzaSyA2rWnHM5XzdFJ4gmPxBsXa-3DYO4h-iiE</string>
     <string name="project_id" translatable="false">signal-ek-fork</string>
 </resources>

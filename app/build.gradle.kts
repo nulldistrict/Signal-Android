@@ -270,6 +270,7 @@ android {
 
   buildFeatures {
     buildConfig = true
+    resValues = true // Fork: the Firebase API key is injected below
     viewBinding = true
     compose = true
   }
@@ -292,6 +293,11 @@ android {
     project.ext.set("archivesBaseName", "Signal")
 
     manifestPlaceholders["mapsKey"] = "AIzaSyCSx9xea86GwDKGznCAULE9Y5a8b-TfN9U"
+
+    // Fork: the API key of the fork's Firebase project comes from the build environment, not the repository. It is
+    // restricted to this app's package and release certificate in Google Cloud; see getFcmApiKey().
+    resValue("string", "google_api_key", getFcmApiKey())
+    resValue("string", "google_crash_reporting_api_key", getFcmApiKey())
 
     buildConfigField("long", "BUILD_TIMESTAMP", getLastCommitTimestamp() + "L")
     buildConfigField("String", "GIT_HASH", "\"${getGitHash()}\"")
@@ -982,6 +988,19 @@ fun getLastCommitDateTimeUtc(): String {
   val formatter = DateTimeFormatter.ofPattern("MMM d '@' HH:mm 'UTC'", Locale.US)
     .withZone(ZoneOffset.UTC)
   return formatter.format(instant)
+}
+
+/**
+ * Fork: the API key of the fork's own Firebase project, from the `fcmApiKey` Gradle property (e.g. in
+ * ~/.gradle/gradle.properties) or the `FCM_API_KEY` environment variable (the GitHub secret in CI). Without it the
+ * app builds but cannot get an FCM token, so the release workflow requires it (scripts/ci/build-fork.sh).
+ */
+fun getFcmApiKey(): String {
+  return providers
+    .gradleProperty("fcmApiKey")
+    .orElse(providers.environmentVariable("FCM_API_KEY"))
+    .orElse("")
+    .get()
 }
 
 fun getMapsKey(): String {

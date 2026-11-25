@@ -115,6 +115,7 @@ jobs:
       - name: Build unsigned APK
         env:
           BUILD_VARIANT: ${{ env.BUILD_VARIANT }}
+          FCM_API_KEY: ${{ secrets.FCM_API_KEY }}
         run: |
           mkdir -p out
           docker run --rm \
@@ -122,7 +123,7 @@ jobs:
             -v "$PWD/src:/project" -w /project \
             -v "$PWD/out:/out" \
             -v "$PWD/src/scripts/ci:/scripts:ro" \
-            -e OUT=/out -e BUILD_VARIANT \
+            -e OUT=/out -e BUILD_VARIANT -e FCM_API_KEY \
             signal-android /scripts/build-fork.sh
 
       - name: Upload unsigned APK
