@@ -394,9 +394,6 @@
     <string name="ChatsSettingsScreen__location_link_osm">OpenStreetMap</string>
     <string name="ChatsSettingsScreen__location_link_apple">Apple Maps</string>
     <string name="ChatsSettingsScreen__location_link_all">All of them</string>
-    <!-- Fork: Material You (wallpaper-based) colors -->
-    <string name="AppearanceSettingsScreen__material_you_colors">Material You colors</string>
-    <string name="AppearanceSettingsScreen__material_you_colors_description">Use colors from your wallpaper. Some older screens keep Signal\'s colors.</string>
     <!-- Preference menu item description for a toggle switch for preserving the archived state of muted chats. -->
     <string name="preferences__muted_chats_that_are_archived_will_remain_archived">Muted chats that are archived will remain archived when a new message arrives.</string>
     <!-- Preference menu item title for a toggle switch for preserving the archived state of muted chats. -->

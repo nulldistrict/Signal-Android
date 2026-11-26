@@ -18,8 +18,6 @@ data class AppearanceSettingsState(
   val isCompactNavigationBar: Boolean = false,
   val isSystemThemeAvailable: Boolean = true,
   val isAppIconSupported: Boolean = true,
-  val isDynamicColorsAvailable: Boolean = false, // Fork: Material You
-  val isDynamicColorsEnabled: Boolean = false, // Fork: Material You
   val dialog: Dialog = Dialog.None
 ) {
 

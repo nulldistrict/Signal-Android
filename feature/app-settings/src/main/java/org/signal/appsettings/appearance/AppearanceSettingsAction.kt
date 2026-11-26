@@ -16,9 +16,6 @@ sealed interface AppearanceSettingsAction {
   /** The theme changed, so the activity's splash screen theme has to follow it. */
   data class ApplySplashScreenTheme(val theme: AppearanceSettingsState.Theme) : AppearanceSettingsAction
 
-  /** Fork: Material You colors changed, so the activity has to be recreated to pick them up. */
-  data object RecreateForDynamicColors : AppearanceSettingsAction
-
   /** Opens [url] in the browser. */
   data class OpenBrowserLink(val url: String) : AppearanceSettingsAction
 

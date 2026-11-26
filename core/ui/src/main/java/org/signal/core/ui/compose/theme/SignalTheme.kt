@@ -2,19 +2,15 @@ package org.signal.core.ui.compose.theme
 
 import android.content.res.Configuration
 import androidx.compose.foundation.layout.Column
-import androidx.compose.material3.ColorScheme
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.Typography
 import androidx.compose.material3.darkColorScheme
-import androidx.compose.material3.dynamicDarkColorScheme
-import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalConfiguration
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.style.Hyphens
@@ -237,22 +233,12 @@ fun SignalTheme(
   ProvideIncognitoKeyboard(enabled = incognitoKeyboardEnabled) {
     CompositionLocalProvider(LocalExtendedColors provides extendedColors, LocalSnackbarColors provides snackbarColors) {
       MaterialTheme(
-        colorScheme = forkColorScheme(isDarkMode) ?: if (isDarkMode) darkColorScheme else lightColorScheme,
+        colorScheme = if (isDarkMode) darkColorScheme else lightColorScheme,
         typography = typography,
         content = content
       )
     }
   }
-}
-
-/** Fork: the wallpaper-based scheme when the user turned on Material You colors, otherwise null. */
-@Composable
-private fun forkColorScheme(isDarkMode: Boolean): ColorScheme? {
-  val context = LocalContext.current
-  if (!ForkDynamicColors.isAvailable || !ForkDynamicColors.isEnabled(context)) {
-    return null
-  }
-  return if (isDarkMode) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
 }
 
 /**

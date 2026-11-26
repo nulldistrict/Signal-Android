@@ -21,7 +21,6 @@ import org.signal.appsettings.routes.AppSettingsNavigationEvent
 import org.signal.core.ui.compose.CollectActions
 import org.signal.core.util.PlayServicesUtil
 import org.signal.core.util.PlayStoreUtil
-import org.thoughtcrime.securesms.util.CachedInflater
 import org.thoughtcrime.securesms.util.CommunicationActions
 import org.thoughtcrime.securesms.util.SplashScreenUtil
 
@@ -46,10 +45,6 @@ fun AppearanceSettingsEntry(
   CollectActions(viewModel.actions) { action ->
     when (action) {
       is AppearanceSettingsAction.ApplySplashScreenTheme -> SplashScreenUtil.setSplashScreenThemeIfNecessary(activity, action.theme.toSettingsTheme())
-      AppearanceSettingsAction.RecreateForDynamicColors -> { // Fork: Material You
-        CachedInflater.from(context).clear()
-        activity?.recreate()
-      }
       is AppearanceSettingsAction.OpenBrowserLink -> CommunicationActions.openBrowserLink(context, action.url)
       AppearanceSettingsAction.OpenPlayStoreSettings -> PlayStoreUtil.openPlayStoreSettings(context)
       AppearanceSettingsAction.OpenPlayServicesSettings -> PlayServicesUtil.openPlayServicesSettings(context)

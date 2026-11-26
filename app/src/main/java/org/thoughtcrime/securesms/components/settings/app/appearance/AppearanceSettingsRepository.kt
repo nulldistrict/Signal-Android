@@ -10,7 +10,6 @@ import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.IntentSenderRequest
 import kotlinx.coroutines.flow.Flow
 import org.signal.appsettings.appearance.AppearanceSettingsState
-import org.signal.core.ui.compose.theme.ForkDynamicColors
 import org.signal.core.util.AppUtil
 import org.signal.locale.LanguageAvailability
 import org.signal.locale.LanguageInstallStatus
@@ -64,15 +63,6 @@ object AppearanceSettingsRepository {
   fun isSystemThemeAvailable(): Boolean = DynamicTheme.systemThemeAvailable()
 
   fun isAppIconSupported(): Boolean = Build.VERSION.SDK_INT >= 26
-
-  // Fork: Material You
-  fun isDynamicColorsAvailable(): Boolean = ForkDynamicColors.isAvailable
-
-  fun isDynamicColorsEnabled(): Boolean = ForkDynamicColors.isEnabled(AppDependencies.application)
-
-  fun setDynamicColorsEnabled(enabled: Boolean) {
-    ForkDynamicColors.setEnabled(AppDependencies.application, enabled)
-  }
 }
 
 fun LanguageInstallStatus.Failed.toLanguageDownloadFailure(): AppearanceSettingsState.LanguageDownloadFailure {

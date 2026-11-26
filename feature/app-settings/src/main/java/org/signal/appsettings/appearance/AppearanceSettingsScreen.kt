@@ -105,17 +105,6 @@ fun AppearanceSettingsScreen(
         )
       }
 
-      if (state.isDynamicColorsAvailable) { // Fork: Material You
-        item {
-          Rows.ToggleRow(
-            checked = state.isDynamicColorsEnabled,
-            text = stringResource(R.string.AppearanceSettingsScreen__material_you_colors),
-            label = stringResource(R.string.AppearanceSettingsScreen__material_you_colors_description),
-            onCheckChanged = { onEvent(AppearanceSettingsEvent.DynamicColorsToggled(it)) }
-          )
-        }
-      }
-
       item {
         Rows.TextRow(
           text = stringResource(R.string.preferences__chat_color_and_wallpaper),
