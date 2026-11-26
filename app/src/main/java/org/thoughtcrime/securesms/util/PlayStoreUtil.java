@@ -14,7 +14,9 @@ public final class PlayStoreUtil {
   private PlayStoreUtil() {}
 
   public static void openPlayStoreOrOurApkDownloadPage(@NonNull Context context) {
-    if (BuildConfig.MANAGES_APP_UPDATES) {
+    if (Environment.IS_GITHUB) { // Fork: official Signal builds cannot update this one
+      CommunicationActions.openBrowserLink(context, BuildConfig.FORK_RELEASES_URL);
+    } else if (BuildConfig.MANAGES_APP_UPDATES) {
       CommunicationActions.openBrowserLink(context, "https://signal.org/android/apk");
     } else {
       openPlayStore(context);

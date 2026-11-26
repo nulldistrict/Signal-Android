@@ -265,22 +265,6 @@ jobs:
           } > signed/BUILD_INFO.txt
           cat signed/BUILD_INFO.txt
 
-      - name: Write update manifest
-        if: ${{ startsWith(github.ref, 'refs/tags/v') || github.event.inputs.tag != '' }}
-        env:
-          TAG: ${{ github.event.inputs.tag || github.ref_name }}
-          REPO: ${{ github.repository }}
-        run: |
-          set -euo pipefail
-          docker run --rm \
-            --user "$(id -u):$(id -g)" \
-            -v "$PWD/signed:/signed" \
-            -v "$PWD/src/scripts/ci:/scripts:ro" \
-            -e APK=/signed/fork-release.apk \
-            -e OUT=/signed \
-            -e APK_URL="https://github.com/${REPO}/releases/download/${TAG}/fork-release.apk" \
-            signal-android /scripts/write-update-manifest.sh
-
       - name: Upload signed APK
         uses: actions/upload-artifact@v4
         with:
@@ -306,12 +290,11 @@ jobs:
             release_flags=(--latest)
           fi
           if gh release view "$TAG" --repo "$REPO" >/dev/null 2>&1; then
-            gh release upload "$TAG" signed/fork-release.apk signed/fork-release.apk.sha256 signed/latest.json signed/BUILD_INFO.txt --clobber --repo "$REPO"
+            gh release upload "$TAG" signed/fork-release.apk signed/fork-release.apk.sha256 signed/BUILD_INFO.txt --clobber --repo "$REPO"
           else
             gh release create "$TAG" \
               signed/fork-release.apk \
               signed/fork-release.apk.sha256 \
-              signed/latest.json \
               signed/BUILD_INFO.txt \
               --repo "$REPO" \
               --target "$TARGET" \

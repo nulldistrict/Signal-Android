@@ -53,9 +53,8 @@ val releaseKeystorePropertiesProvider: Provider<Properties> = providers.of(Prope
 // Fork settings. They are kept out of the upstream version block above, which Signal rewrites on every
 // release, so that merging a new Signal release does not conflict here.
 //
-// GitHub repository that publishes this fork's releases. The in-app updater reads
-// <repository>/releases/latest/download/latest.json, so this must be the repository that
-// the reproducible-release workflow publishes to.
+// GitHub repository that publishes this fork's releases. The github distribution has no in-app
+// updater; "update Signal" prompts open this repository's releases page instead.
 val forkReleaseRepository = "nulldistrict/Signal-Android"
 
 // Added on top of upstream's currentHotfixVersion. Bump it for a fork-only release on the same Signal version
@@ -304,6 +303,7 @@ android {
 
     buildConfigField("long", "BUILD_TIMESTAMP", getLastCommitTimestamp() + "L")
     buildConfigField("String", "GIT_HASH", "\"${getGitHash()}\"")
+    buildConfigField("String", "FORK_RELEASES_URL", "\"https://github.com/${forkReleaseRepository}/releases\"") // Fork
     buildConfigField("String", "SIGNAL_URL", "\"https://chat.signal.org\"")
     buildConfigField("String", "STORAGE_URL", "\"https://storage.signal.org\"")
     buildConfigField("String", "SIGNAL_CDN_URL", "\"https://cdn.signal.org\"")
@@ -500,8 +500,9 @@ android {
 
     create("github") {
       dimension = "distribution"
-      buildConfigField("boolean", "MANAGES_APP_UPDATES", "true")
-      buildConfigField("String", "APK_UPDATE_MANIFEST_URL", "\"https://github.com/${forkReleaseRepository}/releases/latest/download/latest.json\"")
+      // Fork: no in-app updater (owner decision 2026-11-26); updates are installed manually from GitHub releases.
+      buildConfigField("boolean", "MANAGES_APP_UPDATES", "false")
+      buildConfigField("String", "APK_UPDATE_MANIFEST_URL", "null")
       buildConfigField("String", "BUILD_DISTRIBUTION_TYPE", "\"github\"")
     }
 

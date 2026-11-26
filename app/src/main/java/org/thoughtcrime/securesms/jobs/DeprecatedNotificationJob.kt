@@ -17,6 +17,7 @@ import org.thoughtcrime.securesms.dependencies.AppDependencies
 import org.thoughtcrime.securesms.jobmanager.Job
 import org.thoughtcrime.securesms.notifications.NotificationChannels
 import org.thoughtcrime.securesms.notifications.NotificationIds
+import org.thoughtcrime.securesms.util.Environment
 import kotlin.time.Duration.Companion.days
 
 /**
@@ -49,7 +50,10 @@ class DeprecatedNotificationJob private constructor(parameters: Parameters) : Jo
     if (NotificationChannels.getInstance().areNotificationsEnabled()) {
       val intent: Intent
 
-      if (BuildConfig.MANAGES_APP_UPDATES) {
+      if (Environment.IS_GITHUB) { // Fork
+        Log.d(TAG, "Showing deprecated notification for GitHub releases")
+        intent = Intent(Intent.ACTION_VIEW, Uri.parse(BuildConfig.FORK_RELEASES_URL))
+      } else if (BuildConfig.MANAGES_APP_UPDATES) {
         Log.d(TAG, "Showing deprecated notification for website APK")
         intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://signal.org/android/apk"))
       } else {

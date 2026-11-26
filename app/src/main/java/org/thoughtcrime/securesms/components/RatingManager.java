@@ -9,6 +9,7 @@ import org.signal.core.util.logging.Log;
 import org.thoughtcrime.securesms.BuildConfig;
 import org.thoughtcrime.securesms.R;
 import org.thoughtcrime.securesms.keyvalue.SignalStore;
+import org.thoughtcrime.securesms.util.Environment;
 import org.thoughtcrime.securesms.util.PlayStoreUtil;
 import org.thoughtcrime.securesms.util.VersionTracker;
 
@@ -22,7 +23,7 @@ public class RatingManager {
   private static final String TAG = Log.tag(RatingManager.class);
 
   public static void showRatingDialogIfNecessary(Context context) {
-    if (!SignalStore.misc().getRatingEnabled() || BuildConfig.MANAGES_APP_UPDATES) return;
+    if (!SignalStore.misc().getRatingEnabled() || BuildConfig.MANAGES_APP_UPDATES || Environment.IS_GITHUB) return; // Fork: no Play Store listing
 
     long daysSinceInstall = VersionTracker.getDaysSinceFirstInstalled(context);
     long laterTimestamp   = SignalStore.misc().getRatingLaterTimestamp();

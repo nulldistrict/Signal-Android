@@ -11,6 +11,9 @@ object Environment {
   const val IS_STAGING: Boolean = BuildConfig.BUILD_ENVIRONMENT_TYPE == "Staging" || BuildConfig.BUILD_ENVIRONMENT_TYPE == "Pnp" || BuildConfig.BUILD_ENVIRONMENT_TYPE == "Backup"
   const val IS_NIGHTLY: Boolean = BuildConfig.BUILD_DISTRIBUTION_TYPE == "nightly"
   const val IS_WEBSITE: Boolean = BuildConfig.BUILD_DISTRIBUTION_TYPE == "website"
+
+  /** Fork: the GitHub-released distribution. It is not on the Play Store and has no in-app updater. */
+  const val IS_GITHUB: Boolean = BuildConfig.BUILD_DISTRIBUTION_TYPE == "github"
   const val IS_BENCHMARK: Boolean = BuildConfig.BUILD_VARIANT_TYPE == "Benchmark"
   const val IS_PERF: Boolean = BuildConfig.BUILD_VARIANT_TYPE == "Perf"
 
