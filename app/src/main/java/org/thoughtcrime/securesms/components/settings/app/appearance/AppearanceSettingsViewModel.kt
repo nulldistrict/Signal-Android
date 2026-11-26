@@ -99,6 +99,12 @@ class AppearanceSettingsViewModel(
         _actions.send(AppearanceSettingsAction.ApplySplashScreenTheme(event.theme))
       }
 
+      is AppearanceSettingsEvent.DynamicColorsToggled -> { // Fork: Material You
+        AppearanceSettingsRepository.setDynamicColorsEnabled(event.enabled)
+        _state.update { it.copy(isDynamicColorsEnabled = event.enabled) }
+        _actions.send(AppearanceSettingsAction.RecreateForDynamicColors)
+      }
+
       AppearanceSettingsEvent.ChatColorAndWallpaperClicked -> parentEventEmitter.navigateTo(AppSettingsRoute.AppearanceRoute.Wallpaper)
 
       AppearanceSettingsEvent.AppIconClicked -> parentEventEmitter.navigateTo(AppSettingsRoute.AppearanceRoute.AppIconSelection)
@@ -168,7 +174,9 @@ class AppearanceSettingsViewModel(
       messageFontSize = AppearanceSettingsRepository.getMessageFontSize(),
       isCompactNavigationBar = AppearanceSettingsRepository.isCompactNavigationBar(),
       isSystemThemeAvailable = AppearanceSettingsRepository.isSystemThemeAvailable(),
-      isAppIconSupported = AppearanceSettingsRepository.isAppIconSupported()
+      isAppIconSupported = AppearanceSettingsRepository.isAppIconSupported(),
+      isDynamicColorsAvailable = AppearanceSettingsRepository.isDynamicColorsAvailable(),
+      isDynamicColorsEnabled = AppearanceSettingsRepository.isDynamicColorsEnabled()
     )
   }
 }

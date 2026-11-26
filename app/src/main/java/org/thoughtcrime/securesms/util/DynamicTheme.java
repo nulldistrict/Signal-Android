@@ -9,6 +9,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.StyleRes;
 import androidx.appcompat.app.AppCompatDelegate;
 
+import org.signal.core.ui.compose.theme.ForkDynamicColors;
 import org.signal.core.util.logging.Log;
 import org.thoughtcrime.securesms.R;
 import org.thoughtcrime.securesms.keyvalue.SettingsValues.Theme;
@@ -22,6 +23,7 @@ public class DynamicTheme {
   private static int globalNightModeConfiguration;
 
   private int onCreateNightModeConfiguration;
+  private boolean onCreateDynamicColors; // Fork: Material You
 
   public void onCreate(@NonNull Activity activity) {
     int previousGlobalConfiguration = globalNightModeConfiguration;
@@ -30,6 +32,7 @@ public class DynamicTheme {
     globalNightModeConfiguration   = onCreateNightModeConfiguration;
 
     activity.setTheme(getTheme());
+    onCreateDynamicColors = ForkDynamicColors.applyTo(activity); // Fork: Material You
 
     if (previousGlobalConfiguration != globalNightModeConfiguration) {
       Log.d(TAG, "Previous night mode has changed previous: " + previousGlobalConfiguration + " now: " + globalNightModeConfiguration);
@@ -38,6 +41,14 @@ public class DynamicTheme {
   }
 
   public void onResume(@NonNull Activity activity) {
+    // Fork: the Material You switch changed while this activity was in the back stack.
+    if (onCreateDynamicColors != ForkDynamicColors.isEnabled(activity)) {
+      Log.d(TAG, "Dynamic colors changed, recreating");
+      CachedInflater.from(activity).clear();
+      activity.recreate();
+      return;
+    }
+
     if (onCreateNightModeConfiguration != ConfigurationUtil.getNightModeConfiguration(activity)) {
       Log.d(TAG, "Create configuration different from current previous: " + onCreateNightModeConfiguration + " now: " +  ConfigurationUtil.getNightModeConfiguration(activity));
       CachedInflater.from(activity).clear();

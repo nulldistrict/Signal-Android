@@ -37,6 +37,9 @@ sealed interface AppearanceSettingsEvent {
   /** The user picked a theme from the theme list. */
   data class ThemeSelected(val theme: AppearanceSettingsState.Theme) : AppearanceSettingsEvent
 
+  /** Fork: the user flipped the Material You colors switch. */
+  data class DynamicColorsToggled(val enabled: Boolean) : AppearanceSettingsEvent
+
   /** The user tapped the chat color and wallpaper row. */
   data object ChatColorAndWallpaperClicked : AppearanceSettingsEvent
 

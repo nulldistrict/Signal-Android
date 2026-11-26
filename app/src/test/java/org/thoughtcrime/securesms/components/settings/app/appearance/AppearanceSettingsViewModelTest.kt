@@ -74,6 +74,9 @@ class AppearanceSettingsViewModelTest {
     every { AppearanceSettingsRepository.setTheme(any()) } just Runs
     every { AppearanceSettingsRepository.setMessageFontSize(any()) } just Runs
     every { AppearanceSettingsRepository.setCompactNavigationBar(any()) } just Runs
+    every { AppearanceSettingsRepository.isDynamicColorsAvailable() } returns true // Fork
+    every { AppearanceSettingsRepository.isDynamicColorsEnabled() } returns false // Fork
+    every { AppearanceSettingsRepository.setDynamicColorsEnabled(any()) } just Runs // Fork
   }
 
   @After
@@ -100,7 +103,8 @@ class AppearanceSettingsViewModelTest {
         messageFontSize = 22,
         isCompactNavigationBar = true,
         isSystemThemeAvailable = false,
-        isAppIconSupported = false
+        isAppIconSupported = false,
+        isDynamicColorsAvailable = true // Fork: stubbed in setUp()
       )
     )
   }
@@ -428,6 +432,19 @@ class AppearanceSettingsViewModelTest {
     verify { AppearanceSettingsRepository.setTheme(Theme.DARK) }
     assertThat(viewModel.state.value.theme).isEqualTo(Theme.DARK)
     assertThat(actions).isEqualTo(listOf(AppearanceSettingsAction.ApplySplashScreenTheme(Theme.DARK)))
+  }
+
+  // Fork: Material You
+  @Test
+  fun `DynamicColorsToggled stores the choice and recreates the activity`() = runTest(testDispatcher) {
+    val viewModel = createViewModel()
+    val actions = collectActions(viewModel.actions)
+
+    viewModel.onEvent(AppearanceSettingsEvent.DynamicColorsToggled(true))
+
+    verify { AppearanceSettingsRepository.setDynamicColorsEnabled(true) }
+    assertThat(viewModel.state.value.isDynamicColorsEnabled).isTrue()
+    assertThat(actions).isEqualTo(listOf(AppearanceSettingsAction.RecreateForDynamicColors))
   }
 
   @Test
