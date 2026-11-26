@@ -1,9 +1,11 @@
 package org.thoughtcrime.securesms.components.settings.app.privacy
 
 import android.content.Intent
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.withContext
 import org.signal.core.util.ServiceUtil
 import org.signal.core.util.concurrent.SignalDispatchers
+import org.signal.remoteconfig.RemoteConfig
 import org.thoughtcrime.securesms.crypto.MasterSecretUtil
 import org.thoughtcrime.securesms.crypto.PassphraseDatabaseSecret
 import org.thoughtcrime.securesms.database.SignalDatabase
@@ -25,6 +27,14 @@ object PrivacySettingsRepository {
   suspend fun getBlockedCount(): Int {
     return withContext(SignalDispatchers.Default) {
       SignalDatabase.recipients.getBlocked().size
+    }
+  }
+
+  fun isHiddenContactsAvailable(): Boolean = RemoteConfig.contactDelete
+
+  suspend fun getHiddenCount(): Int {
+    return withContext(SignalDispatchers.Default) {
+      SignalDatabase.recipients.getHiddenCount()
     }
   }
 
@@ -63,6 +73,9 @@ object PrivacySettingsRepository {
   fun getScreenLockTimeout(): Duration = SignalStore.settings.screenLockTimeout.seconds
 
   fun isScreenSecurityEnabled(): Boolean = SignalStore.settings.isScreenSecurityEnabled
+
+  /** Emits whenever screen security changes, including when it is changed from outside of the privacy settings screen. */
+  fun screenSecurityEnabledFlow(): Flow<Boolean> = SignalStore.settings.isScreenSecurityEnabledFlow
 
   fun setScreenSecurityEnabled(enabled: Boolean) {
     SignalStore.settings.isScreenSecurityEnabled = enabled

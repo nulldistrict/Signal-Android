@@ -440,8 +440,31 @@
     <string name="preferences_normal">Нормален</string>
     <!-- Preference summary for compact navigation bar size -->
     <string name="preferences_compact">Компактен</string>
+
+    <!-- AppearanceSettingsScreen -->
     <!-- Dialog message body explaining that we have to restart the app in order to apply the user\'s new language setting.  -->
     <string name="preferences_language_change_confirmation_message">Приложението ще се рестартира, за да се приложи новата настройка на езика.</string>
+    <!-- Dialog message body shown when selecting a language that hasn\'t been downloaded yet, notifying the user that a download will happen and then restart. -->
+    <string name="preferences_language_change_download_confirmation_message">Signal ще изтегли пакета с език и след това приложението ще се рестартира, за да се приложи новата настройка на езика.</string>
+    <!-- Dialog message shown while a language pack is being downloaded after the user picks a language. -->
+    <string name="preferences_language_change_downloading_message">Изтегляне на пакета с език…</string>
+    <!-- Dialog message shown when downloading a language pack fails for a reason that trying again may fix. %1$d is Google Play\'s numeric error code, for example -6, shown so the user can report it. -->
+    <string name="preferences_language_change_download_failed_message">Неуспешно изтегляне на пакета с език (грешка %1$d). Проверете връзката си и опитайте отново.</string>
+    <!-- Dialog message shown when downloading a language pack fails because the device is out of storage. -->
+    <string name="preferences_language_change_download_failed_storage_message">Неуспешно изтегляне на пакета с език. Освободете място на устройството си и опитайте отново.</string>
+    <!-- Dialog message shown when a language pack can\'t be downloaded because the Google Play Store or Google Play services app is missing, or Google Play didn\'t install this copy of Signal. Directs the user to download a universal build with full language support from signal.org. "Google Play" is a product name and "signal.org" is a web address; do not translate either. -->
+    <string name="preferences_language_change_download_failed_play_unavailable_message">Google Play не може да изтегля пакети с езици за това копие на Signal. Изтеглете APK от signal.org, за да използвате всички поддържани езици.</string>
+    <!-- Dialog message shown when a language pack can\'t be downloaded because the user turned off the Google Play Store app in system settings. "Google Play" is a product name; do not translate it. -->
+    <string name="preferences_language_change_download_failed_play_disabled_message">Пакетите с езици се изтеглят чрез Google Play, което е изключено на това устройство. Активирайте го в настройките, за да изтеглите този език.</string>
+    <!-- Dialog message shown when a language pack can\'t be downloaded because the user turned off the Google Play services app in system settings. "Google Play" is a product name; do not translate it. -->
+    <string name="preferences_language_change_download_failed_play_services_disabled_message">Пакетите с езици се изтеглят чрез услугите на Google Play, които са изключени на това устройство. Активирайте го в настройките, за да изтеглите този език.</string>
+    <!-- Positive button label on the language pack download failure dialog when the Google Play Store or Google Play services app is turned off. Opens that app\'s page in system settings, where it can be turned on. -->
+    <string name="preferences_language_unavailable_open_settings">Отваряне на настройките</string>
+    <!-- Positive button label on the language pack download failure dialog. Starts the download again. -->
+    <string name="preferences_language_change_download_retry">Опитайте отново</string>
+    <!-- Positive button label on the language pack download failure dialog when Google Play cannot download the pack. Opens signal.org/android/apk in a browser. -->
+    <string name="preferences_language_unavailable_visit_website">Посетете уебсайта</string>
+
     <!-- Phone number heading displayed as a screen title -->
     <string name="preferences_app_protection__phone_number">Телефонен номер</string>
     <!-- Section title above two radio buttons for enabling and disabling phone number display -->
@@ -501,6 +524,10 @@
     <string name="DataAndStorageSettingsFragment__staying_connected_while_in_the_background_will_likely_result_in_increased_battery_usage">Ако поддържате връзка във фонов режим, това най-вероятно ще доведе до повишено изразходване на батерията. Това не е необходимо на повечето устройства. Активирайте това само ако имате проблеми с известията.</string>
     <!-- Button label that enables the "Stay connected in background" setting from a confirmation dialog -->
     <string name="DataAndStorageSettingsFragment__enable">Активиране</string>
+    <!-- Body of a confirmation dialog shown when a user without Google Play Services tries to disable the "Stay connected in background" setting -->
+    <string name="DataAndStorageSettingsFragment__play_services_are_not_available_on_this_device">Услугите на Play не са достъпни на това устройство. Ако тази настройка бъде дезактивирана, вече няма да можете да изпращате съобщения, докато приложението е във фонов режим.</string>
+    <!-- Button label that disables the "Stay connected in background" setting from a confirmation dialog -->
+    <string name="DataAndStorageSettingsFragment__continue">Продължаване</string>
   <!-- Setting option that can be selected to default media to be sent as high quality by default -->
   <string name="SentMediaQuality__high">Високо</string>
   <!-- Setting option that can be selected to default media to be sent as standard quality by default -->
@@ -662,6 +689,31 @@
     <string name="PrivacySettingsScreen__signal">Signal</string>
     <!-- Link after the incognito keyboard disclaimer that opens a support article -->
     <string name="PrivacySettingsScreen__learn_more">Научете повече</string>
+    <!-- Section header in privacy settings above the rows for hidden and blocked contacts -->
+    <string name="PrivacySettingsScreen__hidden_and_blocked">Скрити и блокирани</string>
+    <!-- Row label in privacy settings shown when the user has no hidden contacts or no blocked contacts -->
+    <string name="PrivacySettingsScreen__none">Няма</string>
+    <!-- Row title in privacy settings that opens the list of contacts the user has hidden -->
+    <string name="PrivacySettingsScreen__hidden">Скрити</string>
+    <!-- Row label in privacy settings showing how many contacts the user has hidden. Placeholder is the count. -->
+    <plurals name="PrivacySettingsScreen__d_hidden_contacts">
+        <item quantity="one">%1$d контакт</item>
+        <item quantity="other">%1$d контакта</item>
+    </plurals>
+
+    <!-- HiddenContactsScreen -->
+    <!-- Title of the screen listing the contacts the user has hidden -->
+    <string name="HiddenContactsScreen__hidden_contacts">Скрити контакти</string>
+    <!-- Explanation at the top of the hidden contacts screen -->
+    <string name="HiddenContactsScreen__hidden_contacts_description">Скритите контакти не се показват при търсене. Ако ви изпратят съобщение, ще получите заявка за съобщение. Докоснете някой контакт, за да го разкриете.</string>
+    <!-- Shown on the hidden contacts screen when the user hasn\'t hidden anyone -->
+    <string name="HiddenContactsScreen__no_hidden_contacts">Няма скрити контакти</string>
+    <!-- Dialog title asking whether to unhide a contact. Placeholder is the contact\'s name. -->
+    <string name="HiddenContactsScreen__unhide_s">Разкриване на %1$s?</string>
+    <!-- Dialog body explaining what unhiding a contact does -->
+    <string name="HiddenContactsScreen__unhide_body">Този човек отново ще се показва при търсене и ще може да вижда вашия профил.</string>
+    <!-- Dialog button that unhides a contact -->
+    <string name="HiddenContactsScreen__unhide">Разкриване</string>
 
     <!-- AppSettingsScreen -->
     <!-- String alerting user that backup storage limit has been reached -->
@@ -1244,4 +1296,11 @@
     <string name="AdvancedPinSettingsFragment_rotate_aep_dialog_positive_button">Създаване на нов ключ</string>
     <string name="ApplicationPreferencesActivity_pin_created">ПИН кодът е създаден.</string>
     <string name="ApplicationPreferencesActivity_pin_disabled">ПИН кодът е деактивиран.</string>
+
+    <!-- Title of a dialog asking whether to throw away unsaved edits before leaving the screen they were made on in settings -->
+    <string name="AppSettingsNavigation__discard_changes">Отхвърляне на промените?</string>
+    <!-- Body of a dialog asking whether to throw away unsaved edits before leaving the screen they were made on in settings -->
+    <string name="AppSettingsNavigation__you_will_lose_changes">Ще изгубите промените, които сте направили.</string>
+    <!-- Button in a dialog that throws away unsaved edits and leaves the screen they were made on in settings -->
+    <string name="AppSettingsNavigation__discard">Отхвърляне</string>
 </resources>

@@ -6,6 +6,7 @@ import android.provider.Settings
 import androidx.annotation.ArrayRes
 import androidx.core.app.NotificationCompat
 import androidx.lifecycle.LiveData
+import kotlinx.coroutines.flow.Flow
 import org.signal.core.models.calls.CallDataMode
 import org.signal.core.models.media.SentMediaQuality
 import org.signal.core.models.storage.KeepMessagesDuration
@@ -473,7 +474,9 @@ class SettingsValues internal constructor(store: KeyValueStore, private val cont
 
   var screenLockTimeout: Long by longValue(SCREEN_LOCK_TIMEOUT, 0)
 
-  var isScreenSecurityEnabled: Boolean by booleanValue(SCREEN_SECURITY_ENABLED, false)
+  private val isScreenSecurityEnabledValue = booleanValue(SCREEN_SECURITY_ENABLED, false)
+  var isScreenSecurityEnabled: Boolean by isScreenSecurityEnabledValue
+  val isScreenSecurityEnabledFlow: Flow<Boolean> by lazy { isScreenSecurityEnabledValue.toFlow() }
 
   /** When the user last turned screen security back off after it was automatically enabled due to an assistant app, or 0 if never. */
   var assistantScreenSecurityDeclinedAt: Long by longValue(ASSISTANT_SCREEN_SECURITY_DECLINED_AT, 0)
@@ -510,6 +513,9 @@ class SettingsValues internal constructor(store: KeyValueStore, private val cont
     set(value) {
       putInteger(FORCE_WEBSOCKET_MODE, value.serialize())
     }
+
+  /** Whether the websocket should be kept open while the app is in the background. */
+  fun shouldStayConnectedInBackground(): Boolean = forceWebsocketMode.shouldStayConnected(SignalStore.account.fcmEnabled)
 
   var mediaKeyboardMode: MediaKeyboardMode
     get() = MediaKeyboardMode.valueOf(getNonNullString(MEDIA_KEYBOARD_MODE, MediaKeyboardMode.EMOJI.name))
@@ -721,8 +727,14 @@ class SettingsValues internal constructor(store: KeyValueStore, private val cont
     ENABLED_AUTOMATICALLY(2),
     DISABLED_BY_USER(3);
 
-    val isEnabled: Boolean
-      get() = this == ENABLED_BY_USER || this == ENABLED_AUTOMATICALLY
+    /** Without FCM there's no push, so we stay connected unless the user explicitly turned it off. */
+    fun shouldStayConnected(fcmEnabled: Boolean): Boolean {
+      return when (this) {
+        ENABLED_BY_USER, ENABLED_AUTOMATICALLY -> true
+        DISABLED_BY_USER -> false
+        DISABLED_AUTOMATICALLY -> !fcmEnabled
+      }
+    }
 
     fun serialize(): Int = value
 

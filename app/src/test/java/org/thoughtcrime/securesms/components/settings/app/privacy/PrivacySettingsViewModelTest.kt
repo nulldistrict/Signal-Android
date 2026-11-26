@@ -22,6 +22,7 @@ import io.mockk.verify
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.TestScope
@@ -57,7 +58,9 @@ class PrivacySettingsViewModelTest {
   private var typingIndicators = false
   private var blockUnknown = false
   private var screenSecurity = false
+  private val screenSecurityFlow = MutableStateFlow(false)
   private var incognitoKeyboard = false
+  private var hiddenContactsAvailable = false
   private var deviceSecure = true
   private var passphraseEnabled = false
   private var passphraseInitialized = true
@@ -71,6 +74,8 @@ class PrivacySettingsViewModelTest {
     mockkObject(PrivacySettingsRepository)
 
     coEvery { PrivacySettingsRepository.getBlockedCount() } returns 4
+    every { PrivacySettingsRepository.isHiddenContactsAvailable() } answers { hiddenContactsAvailable }
+    coEvery { PrivacySettingsRepository.getHiddenCount() } returns 7
     every { PrivacySettingsRepository.hasPhoneNumber() } returns true
     every { PrivacySettingsRepository.isDeviceSecure() } answers { deviceSecure }
     every { PrivacySettingsRepository.isReadReceiptsEnabled() } answers { readReceipts }
@@ -83,7 +88,11 @@ class PrivacySettingsViewModelTest {
     every { PrivacySettingsRepository.isScreenLockEnabled() } returns false
     every { PrivacySettingsRepository.getScreenLockTimeout() } returns Duration.ZERO
     every { PrivacySettingsRepository.isScreenSecurityEnabled() } answers { screenSecurity }
-    every { PrivacySettingsRepository.setScreenSecurityEnabled(any()) } answers { screenSecurity = firstArg() }
+    every { PrivacySettingsRepository.setScreenSecurityEnabled(any()) } answers {
+      screenSecurity = firstArg()
+      screenSecurityFlow.value = firstArg()
+    }
+    every { PrivacySettingsRepository.screenSecurityEnabledFlow() } returns screenSecurityFlow
     every { PrivacySettingsRepository.isIncognitoKeyboardEnabled() } answers { incognitoKeyboard }
     every { PrivacySettingsRepository.setIncognitoKeyboardEnabled(any()) } answers { incognitoKeyboard = firstArg() }
     every { PrivacySettingsRepository.isObsoletePassphraseEnabled() } answers { passphraseEnabled }
@@ -181,6 +190,17 @@ class PrivacySettingsViewModelTest {
 
     assertThat(viewModel.state.value.screenSecurity).isTrue()
     assertThat(actions).containsExactly(PrivacySettingsAction.ApplyScreenSecurity(true))
+  }
+
+  @Test
+  fun `screen security changed outside of the screen updates the toggle`() = runTest(testDispatcher) {
+    val viewModel = createViewModel()
+    assertThat(viewModel.state.value.screenSecurity).isFalse()
+
+    screenSecurity = true
+    screenSecurityFlow.value = true
+
+    assertThat(viewModel.state.value.screenSecurity).isTrue()
   }
 
   @Test
@@ -307,6 +327,37 @@ class PrivacySettingsViewModelTest {
     viewModel.onEvent(PrivacySettingsEvent.NavigateBackClicked)
 
     assertThat(navigationEvents).containsExactly(AppSettingsNavigationEvent.NavigateBack())
+  }
+
+  @Test
+  fun `hidden contacts are left out while the feature is off`() = runTest(testDispatcher) {
+    val viewModel = createViewModel()
+
+    viewModel.onEvent(PrivacySettingsEvent.ScreenResumed)
+
+    assertThat(viewModel.state.value.showHiddenContacts).isFalse()
+    assertThat(viewModel.state.value.hiddenCount).isEqualTo(0)
+    coVerify(exactly = 0) { PrivacySettingsRepository.getHiddenCount() }
+  }
+
+  @Test
+  fun `ScreenResumed loads the hidden count while the feature is on`() = runTest(testDispatcher) {
+    hiddenContactsAvailable = true
+    val viewModel = createViewModel()
+
+    viewModel.onEvent(PrivacySettingsEvent.ScreenResumed)
+
+    assertThat(viewModel.state.value.showHiddenContacts).isTrue()
+    assertThat(viewModel.state.value.hiddenCount).isEqualTo(7)
+  }
+
+  @Test
+  fun `HiddenContactsClicked navigates to the hidden contacts`() = runTest(testDispatcher) {
+    val viewModel = createViewModel()
+
+    viewModel.onEvent(PrivacySettingsEvent.HiddenContactsClicked)
+
+    assertThat(navigationEvents).containsExactly(AppSettingsNavigationEvent.NavigateToScreen(AppSettingsRoute.PrivacyRoute.HiddenContacts))
   }
 
   @Test

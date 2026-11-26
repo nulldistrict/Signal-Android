@@ -29,6 +29,7 @@ import org.signal.libsignal.zkgroup.InvalidInputException;
 import org.signal.libsignal.zkgroup.ServerPublicParams;
 import org.signal.libsignal.zkgroup.profiles.ClientZkProfileOperations;
 import org.signal.libsignal.zkgroup.receipts.ClientZkReceiptOperations;
+import org.signal.locale.LanguageSplitRepository;
 import org.signal.network.api.AccountApiV2;
 import org.signal.network.api.ArchiveApiV2;
 import org.signal.network.api.AttachmentApi;
@@ -89,6 +90,7 @@ import org.thoughtcrime.securesms.jobs.AttachmentUploadJob;
 import org.thoughtcrime.securesms.jobs.FastJobStorage;
 import org.thoughtcrime.securesms.jobs.GroupCallUpdateSendJob;
 import org.thoughtcrime.securesms.jobs.IndividualSendJob;
+import org.thoughtcrime.securesms.jobs.IndividualSendJobV2;
 import org.thoughtcrime.securesms.jobs.JobManagerFactories;
 import org.thoughtcrime.securesms.jobs.MarkerJob;
 import org.thoughtcrime.securesms.jobs.PreKeysSyncJob;
@@ -296,6 +298,7 @@ public class ApplicationDependencyProvider implements AppDependencies.Provider {
                                        .addReservedJobRunner(new FactoryJobPredicate(AttachmentUploadJob.KEY, AttachmentCompressionJob.KEY))
                                        .addReservedJobRunner(new FactoryJobPredicate(
                                            IndividualSendJob.KEY,
+                                           IndividualSendJobV2.KEY,
                                            PushGroupSendJob.KEY,
                                            ReactionSendJob.KEY,
                                            TypingSendJob.KEY,
@@ -367,6 +370,11 @@ public class ApplicationDependencyProvider implements AppDependencies.Provider {
   @Override
   public @NonNull PinnedMessageManager providePinnedMessageManager() {
     return new PinnedMessageManager(context);
+  }
+
+  @Override
+  public @NonNull LanguageSplitRepository provideLanguageSplitRepository() {
+    return new LanguageSplitRepository(context, BuildConfig.LANGUAGE_SPLITS);
   }
 
   @Override

@@ -14,9 +14,11 @@ import org.signal.core.util.serialization.SignalJson
 import org.signal.libsignal.net.RequestResult
 import org.signal.network.api.RemoteConfigApi.GetRemoteConfigError
 import org.signal.network.api.RemoteConfigApi.RemoteConfigResult
+import org.signal.remoteconfig.RemoteConfig.INTERNAL_USER_KEY
 import org.signal.remoteconfig.RemoteConfig.REMOTE_VALUES
 import org.signal.remoteconfig.RemoteConfig.asBoolean
 import org.signal.remoteconfig.RemoteConfig.asInteger
+import org.signal.remoteconfig.RemoteConfig.internalUserDisabled
 import org.signal.remoteconfig.RemoteConfig.remoteBoolean
 import org.signal.remoteconfig.RemoteConfig.remoteValue
 import org.signal.remoteconfig.RemoteConfig.retryReceiptMaxCount
@@ -630,6 +632,7 @@ object RemoteConfig {
     defaultValue: Set<String>,
     hotSwappable: Boolean,
     active: Boolean = true,
+    elementTransform: ((String) -> String)? = null,
     onChangeListener: OnFlagChange? = null
   ): Config<Set<String>> {
     return remoteValue(
@@ -639,7 +642,8 @@ object RemoteConfig {
       active = active,
       onChangeListener = onChangeListener,
       transformer = { value ->
-        value?.let { SignalJson.decode<Set<String>>(it.toString()).getOrNull() } ?: defaultValue
+        val set = value?.let { SignalJson.decode<Set<String>>(it.toString()).getOrNull() } ?: defaultValue
+        if (elementTransform != null) set.map(elementTransform).toSet() else set
       }
     )
   }
@@ -1003,6 +1007,15 @@ object RemoteConfig {
     hotSwappable = false
   )
 
+  /** Value for the WebRTC field trial "WebRTC-Audio-NetEqSmartFlushing" */
+  @JvmStatic
+  @get:JvmName("callingFieldTrialSmartFlushing")
+  val callingFieldTrialSmartFlushing: String by remoteString(
+    key = "android.calling.fieldTrial.smartFlushing",
+    defaultValue = "",
+    hotSwappable = false
+  )
+
   /**
    * Enable/disable for notification when we cannot fetch messages despite receiving an urgent push.
    */
@@ -1358,7 +1371,8 @@ object RemoteConfig {
   val enableSoftwareVp9EncodeSoCList: Set<String> by remoteStringSet(
     key = "android.calling.enableSoftwareVp9EncodeSocList",
     defaultValue = setOf(),
-    hotSwappable = true
+    hotSwappable = true,
+    elementTransform = { it.lowercase() }
   )
 
   /**
@@ -1370,7 +1384,8 @@ object RemoteConfig {
   val enableSoftwareVp9DecodeSoCList: Set<String> by remoteStringSet(
     key = "android.calling.enableSoftwareVp9DecodeSoCList",
     defaultValue = setOf(),
-    hotSwappable = true
+    hotSwappable = true,
+    elementTransform = { it.lowercase() }
   )
 
   /**
@@ -1392,7 +1407,8 @@ object RemoteConfig {
   val disableHardwareVp9EncodeSocList: Set<String> by remoteStringSet(
     key = "android.calling.disableHardwareVp9EncodeSocList",
     defaultValue = setOf(),
-    hotSwappable = true
+    hotSwappable = true,
+    elementTransform = { it.lowercase() }
   )
 
   /**
@@ -1403,7 +1419,43 @@ object RemoteConfig {
   val disableHardwareVp9DecodeSocList: Set<String> by remoteStringSet(
     key = "android.calling.disableHardwareVp9DecodeSocList",
     defaultValue = setOf(),
+    hotSwappable = true,
+    elementTransform = { it.lowercase() }
+  )
+
+  /**
+   * Enables hardware H265 encode support for 1:1 calls
+   */
+  @JvmStatic
+  @get:JvmName("enableHardwareH265Encode")
+  val enableHardwareH265Encode: Boolean by remoteBoolean(
+    key = "android.calling.enableHardwareH265Encode",
+    defaultValue = false,
     hotSwappable = true
+  )
+
+  /**
+   * List of devices to skip hardware H265 encode on due to reliability issues
+   */
+  @JvmStatic
+  @get:JvmName("disableHardwareH265EncodeSocList")
+  val disableHardwareH265EncodeSocList: Set<String> by remoteStringSet(
+    key = "android.calling.disableHardwareH265EncodeSocList",
+    defaultValue = setOf(),
+    hotSwappable = true,
+    elementTransform = { it.lowercase() }
+  )
+
+  /**
+   * List of devices to skip hardware H265 decode on due to reliability issues
+   */
+  @JvmStatic
+  @get:JvmName("disableHardwareH265DecodeSocList")
+  val disableHardwareH265DecodeSocList: Set<String> by remoteStringSet(
+    key = "android.calling.disableHardwareH265DecodeSocList",
+    defaultValue = setOf(),
+    hotSwappable = true,
+    elementTransform = { it.lowercase() }
   )
 
   /**
@@ -1492,15 +1544,22 @@ object RemoteConfig {
   @JvmStatic
   @get:JvmName("useJetPackTelecom")
   val useJetPackTelecom: Boolean by remoteBoolean(
-    key = "android.calling.useJetPackTelecom",
+    key = "android.calling.useJetPackTelecom.2",
     defaultValue = false,
+    hotSwappable = false
+  )
+
+  /** Comma-separated manufacturers allowed to use Jetpack telecom. Empty allows none. */
+  val telecomManufacturerAllowlist: String by remoteString(
+    key = "android.calling.telecomAllowList.2",
+    defaultValue = "",
     hotSwappable = false
   )
 
   /** The minimum SDK version required to enable Jetpack telecom integration */
   val telecomMinSdkVersion: Int by remoteInt(
-    key = "android.calling.telecomMinSdkVersion",
-    defaultValue = 37,
+    key = "android.calling.telecomMinSdkVersion.2",
+    defaultValue = 34,
     hotSwappable = false
   )
 
@@ -1574,18 +1633,32 @@ object RemoteConfig {
     durationUnit = DurationUnit.SECONDS
   )
 
-  /** Whether to automatically turn on screen security when an assistant app requests the contents of the screen. */
-  val automaticScreenSecurity: Boolean by remoteBoolean(
-    key = "android.automaticScreenSecurity.2",
+  /** Whether to use the compose media overview in place of the original one. */
+  @JvmStatic
+  @get:JvmName("useNewMediaOverview")
+  val useNewMediaOverview: Boolean by remoteBoolean(
+    key = "android.newMediaOverview",
     defaultValue = false,
     hotSwappable = true
   )
 
-  const val APP_SETTINGS_NAVIGATION_KEY = "android.appSettingsNavigation"
+  /** Whether to automatically turn on screen security when an assistant app requests the contents of the screen. */
+  val automaticScreenSecurity: Boolean by remoteBoolean(
+    key = "android.automaticScreenSecurity.3",
+    defaultValue = false,
+    hotSwappable = true
+  )
 
   /** Whether to host app settings in the new navigation activity in place of the fragment nav graph. */
   val useAppSettingsNavigation: Boolean by remoteBoolean(
-    key = APP_SETTINGS_NAVIGATION_KEY,
+    key = "android.appSettingsNavigation.2",
+    defaultValue = false,
+    hotSwappable = true
+  )
+
+  /** Whether contacts can be hidden, listed and unhidden, and deleted outright. */
+  val contactDelete: Boolean by remoteBoolean(
+    key = "android.contactDelete",
     defaultValue = false,
     hotSwappable = true
   )

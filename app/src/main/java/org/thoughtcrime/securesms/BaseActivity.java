@@ -15,6 +15,7 @@ import androidx.appcompat.app.AppCompatDelegate;
 import androidx.core.app.ActivityCompat;
 import androidx.core.app.ActivityOptionsCompat;
 
+import com.google.android.play.core.splitcompat.SplitCompat;
 import org.signal.core.util.logging.Log;
 import org.thoughtcrime.securesms.dependencies.AppDependencies;
 import org.thoughtcrime.securesms.keyvalue.SignalStore;
@@ -94,6 +95,9 @@ public abstract class BaseActivity extends AppCompatActivity {
     configuration.orientation = Configuration.ORIENTATION_UNDEFINED;
 
     applyOverrideConfiguration(configuration);
+    if (AppLocale.isSplitInstall()) {
+      SplitCompat.installActivity(this);
+    }
   }
 
   @Override

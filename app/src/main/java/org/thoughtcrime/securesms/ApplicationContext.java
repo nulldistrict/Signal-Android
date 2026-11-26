@@ -29,6 +29,7 @@ import androidx.annotation.WorkerThread;
 
 import com.bumptech.glide.Glide;
 import com.google.android.gms.security.ProviderInstaller;
+import com.google.android.play.core.splitcompat.SplitCompat;
 
 import net.zetetic.database.Logger;
 
@@ -233,7 +234,11 @@ public class ApplicationContext extends Application implements AppForegroundObse
               .addBlocking("first-launch", this::initializeFirstEverAppLaunch)
               .addBlocking("app-migrations", this::initializeApplicationMigrations)
               .addBlocking("lifecycle-observer", () -> AppForegroundObserver.addListener(this))
-              .addBlocking("assistant-screen-security", () -> registerOnProvideAssistDataListener(new AssistantScreenSecurityObserver()))
+              .addBlocking("assistant-screen-security", () -> {
+                AssistantScreenSecurityObserver observer = new AssistantScreenSecurityObserver();
+                registerOnProvideAssistDataListener(observer);
+                registerActivityLifecycleCallbacks(observer);
+              })
               .addBlocking("message-retriever", this::initializeMessageRetrieval)
               .addBlocking("dynamic-theme", () -> DynamicTheme.setDefaultDayNightMode(this))
               .addBlocking("proxy-init", () -> {
@@ -296,6 +301,7 @@ public class ApplicationContext extends Application implements AppForegroundObse
               .addPostRender(RestoreOptimizedMediaJob::enqueueIfNecessary)
               .addPostRender(() -> AppDependencies.getPinnedMessageManager().scheduleIfNecessary())
               .addPostRender(() -> AppDependencies.getUnreadReminderManager().scheduleIfNecessary())
+              .addPostRender(() -> AppDependencies.getLanguageSplitRepository().installMissingLanguagesIfNecessary(PlainTextKeyValueStore.getLanguage()))
               .execute();
 
     Log.d(TAG, "onCreate() took " + (System.currentTimeMillis() - startTime) + " ms");
@@ -647,6 +653,10 @@ public class ApplicationContext extends Application implements AppForegroundObse
       if (RemoteConfig.callingFieldTrialAnyAddressPortsKillSwitch()) {
         fieldTrials.put("RingRTC-AnyAddressPortsKillSwitch", "Enabled");
       }
+      String smartFlushing = RemoteConfig.callingFieldTrialSmartFlushing();
+      if (!smartFlushing.isEmpty()) {
+        fieldTrials.put("WebRTC-Audio-NetEqSmartFlushing", smartFlushing);
+      }
       CallManager.initialize(this, new RingRtcLogger(), fieldTrials);
     } catch (UnsatisfiedLinkError e) {
       throw new AssertionError("Unable to load ringrtc library", e);
@@ -731,8 +741,11 @@ public class ApplicationContext extends Application implements AppForegroundObse
   @Override
   protected void attachBaseContext(Context base) {
     PlainTextKeyValueStore.init(base, BuildConfig.VERSION_CODE);
-    AppLocale.initialize(base, BuildConfig.LANGUAGES, PlainTextKeyValueStore::getLanguage);
+    AppLocale.initialize(base, BuildConfig.LANGUAGES, BuildConfig.LANGUAGE_SPLITS, PlainTextKeyValueStore::getLanguage);
     super.attachBaseContext(base);
+    if (AppLocale.isSplitInstall()) {
+      SplitCompat.install(this);
+    }
   }
 
   @Override
