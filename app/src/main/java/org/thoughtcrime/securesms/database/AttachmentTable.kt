@@ -2086,6 +2086,13 @@ class AttachmentTable(
 
     val existingPlaceholder: DatabaseAttachment = getAttachment(attachmentId) ?: throw MmsException("No attachment found for id: $attachmentId")
 
+    // Fork: the pointer was cleared while downloading, e.g. a view-once message opened on another device was wiped by
+    // deleteAttachmentFilesForViewOnceMessage(). Drop the data instead of crashing on remoteKey!! or restoring wiped media.
+    if (existingPlaceholder.remoteKey == null) {
+      Log.w(TAG, "[finalizeAttachmentAfterDownload] $attachmentId no longer has a remote key, discarding the downloaded data. (MessageId: $mmsId)")
+      return
+    }
+
     val fileWriteResult: DataFileWriteResult = writeToDataFile(newDataFile(context), inputStream, TransformProperties.empty(), closeInputStream = false)
 
     val foundDuplicate = writableDatabase.withinTransaction { db ->
